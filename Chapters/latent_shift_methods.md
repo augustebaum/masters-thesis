@@ -19,16 +19,13 @@ on different functions.
 In the case where the target class $y_\text{target}$ is
 known, we could compute the gradient of the component of
 $f$ corresponding the $y_\text{target}$:
-$\frac{\partial f_{y_\text{target}}(z)}{\partial z}.
+$\frac{\partial f_{y_\text{target}}(z)}{\partial z}$.
 We could also consider the direction that increases
 the difference $f_{y_\text{target}} - f_{y_\text{current}}$ the most:
-$\frac{\partial}{\partial z} \left(
-  f_{y_\text{target}}(z) - f_{y_\text{current}}(z)
-\right)$.
+$\frac{\partial}{\partial z} \left( f_{y_\text{target}}(z) - f_{y_\text{current}}(z) \right)$.
 In the other case, we only care about changing the current
 class, so we could choose the direction steepest *descent*
-of $f_{y_\text{current}}$:
-$- \frac{\partial f_{y_\text{target}}(z)}{\partial z}.
+of $f_{y_\text{current}}$: $- \frac{\partial f_{y_\text{target}}(z)}{\partial z}$.
 
 #### REVISE \cite{joshiRealistic2019}
 
@@ -40,11 +37,12 @@ In particular, like in \cite{wachterCounterfactual2017}, in
 REVISE the authors
 include a regularizaton term for the *cost* $c$ of a counterfactual,
 the definition of which is situation-dependent:
-
+$$
 \begin{align}
-  \argmin_{x^\text{CF}} & \{c(x^\text{CF}, x\}             \\
-  \text{such that}      & f(x^\text{CF}) = y_\text{target}
+  \arg\min_{x^\text{CF} \in \mathcal{X}}\  & c(x^\text{CF}, x)       \\
+  \text{such that }        & f(x^\text{CF}) = y_\text{target}
 \end {align}
+$$
 
 
 #### The `CakeOnSea` dataset
