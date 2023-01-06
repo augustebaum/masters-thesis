@@ -5,7 +5,13 @@ Abstract
   Context, contributions
 1. Background
   Context
+    XAI
+    Local XAI
+    CFX
   Definitions
+    MLP
+    CF path
+    NICE
 2. Previous work
   Related works
   Particularly timely or relevant works

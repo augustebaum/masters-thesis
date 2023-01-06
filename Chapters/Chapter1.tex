@@ -16,59 +16,71 @@
 \newcommand{\file}[1]{\texttt{\bfseries#1}}
 \newcommand{\option}[1]{\texttt{\itshape#1}}
 
-%----------------------------------------------------------------------------------------
+\newcommand{\method}[1]{\texttt{#1}}
+\newcommand{\citenote}{\textbf{CITE}}
 
-\section{Plan for this section}
-\begin{enumerate}
-    \item Background (Context, Definitions)
-    \item Previous work (Related works, Particularly timely or relevant work)
-\end{enumerate}
+%----------------------------------------------------------------------------------------
+% \begin{enumerate}
+%     \item Background (Context, Definitions)
+%     \item Previous work (Related works, Particularly timely or relevant work)
+% \end{enumerate}
+
+\section{Context}
 
 \subsection{Explainable AI}
 % \newacronym{xai}{XAI}{Explainable AI}
-Some of the reasons driving research in explainable AI (XAI hereafter) are summarized in \cite{zhangSurvey2021}:
+
+The term "Explainable AI" refers to the endeavour of extracting human-friendly \emph{reasoning} from an AI system, either by a post hoc procedure or by guiding its learning process to give it the ability to produce said reasoning \citenote{}.
+
+Some of the reasons driving research in explainable AI (referred to as XAI hereafter) are summarized in \cite{zhangSurvey2021}:
 \begin{itemize}
-    \item Scientists that use AI to achieve their performance goals hope to recover human-understandable information pertaining to their problem of interest;
-    \item Regulators hope to make AI-based decisions accountable, especially those that affect data subjects directly (e.g. in insurance, banking, or even in criminal justice);
-    \item AI users hope to limit unexpected failure scenarios in their work, especially in cases where failure is unacceptable.
+    \item Scientists that use AI hope to recover human-understandable information pertaining to their problem of interest (e.g. in drug design or physics);
+    \item Regulators hope to make AI-based decisions accountable, especially those that affect data subjects directly (e.g. in insurance, banking, or in criminal justice);
+    \item AI practitioners hope to limit unexpected failure scenarios in their work, especially in cases where failure can be costly (e.g. in medicine or finance).
 \end{itemize}
 
-The point has been made \cite{rudinWhy2019} that using inherently interpretable models should be encouraged, rather than relying on new techniques to "explain" black-box methods.
+It has been argued \cite{rudinWhy2019} that in many cases (including in the tabular setting) trying to "explain" black-box models is less productive than using more interpretable-by-design techniques.
+
+inherently interpretable models should be encouraged rather than relying on new techniques to "explain" black-box methods.
 
 Because of how ubiquitous AI is becoming, XAI research is also blossoming and the research field is vast.
-Some taxonomies have emerged recently that help differentiate methods \cite{zhangSurvey2021, bellePrinciples2021}.
-% It's a trade-off: think of it as looking at just the mean vs. looking at just one point
+Accordingly, some taxonomies have emerged recently that help differentiate methods \cite{zhangSurvey2021, bellePrinciples2021}.
+
 One key characteristic of an XAI method is its \emph{scope}: a \emph{global} XAI method applies to a \emph{whole} fully trained ML model, while a \emph{local} method gives an explanation of \emph{one prediction} by the model.
 Global methods report general information that does not necessarily reflect
 how the model acts in all situations, while local methods produce results with
 a more limited range, which can therefore be misleading.
-Yet, assuming that aggregating many local explanations can help us grasp
-the model's general behaviour, it can be tempting to only focus on those.
+
+% It's a trade-off: think of it as looking at just the mean vs. looking at just one point
+
+In the following we focus on local explainability methods, relying on the assumption that aggregating many local explanations can help us grasp the model's general behaviour.
 
 \subsection{Local explainability}
-Having discarded all global methods, we can still subdivide local methods into several strategies. Some of them are outlined in \cite{bellePrinciples2021}:
+Having discarded all global methods, we can still subdivide local methods into several types of explanation. Some of them are outlined in \cite{bellePrinciples2021}:
 
-\begin{itemize}
-    \item Rule-based approaches (Anchors)
-    \item Local approximation approaches (LIME, LFA)
-    \item Counterfactual approaches (Wachter)
-\end{itemize}
+\paragraph{Rule-based approaches}
+One rule-based approach, called \method{Anchors}, consists in extracting simple rules that hold locally around a given explained input \cite{ribeiroAnchors2018}.
+The advantage of rules as explanations is their intelligibility; it has been shown that rules depicting why a model behaved a certain way tend to be well understood compared to other types of explanation \cite{limWhy2009}.
 
-Rule-based 
+\paragraph{Local approximation approaches}
+One strategy is to transform the model into a simpler, more interepretable one such that the proxy model has the same local behaviour. In LIME \cite{ribeiroWhy2016}, a commonly used method, the proxy is a linear model.
+More recently, it was shown that many pre-existing explanation methods, including LIME, can in fact be formulated as instances of the same framework called Local Function Approximation \cite{hanWhich2022}.
 
-CF is dual to rule-based
+% CF is dual to rule-based \cite{gengComputing2022}.
 
-Counterfactual explanations (CFX hereafter) consist in producing \emph{virtual points} that are close to the explained input, but for which the model prediction is different.
+\paragraph{Counterfactual approaches}
+A counterfactual explanation (CFX hereafter) is one or more \emph{virtual points} that are close to the explained input, but for which \emph{the model prediction is different}.
 They aim to answer the question: ``What would have to change in the input for the model to change its prediction?''
-This is reminiscent of adversarial perturbations, in which a small perturbation can suffice to "trick" the model into making a prediction nonsensical.
-In CFX the goal is to keep the virtual points as realistic as possible.
+This is reminiscent of adversarial perturbations, in which a small perturbation can suffice to ``trick'' the model into making a nonsensical prediction.
+However, in CFX one tries to keep the virtual points as realistic as possible.
 
 CFX provide value in several ways:
 \begin{itemize}
     \item They indirectly show which features are being used by the model in its decisions;
     \item They provide insight on the model's understanding of what makes an input point realistic;
-    \item They constitute a way to provide \emph{recourse} when the model is used in a setting where recourse is required or desirable.
+    \item They constitute a way to provide \emph{recourse} when the model is used in a setting where recourse is required or desirable (for example in the context of a loan application).
 \end{itemize}
 
+\cite{wachterCounterfactual2017}
 
 \end{document}
