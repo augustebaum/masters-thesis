@@ -17,7 +17,11 @@
 \newcommand{\option}[1]{\texttt{\itshape#1}}
 
 \newcommand{\method}[1]{\texttt{#1}}
-\newcommand{\citenote}{\textbf{CITE}}
+\newcommand{\note}[1]{\textbf{#1}}
+\newcommand{\citenote}{\note{CITE}}
+
+\newcommand{\CF}[1]{#1^\text{CF}}
+\newcommand{\target}{\text{target}}
 
 %----------------------------------------------------------------------------------------
 % \begin{enumerate}
@@ -56,23 +60,28 @@ a more limited range, which can therefore be misleading.
 In the following we focus on local explainability methods, relying on the assumption that aggregating many local explanations can help us grasp the model's general behaviour.
 
 \subsection{Local explainability}
+
 Having discarded all global methods, we can still subdivide local methods into several types of explanation. Some of them are outlined in \cite{bellePrinciples2021}:
 
-\paragraph{Rule-based approaches}
-One rule-based approach, called \method{Anchors}, consists in extracting simple rules that hold locally around a given explained input \cite{ribeiroAnchors2018}.
-The advantage of rules as explanations is their intelligibility; it has been shown that rules depicting why a model behaved a certain way tend to be well understood compared to other types of explanation \cite{limWhy2009}.
-
 \paragraph{Local approximation approaches}
-One strategy is to transform the model into a simpler, more interepretable one such that the proxy model has the same local behaviour. In LIME \cite{ribeiroWhy2016}, a commonly used method, the proxy is a linear model.
-More recently, it was shown that many pre-existing explanation methods, including LIME, can in fact be formulated as instances of the same framework called Local Function Approximation \cite{hanWhich2022}.
+
+One strategy is to transform the model into a simpler, more interpretable one such that the proxy model has the same local behaviour. In LIME \cite{ribeiroWhy2016}, a commonly used method, the proxy is a linear model.
+Interestingly, it has recently been shown that many pre-existing local explanation methods, including LIME, can in fact be formulated as instances of the same framework called Local Function Approximation \cite{hanWhich2022}.
+
+\paragraph{Rule-based approaches}
+
+A special case of local approximation approaches, rule-based techniques aim to approximate the model's behaviour by simple logical rules on the input features that hold \emph{locally} (i.e. for a high proportion of other input points in the neighborhood of the input of interest).
+One rule-based approach, called \method{Anchors}, does so by reformulating the problem as a multi-armed bandit problem \cite{ribeiroAnchors2018}.
+The advantage of rules as explanations is their intelligibility; it has been shown that rules depicting why a model behaved a certain way tend to be well understood compared to other types of explanation \cite{limWhy2009}.
 
 % CF is dual to rule-based \cite{gengComputing2022}.
 
 \paragraph{Counterfactual approaches}
+
 A counterfactual explanation (CFX hereafter) is one or more \emph{virtual points} that are close to the explained input, but for which \emph{the model prediction is different}.
-They aim to answer the question: ``What would have to change in the input for the model to change its prediction?''
-This is reminiscent of adversarial perturbations, in which a small perturbation can suffice to ``trick'' the model into making a nonsensical prediction.
-However, in CFX one tries to keep the virtual points as realistic as possible.
+Such an explanation aims to answer the question: ``What would have to change in the input for the model to change its prediction?''
+This is reminiscent of adversarial attacks, which consist in finding small perturbations that ``trick'' the model into making a nonsensical prediction \cite{szegedyIntriguing2014,moosavi-dezfooliUniversal2017}.
+The difference between an adversarial perturbation and a CFX is not formally agreed upon, however some authors consider that while adversarial perturbations can be imperceptible, CFX should be sparse yet easily visible perturbations \cite{laugelLocal2020}. The argument could also be made that CFX also have a realism constraint \citenote, although that can be the case for adversarial perturbations too: if the perturbation is imperceptible, then the perturbed input is realistic since it is close to a real input point.
 
 CFX provide value in several ways:
 \begin{itemize}
@@ -81,6 +90,16 @@ CFX provide value in several ways:
     \item They constitute a way to provide \emph{recourse} when the model is used in a setting where recourse is required or desirable (for example in the context of a loan application).
 \end{itemize}
 
-\cite{wachterCounterfactual2017}
+The subject of this work will be this last kind of local explanation.
+
+\subsection{Counterfactual explanations}
+
+One of the first and most popular sources on CFX is \cite{wachterCounterfactual2017}. The problem is formulated as an optimization problem constrained by the distance between the explained input $x$ and the candidate counterfactual $\CF{x}$:
+\begin{equation}
+    \arg\min_{\CF{x}} \max_\lambda \{ \lambda (f(\CF{x}) - y_\target)^2 + d(x, \CF{x}) \}
+\end{equation}
+where $f$ is the model of interest, $y_\target$ is the target model output (different from the factual output $y = f(x)$) and $d$ is the aformentioned distance metric, which depends on the use-case.
+
+The authors view CFX as an adequate solution to the ``right to explanation'' requirements set by GDPR. Furthermore, in certain contexts such as loan applications, a CFX could constitute a useful piece of advice that can be taken advantage of in a future trial. \citenote{}
 
 \end{document}
