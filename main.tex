@@ -78,61 +78,38 @@
 
 \pagestyle{plain} % Default to the plain heading style until the thesis style is called for the body content
 
-%----------------------------------------------------------------------------------------
-%	TITLE PAGE
-%----------------------------------------------------------------------------------------
-
 \include{Head/TitlePage.tex}
 
-%----------------------------------------------------------------------------------------
-%	DECLARATION PAGE
-%----------------------------------------------------------------------------------------
-
 \include{Head/Declaration.tex}
-
 \cleardoublepage
 
-%----------------------------------------------------------------------------------------
 %	QUOTATION PAGE
-%----------------------------------------------------------------------------------------
 
-\vspace*{0.2\textheight}
+% \vspace*{0.2\textheight}
+% \noindent\enquote{\itshape Thanks to my solid academic training, today I can write hundreds of words on virtually any topic without possessing a shred of information, which is how I got a good job in journalism.}\bigbreak
+% \hfill Dave Barry
 
-\noindent\enquote{\itshape Thanks to my solid academic training, today I can write hundreds of words on virtually any topic without possessing a shred of information, which is how I got a good job in journalism.}\bigbreak
-
-\hfill Dave Barry
-
-%----------------------------------------------------------------------------------------
 %	ABSTRACT PAGE
-%----------------------------------------------------------------------------------------
 
-\begin{abstract}
-\addchaptertocentry{\abstractname} % Add the abstract to the table of contents
-The Thesis Abstract is written here (and usually kept to just this page). The page is kept centered vertically so can expand into the blank space above the title too\ldots
-\end{abstract}
+\include{Head/Abstract.tex}
 
-%----------------------------------------------------------------------------------------
 %	ACKNOWLEDGEMENTS
-%----------------------------------------------------------------------------------------
 
-\begin{acknowledgements}
-\addchaptertocentry{\acknowledgementname} % Add the acknowledgements to the table of contents
-The acknowledgments and the people to thank go here, don't forget to include your project advisor\ldots
-\end{acknowledgements}
+\include{Head/Acknowledgements.tex}
+% \begin{acknowledgements}
+% \addchaptertocentry{\acknowledgementname} % Add the acknowledgements to the table of contents
+% The acknowledgments and the people to thank go here, don't forget to include your project advisor\ldots
+% \end{acknowledgements}
 
-%----------------------------------------------------------------------------------------
 %	LIST OF CONTENTS/FIGURES/TABLES PAGES
-%----------------------------------------------------------------------------------------
 
-\tableofcontents % Prints the main table of contents
+% \tableofcontents
 
-\listoffigures % Prints the list of figures
+% \listoffigures
 
-\listoftables % Prints the list of tables
+% \listoftables
 
-%----------------------------------------------------------------------------------------
 %	ABBREVIATIONS
-%----------------------------------------------------------------------------------------
 
 % \begin{abbreviations}{ll} % Include a list of abbreviations (a table of two columns)
 
@@ -141,9 +118,7 @@ The acknowledgments and the people to thank go here, don't forget to include you
 
 % \end{abbreviations}
 
-%----------------------------------------------------------------------------------------
 %	PHYSICAL CONSTANTS/OTHER DEFINITIONS
-%----------------------------------------------------------------------------------------
 
 % \begin{constants}{lr@{${}={}$}l} % The list of physical constants is a three column table
 
@@ -152,45 +127,36 @@ The acknowledgments and the people to thank go here, don't forget to include you
 
 % \end{constants}
 
-%----------------------------------------------------------------------------------------
 %	SYMBOLS
-%----------------------------------------------------------------------------------------
 
-\begin{symbols}{lll} % Include a list of Symbols (a three column table)
+% \begin{symbols}{lll} % Include a list of Symbols (a three column table)
 
-    $a$ & distance & \si{\meter} \\
-    $P$ & power & \si{\watt} (\si{\joule\per\second}) \\
-    %Symbol & Name & Unit \\
+%     $a$ & distance & \si{\meter} \\
+%     $P$ & power & \si{\watt} (\si{\joule\per\second}) \\
+%     %Symbol & Name & Unit \\
 
-    \addlinespace % Gap to separate the Roman symbols from the Greek
+%     \addlinespace % Gap to separate the Roman symbols from the Greek
 
-    $\omega$ & angular frequency & \si{\radian} \\
+%     $\omega$ & angular frequency & \si{\radian} \\
 
-\end{symbols}
+% \end{symbols}
 
-%----------------------------------------------------------------------------------------
 %	DEDICATION
-%----------------------------------------------------------------------------------------
 
 \dedicatory{For/Dedicated to/To my\ldots} 
 
-%----------------------------------------------------------------------------------------
-%	THESIS CONTENT - CHAPTERS
-%----------------------------------------------------------------------------------------
+%	CHAPTERS
 
 \mainmatter % Begin numeric (1,2,3...) page numbering
 
 \pagestyle{thesis} % Return the page headers back to the "thesis" style
-% \subfile{Chapters/Chapter1}
 \subfile{Chapters/Chapter1}
 %\subfile{Chapters/Chapter2} 
 %\subfile{Chapters/Chapter3}
 %\subfile{Chapters/Chapter4} 
 %\subfile{Chapters/Chapter5} 
 
-%----------------------------------------------------------------------------------------
-%	THESIS CONTENT - APPENDICES
-%----------------------------------------------------------------------------------------
+%	APPENDICES
 
 \appendix % Cue to tell LaTeX that the following "chapters" are Appendices
 \subfile{Appendices/AppendixA}
