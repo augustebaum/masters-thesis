@@ -1,23 +1,24 @@
 \documentclass[
 	11pt, % The default document font size, options: 10pt, 11pt, 12pt
-	%oneside, % Two side (alternating margins) for binding by default, uncomment to switch to one side
+	oneside, % Two side (alternating margins) for binding by default, uncomment to switch to one side
 	english, % ngerman for German
-	singlespacing, % Single line spacing, alternatives: onehalfspacing or doublespacing
+	onehalfspacing, % alternatives: singlespacing, onehalfspacing or doublespacing
 	%draft, % Uncomment to enable draft mode (no pictures, no links, overfull hboxes indicated)
-	%nolistspacing, % If the document is onehalfspacing or doublespacing, uncomment this to set spacing in lists to single
-	%liststotoc, % Uncomment to add the list of figures/tables/etc to the table of contents
-	%toctotoc, % Uncomment to add the main table of contents to the table of contents
+	nolistspacing, % If the document is onehalfspacing or doublespacing, uncomment this to set spacing in lists to single
+	liststotoc, % Uncomment to add the list of figures/tables/etc to the table of contents
+	toctotoc, % Uncomment to add the main table of contents to the table of contents
 	parskip, % Uncomment to add space between paragraphs
 	%nohyperref, % Uncomment to not load the hyperref package
 	headsepline, % Uncomment to get a line under the header
 	%chapterinoneline, % Uncomment to place the chapter title next to the number on one line
-	%consistentlayout, % Uncomment to change the layout of the declaration, abstract and acknowledgements pages to match the default layout
+	% consistentlayout, % Uncomment to change the layout of the declaration, abstract and acknowledgements pages to match the default layout
 ]{MastersDoctoralThesis} % The class file specifying the document structure
 
 \usepackage[utf8]{inputenc} % Required for inputting international characters
 \usepackage[T1]{fontenc} % Output font encoding for international characters
 
-\usepackage{mathpazo} % Use the Palatino font by default
+% \usepackage{mathpazo} % Use the Palatino font by default
+\usepackage{newpxtext,newpxmath}
 
 \usepackage[backend=biber,backref]{biblatex}
 % See <https://tex.stackexchange.com/questions/36307/formatting-back-references-in-bibliography>
@@ -34,9 +35,8 @@
 % Make it so imported files can be compiled independently, greatly reducing compilation time
 \usepackage{subfiles}
 
-%----------------------------------------------------------------------------------------
+% -----------------------------------------------
 %	MARGIN SETTINGS
-%----------------------------------------------------------------------------------------
 
 \geometry{
 	paper=a4paper, % Change to letterpaper for US letter
@@ -48,9 +48,8 @@
 	%showframe, % Uncomment to show how the type block is set on the page
 }
 
-%----------------------------------------------------------------------------------------
+% -----------------------------------------------
 %	THESIS INFORMATION
-%----------------------------------------------------------------------------------------
 
 \thesistitle{Thesis Title} % Your thesis title, this is used in the title and abstract, print it elsewhere with \ttitle
 \supervisor{Dr. James \textsc{Smith}} % Your supervisor's name, this is used in the title page, print it elsewhere with \supname
@@ -75,7 +74,6 @@
 \begin{document}
 
 \frontmatter % Use roman page numbering style (i, ii, iii, iv...) for the pre-content pages
-
 \pagestyle{plain} % Default to the plain heading style until the thesis style is called for the body content
 
 \include{Head/TitlePage.tex}
@@ -83,32 +81,27 @@
 \include{Head/Declaration.tex}
 \cleardoublepage
 
+% -----------------------------------------------
 %	QUOTATION PAGE
-
 % \vspace*{0.2\textheight}
 % \noindent\enquote{\itshape Thanks to my solid academic training, today I can write hundreds of words on virtually any topic without possessing a shred of information, which is how I got a good job in journalism.}\bigbreak
 % \hfill Dave Barry
 
+% -----------------------------------------------
 %	ABSTRACT PAGE
-
 \include{Head/Abstract.tex}
 
 %	ACKNOWLEDGEMENTS
 
 \include{Head/Acknowledgements.tex}
-% \begin{acknowledgements}
-% \addchaptertocentry{\acknowledgementname} % Add the acknowledgements to the table of contents
-% The acknowledgments and the people to thank go here, don't forget to include your project advisor\ldots
-% \end{acknowledgements}
 
+% -----------------------------------------------
 %	LIST OF CONTENTS/FIGURES/TABLES PAGES
-
-% \tableofcontents
-
+\tableofcontents
 % \listoffigures
-
 % \listoftables
 
+% -----------------------------------------------
 %	ABBREVIATIONS
 
 % \begin{abbreviations}{ll} % Include a list of abbreviations (a table of two columns)
@@ -118,6 +111,7 @@
 
 % \end{abbreviations}
 
+% -----------------------------------------------
 %	PHYSICAL CONSTANTS/OTHER DEFINITIONS
 
 % \begin{constants}{lr@{${}={}$}l} % The list of physical constants is a three column table
@@ -127,6 +121,7 @@
 
 % \end{constants}
 
+% -----------------------------------------------
 %	SYMBOLS
 
 % \begin{symbols}{lll} % Include a list of Symbols (a three column table)
@@ -141,28 +136,31 @@
 
 % \end{symbols}
 
+% -----------------------------------------------
 %	DEDICATION
+% \dedicatory{For/Dedicated to/To my\ldots} 
 
-\dedicatory{For/Dedicated to/To my\ldots} 
-
+% -----------------------------------------------
 %	CHAPTERS
-
 \mainmatter % Begin numeric (1,2,3...) page numbering
-
 \pagestyle{thesis} % Return the page headers back to the "thesis" style
+
 \subfile{Chapters/Chapter1}
 %\subfile{Chapters/Chapter2} 
 %\subfile{Chapters/Chapter3}
 %\subfile{Chapters/Chapter4} 
 %\subfile{Chapters/Chapter5} 
 
+% -----------------------------------------------
 %	APPENDICES
-
 \appendix % Cue to tell LaTeX that the following "chapters" are Appendices
+
 \subfile{Appendices/AppendixA}
 %\subfile{Appendices/AppendixB}
 %\subfile{Appendices/AppendixC}
 
+% -----------------------------------------------
+%	BIBLIOGRAPHY
 \printbibliography[heading=bibintoc]
 
 \end{document}
