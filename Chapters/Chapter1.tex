@@ -34,7 +34,7 @@
 \subsection{Explainable AI}
 % \newacronym{xai}{XAI}{Explainable AI}
 
-The term "Explainable AI" refers to the endeavour of extracting human-friendly \emph{reasoning} from an AI system, either by a post hoc procedure or by guiding its learning process to give it the ability to produce said reasoning \citenote{}.
+The term "Explainable AI" refers to the endeavour of extracting human-friendly \emph{reasoning} from an AI system, either by a post hoc procedure or by guiding its learning process to give it the ability to produce said reasoning\citenote{}.
 
 Some of the reasons driving research in explainable AI (referred to as XAI hereafter) are summarized in \cite{zhangSurvey2021}:
 \begin{itemize}
@@ -45,9 +45,7 @@ Some of the reasons driving research in explainable AI (referred to as XAI herea
 
 It has been argued \cite{rudinWhy2019} that in many cases (including in the tabular setting) trying to "explain" black-box models is less productive than using more interpretable-by-design techniques.
 
-inherently interpretable models should be encouraged rather than relying on new techniques to "explain" black-box methods.
-
-Because of how ubiquitous AI is becoming, XAI research is also blossoming and the research field is vast.
+Because of how ubiquitous AI is becoming, XAI research is also blossoming and the research landscape is vast.
 Accordingly, some taxonomies have emerged recently that help differentiate methods \cite{zhangSurvey2021, bellePrinciples2021}.
 
 One key characteristic of an XAI method is its \emph{scope}: a \emph{global} XAI method applies to a \emph{whole} fully trained ML model, while a \emph{local} method gives an explanation of \emph{one prediction} by the model.
@@ -81,7 +79,7 @@ The advantage of rules as explanations is their intelligibility; it has been sho
 A counterfactual explanation (CFX hereafter) is one or more \emph{virtual points} that are close to the explained input, but for which \emph{the model prediction is different}.
 Such an explanation aims to answer the question: ``What would have to change in the input for the model to change its prediction?''
 This is reminiscent of adversarial attacks, which consist in finding small perturbations that ``trick'' the model into making a nonsensical prediction \cite{szegedyIntriguing2014,moosavi-dezfooliUniversal2017}.
-The difference between an adversarial perturbation and a CFX is not formally agreed upon, however some authors consider that while adversarial perturbations can be imperceptible, CFX should be sparse yet easily visible perturbations \cite{laugelLocal2020}. The argument could also be made that CFX also have a realism constraint \citenote, although that can be the case for adversarial perturbations too: if the perturbation is imperceptible, then the perturbed input is realistic since it is close to a real input point.
+The difference between an adversarial perturbation and a CFX is not formally agreed upon, however some authors consider that while adversarial perturbations can be imperceptible, CFX should be sparse yet easily visible perturbations \cite{laugelLocal2020}. The argument could also be made that CFX also have a realism constraint \citenote{}, although that can be the case for adversarial perturbations too: if the perturbation is imperceptible, then the perturbed input is realistic since it is close to a real input point.
 
 CFX provide value in several ways:
 \begin{itemize}
@@ -98,8 +96,46 @@ One of the first and most popular sources on CFX is \cite{wachterCounterfactual2
 \begin{equation}
     \arg\min_{\CF{x}} \max_\lambda \{ \lambda (f(\CF{x}) - y_\target)^2 + d(x, \CF{x}) \}
 \end{equation}
-where $f$ is the model of interest, $y_\target$ is the target model output (different from the factual output $y = f(x)$) and $d$ is the aformentioned distance metric, which depends on the use-case.
+where $f$ is the model of interest, $y_\target$ is the target model output (different from the factual output $y = f(x)$) and $d$ is the aforementioned distance metric, which depends on the use-case.
 
-The authors view CFX as an adequate solution to the ``right to explanation'' requirements set by GDPR. Furthermore, in certain contexts such as loan applications, a CFX could constitute a useful piece of advice that can be taken advantage of in a future trial. \citenote{}
+The authors view CFX as an adequate solution to the ``right to explanation'' requirements set by the GDPR. Furthermore, in certain contexts such as loan applications, a CFX could constitute a useful piece of advice that can be taken advantage of in a future trial. \citenote{}
+
+\section{Counterfactual explanations}
+
+% Introduction paragraph
+% There are many kinds of explanation, each with their own specific formalism issues. Here are some of those for CFX.
+As we saw when describing local explainability techniques, there are myriad ways of offering local explanations.
+The field of XAI in general suffers (or benefits?) from a crisis of formalism.
+In particular CFX have a unique set of issues relating to rating, that set it apart from its siblings:
+\begin{itemize}
+    \item the concurrent goals conflict
+    \item the out-of-distribution problem
+    \item the semanticity problem
+\end{itemize}
+
+\subsection{The concurrent goals of CFX}
+
+As noted by the authors of \cite{wachterCounterfactual2017}, one appeal of CFX is their ability to provide a large quantity of information in a seemingly compact form:
+a CFX can serve as a local feature attribution rating, highlighting which features the model used to differentiate between classes in a specific prediction, and it can also enable stakeholders to offer recourse when this is appropriate.
+
+However, these two coupled objectives can sometimes conflict and make CFX appear less trustworthy as a result.
+For example, consider the problem of whether to allow protected attributes to be modified.
+In a hypothetical loan application setting, consider a model that takes a set of personal information about a candidate and predicts if they are likely to default on their loan.
+In particular, suppose some protected attribute is being used in the prediction, such as ethnicity or gender.
+If a CFX system were used for recourse, it might be sensible to set it up to completely ignore such protected attributes: could we expect a person to change their gender in order to increase their chances of receiving a loan?
+On the other hand, say a CFX system were used for testing the model's learning. If the protected attribute is frozen in place, then by definition it will never being identified as useful for the model's decision, \emph{even if the model actually makes use of it}.
+In other words, if a CFX displays that the protected attribute is unchanged, in the absence of other information, it is not possible to tell if the model is unbiased, or if the CFX system is unbiased.
+
+\subsection{The out-of-distribution problem}
+
+One major drawback with CFX is that, since they generate virtual points, there is a risk that these new points look entirely different from the data used to train the model.
+In this case the model could generalize poorly and the explanation could therefore be misleading.
+It is also possible that the new points look completely unrealistic, in which case the explanation might be difficult or impossible to interpret.
+
+
+Determining whether a given point in the input space is ``realistic'' is a problem of its own, and is studied through various lenses from different disciplines of data analysis \cite{yangGeneralized2022}.
+In the following we will refer to this admittedly very ill-defined problem as the ``out-of-distribution'' problem.
+
+\subsection{Semantic explanations}
 
 \end{document}
