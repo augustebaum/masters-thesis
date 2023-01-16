@@ -2,5 +2,6 @@
 
 *.log
 *.pdf
+!Logo_EPFL.pdf
 *.blg
 *.gz
