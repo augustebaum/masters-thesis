@@ -27,7 +27,9 @@ and benchmarks
 - CERTIFAI
 - GRACE
 
-Using a latent space is very frequent nowadays.
+Using a latent space is very frequent nowadays. CITE??
+In some cases the point is to learn a latent space that is amenable
+both to classification and CF generation (@zhangInterpretable2022) while in other cases learning a latent representation that is completely independent from the classification task is a deliberate design choice (@cohenGifsplanation2022).
 
 Constraints applied to CFs:
 - @rasouliCARE2022
