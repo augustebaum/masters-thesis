@@ -1,3 +1,5 @@
 {"rule":"COMMA_COMPOUND_SENTENCE_2","sentence":"^\\QIn this case the model could generalize poorly and the explanation could therefore be misleading.\\E$"}
 {"rule":"COMMA_PARENTHESIS_WHITESPACE","sentence":"^\\QThe argument could also be made that CFX also have a realism constraint , although that can be the case for adversarial perturbations too: if the perturbation is imperceptible, then the perturbed input is realistic since it is close to a real input point.\\E$"}
 {"rule":"COMMA_COMPOUND_SENTENCE_2","sentence":"^\\QBecause of how ubiquitous AI is becoming, XAI research is also blossoming and the research landscape is vast.\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_US","sentence":"^\\Qenglish backrefpage = page,backrefpages = pages,\\E$"}
+{"rule":"COMMA_PARENTHESIS_WHITESPACE","sentence":"^\\Qenglish backrefpage = page,backrefpages = pages,\\E$"}
