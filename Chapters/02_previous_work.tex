@@ -9,16 +9,74 @@
 In this chapter we detail some of the topics and works that are either directly relevant to our work, or were otherwise of interest during this project.
 
 % A comprehensive overview of algorithms, evaluation metrics as well as open problems is given in \cite{vermaCounterfactual2020}.
+% note to self: verma include "progressive explanations" as one of their "open research" topics. Which is kind of what i'm doing!
+\section{Related topics}
 
-% \section{}
+\subsection{Contrastive explanations}
+
+Given a chosen concept, measure whether this concept seems to contribute more to a certain class than to another \cite{jacoviContrastive2021}.
+
+\subsection{Causal learning and counterfactuals}
+
+\cite{vowelsYa2023}
 
 Counterfactual statements are closely related to causal inference \citenote.
 This link is formally made in Pearl's theory of \emph{structural causal models} (or SCMs for short): given a complete formal description of the causal relationships between variables, the theory describes a natural procedure to compute how a change in one variable would influence the others. \note{Is this true only for additive noise models? or all SCMS}
 
-Karimi \textsl{et al.~} develop this relationship in the context of CFX in the form of an lower bound statement:
-given some cost function, if the true SCM is known fully, then the Pearl procedure yields a CF that has minimum cost.
-Any other proposed CF will in some way neglect some of the variable relationships, and hence include redundant perturbations which increase the cost.
+Karimi \textsl{et al.}~develop this relationship in the context of CFX in the form of a lower bound statement: given some cost function, if the true SCM is known fully, then the Pearl procedure yields a CF that has minimum cost.
+In other words, any other proposed CF will in some way neglect some variable relationships, and hence include redundant perturbations which increase the cost.
 
-For instance, 
+This brings us to the topic of causal discovery: the problem of extracting a causal graph from (usually observational) data.
+As mentioned, the full causal graph for a given task is a powerful tool which enables all kinds of inference to be carried out. However, the data used for training machine learning models seldom includes causal information about how the data were obtained, because real-world tasks often do not allow for causal experiments to take place.
+Hence, neural network models (and statistical models more generally) can only uncover \emph{correlations} between variables: the true form of the causal graph can only be known up to undirected edges between variables and possibly some unobserved latent variables.
+% not to mention that the selection process can include bias that is not explicitely declared
+\notecite{}
+
+\subsection{Semantic latent features}
+
+% PNS Relates causality with feature learning \cite{wangRepresentation2022}
+
+% Semanticity of Diffusion latent space \cite{anonymousDiffusion2022} \citenote{find better source}
+% -> possible rules for a semantic latent space:
+% 1. homomorphism
+% 2. non-destructiveness
+% In fact this is reminiscent of universal adversarial perturbations \cite{moosavi-dezfooliUniversal2017}
+
+% Disentangled feature learning requires supervision \cite{locatelloChallenging2019}
+
+% VAE-NF does exactly that, guiding the latent space to serve the classification task better \cite{zhangInterpretable2022}
+
+% Duality between rule-based and CF explanations \cite{gengComputing2022}
+
+\section{CFX generation methods}
+
+A comprehensive classification and taxonomy up to 2020 is given in \cite{vermaCounterfactual2020}.
+
+% - wachterCounterfactual
+% - REVISE (@joshiRealistic2019, gradient in latent space)
+%   - gifsplanation, more basic and applied to images (@cohenGifsplanation2022)
+% - Prototypes (CFPrototype, @vanlooverenInterpretable2021)
+% - There are repositories containing implementations
+% and benchmarks
+%   - @pawelczykCARLA2021
+%   - @deoliveiraFramework2021
+% - CLUE (to reinforce model certainty)
+% - CRUDS
+% - Causality-related
+%   - More sensible if recourse is a desired goal.
+%   - @mahajanPreserving2020
+%   - @karimiAlgorithmic2020
+% - CARE
+%   - uses genetic algo
+% - DiCE
+%   - Determinantal point processes
+% - CERTIFAI
+% - GRAC
+
+% Using VAE: \cite{nguyenLearning2020}
+
+Revise (our benchmark)
+
+\section{Metrics for CFX}
 
 \end{document}

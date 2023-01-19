@@ -58,7 +58,7 @@ The advantage of rules as explanations is their intelligibility; it has been sho
 
 % CF is dual to rule-based \cite{gengComputing2022}.
 
-\paragraph{Counterfactual approaches}
+\paragraph{Counterfactual approaches}\label{par:cfx}
 
 A counterfactual explanation (CFX hereafter) is one or more \emph{virtual points} that are close to the explained input, but for which \emph{the model prediction is different}.
 Such an explanation aims to answer the question: ``What would have to change in the input for the model to change its prediction?''
@@ -121,5 +121,18 @@ Determining whether a given point in the input space is ``realistic'' is a probl
 In the following we will refer to this admittedly very ill-defined problem as the ``out-of-distribution'' problem.
 
 \subsection{Semantic explanations}
+
+We have already discussed the similarity between CFX and adversarial perturbations in \autoref{par:cfx}. 
+
+% Where adversarial perturbations usually aim to be imperceptible to humans (but highly noticeable to the model), CFX are designed to be recognized as 
+
+% If your goal is to distinguish signal from noise, then
+An aim of CFX would be that, if the model has recovered some meaningful information about the data, then the explanation should reveal it. That is to say, we would like to trust that, if the provided explanations are gibberish, then this must mean that what the model learned is not meaningful to a human, at a glance.
+Of course, this raises a highly philosophical issue: what is meaning? 
+% Surely, we cannot recognize interesting behaviour within explanations unless we know about it beforehand, which would 
+If a concept means nothing to you, then by definition you could easily miss it and move on.
+Therefore, if the explanation presents us with what seems to be gibberish, it is not possible to distinguish gibberish that actually constitutes interesting concepts from random noise that truly contains no information.
+
+
 
 \end{document}
