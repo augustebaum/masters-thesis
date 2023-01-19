@@ -1,0 +1,24 @@
+\documentclass[../main.tex]{subfiles}
+\graphicspath{{\subfix{../Figures/}}}
+
+\begin{document}
+
+\chapter{Previous work}
+\label{ch:previous_work}
+
+In this chapter we detail some of the topics and works that are either directly relevant to our work, or were otherwise of interest during this project.
+
+% A comprehensive overview of algorithms, evaluation metrics as well as open problems is given in \cite{vermaCounterfactual2020}.
+
+% \section{}
+
+Counterfactual statements are closely related to causal inference \citenote.
+This link is formally made in Pearl's theory of \emph{structural causal models} (or SCMs for short): given a complete formal description of the causal relationships between variables, the theory describes a natural procedure to compute how a change in one variable would influence the others. \note{Is this true only for additive noise models? or all SCMS}
+
+Karimi \textsl{et al.~} develop this relationship in the context of CFX in the form of an lower bound statement:
+given some cost function, if the true SCM is known fully, then the Pearl procedure yields a CF that has minimum cost.
+Any other proposed CF will in some way neglect some of the variable relationships, and hence include redundant perturbations which increase the cost.
+
+For instance, 
+
+\end{document}

@@ -11,7 +11,9 @@ Abstract
   Definitions
     MLP
     CF path
+    VAE
     NICE
+    LOF and other measures of realism
 2. Previous work
   Related works
   Particularly timely or relevant works
@@ -40,3 +42,23 @@ Abstract
 6. Conclusion
   Summary in context of current research
   Future work
+
+
+
+
+Context
+  ...
+  CFX
+    Issues with CFX at a glance
+  Technical stuff
+    Metrics
+    VAE
+    NF
+    ... the ones that are important to understand the previous work and the methods.
+Previous work
+  Idea introduced or developed
+Methods
+  Metrics
+
+Results
+  Interpretation
