@@ -106,7 +106,7 @@ Finally, we study the robustness of our proposed method; we demonstrate it can b
 
 # Intro
 
-Explain the problem of explainable AI, differentiate between global and local explanations, compare and contrast different local methods (advantages and disadvantages):
+We explain the problem of explainable AI, differentiate between global and local explanations, compare and contrast different local methods (advantages and disadvantages):
 - Attribution methods: IG
 - Local approximation methods: LIME
 - Rule-based: Anchors

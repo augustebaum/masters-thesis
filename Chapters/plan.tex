@@ -1,0 +1,108 @@
+\documentclass[../main.tex]{subfiles}
+
+\begin{document}
+
+\section{Abstract}
+
+The use of ML is hindered by the problem of explainability: in some applications justifying a model's decisions is critical to ensure trustworthiness, while in others it is set to become a legal necessity.
+For a given input-output pair, counterfactual explanations (CFX) address this need by providing an answer to the question "What would it take for the model to change its mind?".
+This has the advantage of clarity and, not only does it show which features are determinant to the model, it also constitutes a way for end-users to obtain a more desirable model outcome. 
+However, it can be difficult to understand \emph{why} an input gives rise to a particular CFX.
+
+Recently, Latent Shift was introduced to produce a \emph{progressive explanation path}, where the input is perturbed continuously towards the target class. However, this was only applied to binary classification problems on images.
+
+Thus, our contributions are as follows: firstly, we extend Latent Shift to (numerical) tabular data; this poses the problem of visualization, which is not present for images or for text data and is made obvious as the number of features increases.
+Secondly, we extend it to multi-class problems, where targeting a particular class is not the same as simply moving a point away from its current class; we experiment with different loss functions to maximize the probability of reaching the target class.
+Thirdly, we propose a variation to Latent Shift to ensure paths satisfy certain interpretability constraints, e.g. the path should only go through \emph{realistic} points.
+Finally, we study the robustness of our proposed method; we demonstrate it can be abused to produce paths of any given shape.
+
+\section{Introduction}
+
+We explain the problem of explainable AI, differentiate between global and local explanations, compare and contrast different local methods (advantages and disadvantages):
+\begin{itemize}
+    \item Attribution methods: IG
+    \item Local approximation methods: LIME
+    \item Rule-based: Anchors
+    \item CFX
+\end{itemize}
+ 
+Given the previous discussion CFX are attractive, but they suffer from certain issues:
+\begin{itemize}
+    \item different CFX can be equally valid (the "Rashomon effect")
+    \item the generated points might not be realistic (in-distribution)
+    \item the different goals of CFX can interfere with each other
+\end{itemize}
+
+Latent shift is a technique that displays only one CFX, but it shows the progression of how an input gets transformed into its CFX. This is more convincing than just showing one perturbation or a group of them, as the end-user can appreciate in more detail in what manner the perturbation would be performed.
+
+
+\section{Related works}
+
+Some techniques relate more the causal relationships between variables, which is important for avoiding redundant recourse.
+
+Contrastive explanations are related to counterfactuals; the difference is they require a user to describe a concept, and then they show whether the concept is more relevant to one class or another.
+
+One of the first CFX methods involves setting up an optimization problem to be solved by gradient descent. Other papers have followed up on this same approach, and Latent Shift can be seen as a simplified version of this idea.
+
+Many methods already include training a latent space to easily differentiate between classes, such as a conditional VAE. Once the classes can be distinguished in latent space, it is then easy to perturb a latent representation towards the desired class. Latent shift also draws inspiration from this, but it does not assume knowledge of the true labels.
+
+% From less to more relevant:
+% - Causality-related
+%     - More sensible if recourse is a desired goal.
+%     - @mahajanPreserving2020
+%     - @karimiAlgorithmic2020
+% - Contrastive explanations
+% - CARE (@rasouliCARE2022)
+% - GRACE (@leGRACE2020)
+% - DiCE (@mothilalExplaining2020)
+% - CLUE (@antoranGetting2021) (to reinforce model certainty)
+% - @wachterCounterfactual2017: Involves gradient descent
+% - CRUDS (@downsCRUDS2020)
+% - Prototypes (@vanlooverenInterpretable2021)
+% - REVISE (@joshiRealistic2019, gradient in latent space)
+% - Repositories containing implementations and benchmarks
+%     - @pawelczykCARLA2021
+%     - @deoliveiraFramework2021
+
+\section{Methods}
+
+We discuss Latent Shift in further detail: what is the application domain (post hoc explainability) and the individual components (a latent space separate from the classifier, a loss function to guide the path).
+
+This leads us to consider different options for generative models: normalizing flows are the most sensible in terms of explanation quality (because they are invertible by design), but they do pose a practical problem for datasets with many features.
+
+We also formalize our desiderata for paths in terms of possible metrics for validity, distance and realism. In general metrics for singular counterfactuals can be naturally extended to explanation paths by taking the area-under-curve over the path.
+We propose several options for validity losses that will be used to generate paths.
+For realism there are many options, so we reference some of the related works again.
+However, even if these metrics are easy to relate to when the data is easy to visualize (i.e. when there are fewer than 3 features), we require some more information in the general case. Hence, we propose to use our CFX method to provide local feature attribution scores: this can be done using a procedure similar to the IntegratedGradients computation. Then we can compare the scores given using our method with those given by IG.
+
+The methods seen in the literature do not prioritize progressive explanations, so for our baseline we select some gradient descent-based techniques (such as \cite{joshiRealistic2019} or \cite{wachterCounterfactual2017}), and retain the full path.
+
+One issue with latent shift is the impossibility to constrain whole paths; e.g. we cannot minimize the AUC of a realness score, because we can only control the initial direction of the path. This is by contrast with the gradient-based methods that recompute the gradient at each step of the path, at a cost. 
+
+However, there is a way to optimize for path-wide constraints:
+by relaxing the constraint of keeping the latent space task-agnostic, we can compute a path, measure its score and then perform backpropagation to update the latent space. 
+For example we could implement the constraint of crossing as few decision boundaries as possible.
+We sacrifice independence of the latent space from the classifier, but in return get back extra confidence that the latent space is a good model of the classifier's behaviour.
+
+\section{Experiments}
+
+\subsection{Which validity loss gets the best validity score?}
+
+There are several possible ways to adapt the latent shift validity loss to the multi-class setting, where it is possible to specify a particular target class.
+
+We would compare latent shift and a gradient-based method including only the validity constraint, and measure their performance in terms of validity rate (i.e. how often the proposed path succeeds in reaching its target).
+
+\subsection{Using path regularization, which path loss best optimizes for validity, distance and realism at once?}
+
+
+
+\subsection{Can we abuse path regularization to choose the shape of the paths?}
+
+Since our framework accepts a wide variety of path loss functions, it is not unreasonable to imagine that paths can be manipulated in arbitrary ways.
+We choose some parametric curves and show that using the corresponding loss function we can approximate those curves with high similarity.
+
+\section{Results}
+
+\section{Conclusion}
+
+\end{document}
