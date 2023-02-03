@@ -3,3 +3,5 @@ Semanticity
 semanticity
 CFX
 Autoencoder
+autoencoder
+logits

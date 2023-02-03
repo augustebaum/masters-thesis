@@ -64,7 +64,19 @@ In the case of gradient-descent methods it makes sense to use losses that take a
 
 \subsection{Proposed solution}
 
+Since we can extend many of the point-wise measures to whole paths in a natural way, \eg{} with the mean or the area-under-curve, we propose using this a loss on the whole path, which could be used to train the autoencoder in addition to its usual loss function.
 
-
+\begin{algorithm}
+\caption{Latent space learning by gradient descent with path regularization}
+\KwData{$f, (\enc, \dec),$ data}
+\While{not converged}{
+    $x \gets \mathtt{get\_input}(\text{data})$ \\
+    $z \gets \enc_\phi(x)$ \\
+    $\source \gets f(x)$ \\
+    $\target \gets \mathtt{random\_target}(x)$ \\% \Comment{such that $\target \neq \source$} \\
+    $\apath \gets \mathtt{generate\_path}(z, \source, \target)$ \\
+    $\phi \gets \phi - \nabla_\phi {(NLL(\phi) + \loss(\apath))}$ \\
+}
+\end{algorithm}
 
 \end{document}
