@@ -4,8 +4,8 @@
 \begin{document}
 
 
-\chapter{Background}
-\label{ch:background}
+\chapter{Introduction}
+\label{ch:introduction}
 
 %----------------------------------------------------------------------------------------
 % \begin{enumerate}
@@ -112,13 +112,12 @@ In other words, if a CFX displays that the protected attribute is unchanged, in 
 
 \subsection{The out-of-distribution problem}
 
-One major drawback with CFX is that, since they generate virtual points, there is a risk that these new points look entirely different from the data used to train the model.
+One major drawback with CFX is that, since they generate virtual points, there is a risk that these new points look realistic, yet quite different from the data used to train the model.
 In this case the model could generalize poorly and the explanation could therefore be misleading.
-It is also possible that the new points look completely unrealistic, in which case the explanation might be difficult or impossible to interpret.
-
+Worse, the new points could look completely unrealistic (e.g. containing logical inconsistencies), in which case the explanation might be difficult or impossible to interpret.
 
 Determining whether a given point in the input space is ``realistic'' is a problem of its own, and is studied through various lenses from different disciplines of data analysis \cite{yangGeneralized2022}.
-In the following we will refer to this admittedly very ill-defined problem as the ``out-of-distribution'' problem.
+In the following we will refer to this as the ``out-of-distribution'' problem.
 
 \subsection{Semantic explanations}
 
@@ -126,10 +125,9 @@ We have already discussed the similarity between CFX and adversarial perturbatio
 
 % Where adversarial perturbations usually aim to be imperceptible to humans (but highly noticeable to the model), CFX are designed to be recognized as 
 
-% If your goal is to distinguish signal from noise, then
 An aim of CFX would be that, if the model has recovered some meaningful information about the data, then the explanation should reveal it. That is to say, we would like to trust that, if the provided explanations are gibberish, then this must mean that what the model learned is not meaningful to a human, at a glance.
 Of course, this raises a highly philosophical issue: what is meaning? 
-% Surely, we cannot recognize interesting behaviour within explanations unless we know about it beforehand, which would 
+% Surely, we cannot recognize interesting behaviour within explanations unless we know about it beforehand
 If a concept means nothing to you, then by definition you could easily miss it and move on.
 Therefore, if the explanation presents us with what seems to be gibberish, it is not possible to distinguish gibberish that actually constitutes interesting concepts from random noise that truly contains no information.
 

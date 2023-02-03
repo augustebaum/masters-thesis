@@ -77,12 +77,34 @@
 \newcommand{\method}[1]{\texttt{#1}}
 \newcommand{\model}[1]{\texttt{#1}}
 
-% Math
+\usepackage{amsmath}
+
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\R}{\mathbb{R}}
+
 \newcommand{\CF}[1]{#1^\text{CF}}
-\newcommand{\target}{\text{target}}
+
+\newcommand{\source}{\mathrm{source}}
+\newcommand{\target}{\mathrm{target}}
+
+\newcommand{\autoencoder}{\mathrm{AE}}
+\DeclareMathOperator{\enc}{Enc}
+\DeclareMathOperator{\dec}{Dec}
+
+\newcommand{\inputspace}{\mathcal{X}}
+\newcommand{\inputdim}{N}
+\newcommand{\setclasses}{\mathcal{C}}
+\newcommand{\outputdim}{C}
+\newcommand{\latentspace}{\mathcal{H}}
+\newcommand{\latentdim}{H}
+
+\newcommand{\loss}{\mathcal{L}}
+\newcommand{\lossval}{\loss_\text{validity}}
+\newcommand{\ce}{\text{CE}}
 
 % Words and expressions
 \newcommand{\ls}{Latent Shift}
+\newcommand{\revise}{\method{Revise}}
 \newcommand{\adhoc}{\textsl{ad~hoc}}
 \newcommand{\etal}{\textsl{et~al.}\@ }
 \newcommand{\eg}{e.g.\@ }
@@ -169,12 +191,10 @@
 \mainmatter % Begin numeric (1,2,3...) page numbering
 \pagestyle{thesis} % Return the page headers back to the "thesis" style
 
-\subfile{Chapters/01_background}
-\subfile{Chapters/02_previous_work}
-%\subfile{Chapters/Chapter2} 
-%\subfile{Chapters/Chapter3}
-%\subfile{Chapters/Chapter4} 
-%\subfile{Chapters/Chapter5} 
+\subfile{Chapters/01_introduction}
+\subfile{Chapters/02_background}
+\subfile{Chapters/03_previous_work}
+\subfile{Chapters/04_methods}
 
 % -----------------------------------------------
 %	APPENDICES
