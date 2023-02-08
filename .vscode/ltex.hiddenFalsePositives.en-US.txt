@@ -4,3 +4,4 @@
 {"rule":"MORFOLOGIK_RULE_EN_US","sentence":"^\\Qenglish backrefpage = page,backrefpages = pages,\\E$"}
 {"rule":"COMMA_PARENTHESIS_WHITESPACE","sentence":"^\\Qenglish backrefpage = page,backrefpages = pages,\\E$"}
 {"rule":"ENGLISH_WORD_REPEAT_RULE","sentence":"^\\QIntro\nContext\nExplain the problem of explainable AI, differentiate between global and local explanations, compare and contrast different local methods (advantages and disadvantages):\nAttribution methods\nLocal approximation methods\nRule-based\nCFX\nCFX\nGiven the previous discussion CFX are attractive, but they suffer from certain issues: having to generate realistic (in-distribution) points, the different goals that CFX have can interfere with each other, and being realistic is not always enough.\\E$"}
+{"rule":"POSSESSIVE_APOSTROPHE","sentence":"^\\QNonlinear independent components estimation.\\E$"}

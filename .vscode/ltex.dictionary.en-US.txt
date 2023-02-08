@@ -5,3 +5,5 @@ CFX
 Autoencoder
 autoencoder
 logits
+autoencoders
+VAEs

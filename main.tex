@@ -28,7 +28,7 @@
 }
 
 % \addbibresource{example.bib} % The filename of the bibliography
-\addbibresource{/Users/taabaau2/Nextcloud/ZoteroLib/0_library.bib} % The filename of the bibliography
+\addbibresource{/Users/Auguste/Documents/Nextcloud/ZoteroLib/0_library.bib} % The filename of the bibliography
 
 \usepackage[autostyle=true]{csquotes} % Required to generate language-dependent quotes in the bibliography
 
@@ -82,8 +82,13 @@
 % Change aspect to add toprule, midrule and bottomrule
 \usepackage[ruled]{algorithm2e}
 
+\newcommand{\normal}{\mathcal{N}}
 \newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\abs}[1]{\left\lvert#1\right\rvert}
+\newcommand{\diff}[2]{\frac{\mathrm{d} #1}{\mathrm{d} #2}}
 \newcommand{\R}{\mathbb{R}}
+\newcommand{\kl}{\mathbb{D}_\text{KL}}
+\newcommand{\after}{\circ}
 
 \newcommand{\CF}[1]{#1^\text{CF}}
 
@@ -96,7 +101,7 @@
 \DeclareMathOperator{\dec}{Dec}
 
 \newcommand{\inputspace}{\mathcal{X}}
-\newcommand{\inputdim}{N}
+\newcommand{\inputdim}{D}
 \newcommand{\setclasses}{\mathcal{C}}
 \newcommand{\outputdim}{C}
 \newcommand{\latentspace}{\mathcal{H}}
