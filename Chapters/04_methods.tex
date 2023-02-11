@@ -32,8 +32,9 @@ $\nabla_z \lossval$ gives rise to a class-changing path in input space.
 
 Note that this extension to the multi-class setting means that we have a choice to specify a given target class: we might also prefer to simply change the class, without preference of target class. In our analysis we focus on the case where a target class is specified.
 
-At first glance, it seems that $\lossval = -f(\dec(z))_\target$ (the component of $f(\dec(z))$ corresponding to class $\target$) could be a satisfactory generalization: minimizing this loss, is equivalent to maximizing $f(\dec(z))_\target$.
-However, one issue with this choice of $\lossval$ is its output domain: $[-1, 0]$, which is small. This means that computing gradients computed from loss could potentially be very small. By contrast, a typical loss function used in classification tasks (such as the cross-entropy) often includes a logarithm so that the loss can change more rapidly which promotes larger gradients. \citenote{}
+At first glance, it seems that $\lossval = -f(\dec(z))_\target$ (the component of $f(\dec(z))$ corresponding to class $\target$) could be a satisfactory generalization: minimizing this loss is equivalent to maximizing $f(\dec(z))_\target$.
+However, one issue with this choice of $\lossval$ is its output domain: $[-1, 0]$, which is small. This means that the gradients computed from this loss could potentially be very small in magnitude and thus unreliable.
+By contrast, a typical loss function used in classification tasks (such as the cross-entropy) often includes a logarithm so that the loss can change more rapidly which promotes larger gradients. \citenote{}
 Hence, we use the cross-entropy instead: $$\lossval = -\ce(f(\dec(z)), y_\target).$$
 We call this validity loss \method{TargetLoss}.
 

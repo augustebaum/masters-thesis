@@ -8,9 +8,12 @@
 
 Input space $\inputspace$, typically $\R^\inputdim$ in our analysis.
 
-Classifier $f: \R^\inputdim \to \R^\outputdim$ assumed to be differentiable
+Classifier $f: \R^\inputdim \to \R^\outputdim$ assumed to be differentiable (typically a multi-layer perceptron, or MLP for short).
 
-Trained using cross-entropy $\ce$
+Trained using cross-entropy $\ce$:
+\begin{equation}
+    \ce(y_\text{predict}, y_\target) = - \sum_{i \in \setclasses} y_\text{predict}^{(i)} \log y_\target^{(i)}
+\end{equation}
 
 Gradient descent?
 
@@ -38,7 +41,7 @@ For a more detailed introduction to VAEs we highly recommend the tutorial by \ci
 
 \subsection{Flow-based models}
 
-Another type of generative model is the normalizing flow, in which we assume again a latent variable $z$ that is typically standard Gaussian-distributed and that leads to an $x$ via a transformation $g$ (our $\dec$ function).
+Another type of generative model is the normalizing flow (or NF for short), in which we assume again a latent variable $z$ that is typically standard Gaussian-distributed and that leads to an $x$ via a transformation $g$ (our $\dec$ function).
 Usually, this $g$ is decomposed into several small perturbations $g_i$ so that $x = g(z) = (g_K \after g_{K-1} \after \ldots \after g_1) (z)$.
 Importantly, each $g_i$ is \emph{invertible}, hence $g$ itself is invertible and one can easily express and therefore maximize the log-likelihood $\log P(x)$ using the change-of-variable formula:
 %
@@ -84,7 +87,28 @@ Importantly, each $g_i$ is \emph{invertible}, hence $g$ itself is invertible and
 \end{align*}
 where $\det$ denotes the determinant and $\diff{g}{z}$ the Jacobian matrix of $g$.
 
+Unlike VAEs, the transformation $g$ is guaranteed to be invertible, but this requires that the dimensionality of $\latentspace$ be at least $\inputdim$.
+
 \subsubsection{Nonlinear independent components estimation}
-This implementation of a NF, hereafter referred to as NICE, ???
+
+This implementation of a NF, hereafter referred to as NICE, allows crafting flows $g_i$ that are invertible, even if they contain highly nonlinear components.
+
+This is achieved by separating $z_i$ into two parts: one left unmodified and the other put through some nonlinear layer with learnable parameters.
+By construction, the transformation is invertible regardless of the nonlinearity: in \autoref{eq:coupling_layer} we show the relation between layer $i$ and layer $i+1$, with the linearity in this layer denoted by $h_{i+1}$. $z_i$ is divided into parts $A$ and $B$, and it is possible to get $z_i$ back completely from $z_{i+1}$.
+
+\begin{equation}
+    \label{eq:coupling_layer}
+    \begin{cases}
+        z_{i+1}^A = z_i^A \\
+        z_{i+1}^B = h_{i+1}(z_i^A) + z_i^B
+    \end{cases}
+    \Leftrightarrow
+    \begin{cases}
+        z_i^A = z_{i+1}^A \\
+        z_i^B = -h_{i+1}(z_{i+1}^A) + z_{i+1}^B
+    \end{cases}
+\end{equation}
+
+The NICE architecture was first presented in \cite{dinhNICE2015}.
 
 \end{document}
