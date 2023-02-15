@@ -35,7 +35,7 @@ Accordingly, some taxonomies have emerged recently that help differentiate metho
 One key characteristic of an XAI method is its \emph{scope}: a \emph{global} XAI method applies to a \emph{whole} fully trained ML model, while a \emph{local} method gives an explanation of \emph{one prediction} by the model.
 Global methods report general information that does not necessarily reflect
 how the model acts in all situations, while local methods produce results with
-a more limited range, which can therefore be misleading.
+a more limited range, which can therefore lead to misleading interpretations if applied to far-removed situations.
 
 % It's a trade-off: think of it as looking at just the mean vs. looking at just one point
 
@@ -47,7 +47,7 @@ Having discarded all global methods, we can still subdivide local methods into s
 
 \paragraph{Local approximation approaches}
 
-One strategy is to transform the model into a simpler, more interpretable one such that the proxy model has the same local behaviour. In LIME \cite{ribeiroWhy2016}, a commonly used method, the proxy is a linear model.
+One strategy is to transform the model into a simpler, more interpretable proxy model which has the same local behaviour. In LIME \cite{ribeiroWhy2016}, a commonly used method, the proxy is a linear model.
 Interestingly, it has recently been shown that many pre-existing local explanation methods, including LIME, can in fact be formulated as instances of the same framework called Local Function Approximation \cite{hanWhich2022}.
 
 \paragraph{Rule-based approaches}
@@ -72,11 +72,12 @@ CFX provide value in several ways:
     \item They constitute a way to provide \emph{recourse} when the model is used in a setting where recourse is required or desirable (for example in the context of a loan application).
 \end{itemize}
 
-The subject of this work will be this last kind of local explanation.
+The subject of this work will be this last kind of local explanation, and we will describe it further in the next section.
 
-\subsection{Counterfactual explanations}
+\section{Counterfactual explanations}
 
-One of the first and most popular sources on CFX is \cite{wachterCounterfactual2017}. The problem is formulated as an optimization problem constrained by the distance between the explained input $x$ and the candidate counterfactual $\CF{x}$:
+\subsection{A first example: \citeauthor{wachterCounterfactual2017}}
+One of the first and most frequently cited sources on CFX is \citeauthor{wachterCounterfactual2017} \cite{wachterCounterfactual2017}. In this work, the problem is formulated as an optimization problem constrained by the distance between the explained input $x$ and the candidate counterfactual $\CF{x}$:
 \begin{equation}
     \arg\min_{\CF{x}} \max_\lambda \{ \lambda (f(\CF{x}) - y_\target)^2 + d(x, \CF{x}) \}
 \end{equation}
@@ -84,33 +85,34 @@ where $f$ is the model of interest, $y_\target$ is the target model output (diff
 
 The authors view CFX as an adequate solution to the ``right to explanation'' requirements set by the GDPR. Furthermore, in certain contexts such as loan applications, a CFX could constitute a useful piece of advice that can be taken advantage of in a future trial. \citenote{}
 
-\section{Counterfactual explanations}
+While CFX seem helpful in improving trust in black-box machine learning models, further thought surfaces difficult problems that threaten the trustworthiness \emph{of the explanations themselves}.
+
+\subsection{Formalizing counterfactual explanations}
 
 % Introduction paragraph
 % There are many kinds of explanation, each with their own specific formalism issues. Here are some of those for CFX.
 As we saw when describing local explainability techniques, there are myriad ways of offering local explanations.
-The field of XAI in general suffers (or benefits?) from a crisis of formalism.
-In particular CFX have a unique set of issues relating to rating, that set it apart from its siblings:
+The field of XAI in general suffers from a crisis of formalism. \citenote{}
+In particular CFX have a unique set of issues relating to rating explanations, that set it apart from its siblings:
 \begin{itemize}
     \item the concurrent goals conflict
     \item the out-of-distribution problem
     \item the semanticity problem
 \end{itemize}
 
-\subsection{The concurrent goals of CFX}
+\subsubsection{The concurrent goals of counterfactual explanations}
 
-As noted by the authors of \cite{wachterCounterfactual2017}, one appeal of CFX is their ability to provide a large quantity of information in a seemingly compact form:
-a CFX can serve as a local feature attribution rating, highlighting which features the model used to differentiate between classes in a specific prediction, and it can also enable stakeholders to offer recourse when this is appropriate.
-
+As noted by the authors of \cite{wachterCounterfactual2017}, one appeal of CFX is their ability to provide a large quantity of information in a seemingly compact form: a CFX can serve as a local feature attribution rating, highlighting which features the model used to differentiate between classes in a specific prediction, and it can also enable stakeholders to offer recourse when this is appropriate.
 However, these two coupled objectives can sometimes conflict and make CFX appear less trustworthy as a result.
-For example, consider the problem of whether to allow protected attributes to be modified.
+
+For example, consider the problem of allowing protected attributes to be modified.
 In a hypothetical loan application setting, consider a model that takes a set of personal information about a candidate and predicts if they are likely to default on their loan.
 In particular, suppose some protected attribute is being used in the prediction, such as ethnicity or gender.
 If a CFX system were used for recourse, it might be sensible to set it up to completely ignore such protected attributes: could we expect a person to change their gender in order to increase their chances of receiving a loan?
 On the other hand, say a CFX system were used for testing the model's learning. If the protected attribute is frozen in place, then by definition it will never being identified as useful for the model's decision, \emph{even if the model actually makes use of it}.
 In other words, if a CFX displays that the protected attribute is unchanged, in the absence of other information, it is not possible to tell if the model is unbiased, or if the CFX system is unbiased.
 
-\subsection{The out-of-distribution problem}
+\subsubsection{The out-of-distribution problem}
 
 One major drawback with CFX is that, since they generate virtual points, there is a risk that these new points look realistic, yet quite different from the data used to train the model.
 In this case the model could generalize poorly and the explanation could therefore be misleading.
@@ -119,7 +121,7 @@ Worse, the new points could look completely unrealistic (e.g. containing logical
 Determining whether a given point in the input space is ``realistic'' is a problem of its own, and is studied through various lenses from different disciplines of data analysis \cite{yangGeneralized2022}.
 In the following we will refer to this as the ``out-of-distribution'' problem.
 
-\subsection{Semantic explanations}
+\subsubsection{Semantic explanations}
 
 We have already discussed the similarity between CFX and adversarial perturbations in \autoref{par:cfx}. 
 

@@ -66,18 +66,37 @@ In the case of gradient-descent methods it makes sense to use losses that take a
 \subsection{Proposed solution}
 
 Since we can extend many of the point-wise measures to whole paths in a natural way, \eg{} with the mean or the area-under-curve, we propose using this a loss on the whole path, which could be used to train the autoencoder in addition to its usual loss function.
+This added component to the loss can take various forms, and in general we call it \emph{path regularization}. The full process is described with pseudocode in \autoref{algo:pathreg}.
+Note that in the case of normalizing flow-based representations, the decoder is the inverse of the encoder and thus does not need to be trained the way it would in a VAE. This is why we only show explicitly the parameters of $\enc$ (denoted by $\phi$).
 
 \begin{algorithm}
-\caption{Latent space learning by gradient descent with path regularization}
-\KwData{$f, (\enc, \dec),$ data}
+\caption{Learning a normalizing flow latent space by SGD with path regularization}
+\label{algo:pathreg}
+\KwData{$f, (\enc_\phi, \dec),$ data, path loss $\loss$}
+\KwOut{$\phi^*$ that minimizes the $\nll$ and the path loss}
 \While{not converged}{
     $x \gets \mathtt{get\_input}(\text{data})$ \\
     $z \gets \enc_\phi(x)$ \\
     $\source \gets f(x)$ \\
-    $\target \gets \mathtt{random\_target}(x)$ \\% \Comment{such that $\target \neq \source$} \\
-    $\apath \gets \mathtt{generate\_path}(z, \source, \target)$ \\
-    $\phi \gets \phi - \nabla_\phi {(NLL(\phi) + \loss(\apath))}$ \\
+    $\target \gets \mathtt{random\_target}(x)$
+        \tcp*{such that $\target \neq \source$}
+    $\apath \gets \mathtt{generate\_path}(z, \source, \target)$
+        \tcp*{$\apath = (\CF{x}_t)_{t=1}^T$}
+    $\phi \gets \phi - \nabla_\phi {(\nll(\phi) + \loss(\apath))}$ \\
 }
 \end{algorithm}
+
+\section{Metrics}
+
+\section{Datasets}
+
+CakeOnSea
+
+ForestCover: took out categorical columns.
+Over 500k rows. 7 categories.
+
+WineQuality: Around 6k rows. Response is quality from 0 to 10, but in fact there are no rows with quality 0, 1, 2 or 10, and 43\% of the rows have a rating of 6.
+Hence we make the following mapping: class 0 corresponds to a quality rating of 5 or lower, class 1 to a rating of 6, and class 2 to a rating of 7 or higher.
+With this mapping, around 33\% of data are in class 0, 43\% in class 1 and 18\% in class 2.
 
 \end{document}

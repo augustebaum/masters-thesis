@@ -27,8 +27,7 @@
   backrefpages = {pages},% originally "cit. on pp."
 }
 
-% \addbibresource{example.bib} % The filename of the bibliography
-\addbibresource{/Users/Auguste/Documents/Nextcloud/ZoteroLib/0_library.bib} % The filename of the bibliography
+\addbibresource{/Users/taabaau2/Nextcloud/ZoteroLib/0_library.bib} % The filename of the bibliography
 
 \usepackage[autostyle=true]{csquotes} % Required to generate language-dependent quotes in the bibliography
 
@@ -51,11 +50,11 @@
 % -----------------------------------------------
 %	THESIS INFORMATION
 
-\thesistitle{Thesis Title} % Your thesis title, this is used in the title and abstract, print it elsewhere with \ttitle
+\thesistitle{Path regularization for continuous counterfactual explanations} % Your thesis title, this is used in the title and abstract, print it elsewhere with \ttitle
 \supervisor{Dr. James \textsc{Smith}} % Your supervisor's name, this is used in the title page, print it elsewhere with \supname
 \examiner{} % Your examiner's name, this is not currently used anywhere in the template, print it elsewhere with \examname
 \degree{Doctor of Philosophy} % Your degree name, this is used in the title page and abstract, print it elsewhere with \degreename
-\author{John \textsc{Smith}} % Your name, this is used in the title page and abstract, print it elsewhere with \authorname
+\author{Auguste \textsc{Baum}} % Your name, this is used in the title page and abstract, print it elsewhere with \authorname
 \addresses{} % Your address, this is not currently used anywhere in the template, print it elsewhere with \addressname
 
 \subject{Biological Sciences} % Your subject area, this is not currently used anywhere in the template, print it elsewhere with \subjectname
@@ -81,6 +80,9 @@
 
 % Change aspect to add toprule, midrule and bottomrule
 \usepackage[ruled]{algorithm2e}
+\SetEndCharOfAlgoLine{}
+
+\usepackage{multirow}
 
 \newcommand{\normal}{\mathcal{N}}
 \newcommand{\norm}[1]{\left\lVert#1\right\rVert}
@@ -110,6 +112,7 @@
 \newcommand{\loss}{\mathcal{L}}
 \newcommand{\lossval}{\loss_\text{validity}}
 \newcommand{\ce}{\text{CE}}
+\renewcommand{\nll}{\text{NLL}}
 
 % Words and expressions
 \newcommand{\ls}{Latent Shift}
@@ -204,12 +207,13 @@
 \subfile{Chapters/02_background}
 \subfile{Chapters/03_previous_work}
 \subfile{Chapters/04_methods}
+\subfile{Chapters/05_experiments}
 
 % -----------------------------------------------
 %	APPENDICES
 \appendix % Cue to tell LaTeX that the following "chapters" are Appendices
 
-\subfile{Appendices/AppendixA}
+%\subfile{Appendices/AppendixA}
 %\subfile{Appendices/AppendixB}
 %\subfile{Appendices/AppendixC}
 
