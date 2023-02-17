@@ -90,10 +90,39 @@ Note that in the case of normalizing flow-based representations, the decoder is 
 
 \section{Datasets}
 
-CakeOnSea
+In our experiments we use one custom synthetic dataset generated in a parametrizable way, as well as some real datasets.
 
-ForestCover: took out categorical columns.
-Over 500k rows. 7 categories.
+\subsection{\dataset{CakeOnSea}}
+
+Our analyses were complicated by the impossibility of visualizing counterfactuals for tabular data in general.
+Thus, in order to start approaching the problem intuitively, we developed a synthetic dataset with no more than two features that have an influence on the response.
+The two features, denoted by $x_0$ and $x_1$, range from 0 to 50, except for the so-called ``dead zone'' which is $[25, 35]^2$, in which there are no points at all.
+There are three classes, and the class decision rule is as follows:
+\begin{align*}
+    (x_0, x_1) \in [35, 45]^2 \implies & y = 2 \\
+    x_1 < 25                  \implies & y = 0 \\
+    (x_0, x_1) \in \text{dead zone} \lor (x_0, x_1) \notin [0, 50]^2  \implies & y\ \text{unknown} \\
+    \text{otherwise} \qquad            & y = 1
+\end{align*}
+Note that we explicitly refrain from assigning a class if $x = (x_0, x_1)$ is in the dead zone, to simulate a situation with completely unrealistic points.
+The decision rule can be visualized in \autoref{fig:cake_on_sea}.
+
+To generate the dataset, we randomly sample points in the $[0, 50]^2$ and then take out points from the dead zone. By default, the sampling distribution is a uniform $\mathcal{U}([0, 50]^2)$.
+
+\begin{figure}[h]
+    \centering
+    \input{Figures/cake_on_sea}
+    \caption{Decision rule for the \dataset{CakeOnSea} dataset.}
+    \label{fig:cake_on_sea}
+\end{figure}
+
+\subsection{\dataset{ForestCover}}
+
+This dataset is taken from the UCI Machine Learning repository \cite{duaUCI2019} and can be found at this URL: \url{https://archive.ics.uci.edu/ml/datasets/Covertype}. 
+It contains data on about 580000 trees such as their elevation, their horizontal distance to the nearest surface water features and the type of soil they are in, as well as their species (among seven tree species). There is a total of 13 recorded variables, including the tree species. Of the 12 variables used for prediction, two are categorical, and encoded as one-hot columns.
+Because our method does not yet apply to categorical features, we remove the one-hot columns.
+
+\subsection{\dataset{WineQuality}}
 
 WineQuality: Around 6k rows. Response is quality from 0 to 10, but in fact there are no rows with quality 0, 1, 2 or 10, and 43\% of the rows have a rating of 6.
 Hence we make the following mapping: class 0 corresponds to a quality rating of 5 or lower, class 1 to a rating of 6, and class 2 to a rating of 7 or higher.

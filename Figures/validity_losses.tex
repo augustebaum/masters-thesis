@@ -6,3 +6,23 @@ BinaryStretchLoss & $0.5276±0.0000$ & 0.5276±0.0000 & 0.3137±0.0070 & 0.2791�
 StretchLoss & 0.5276±0.0000 & 0.5276±0.0000 & 0.2994±0.0221 & 0.2815±0.0019 \\
 TargetLoss & 0.5276±0.0000 & 0.5276±0.0000 & 0.3095±0.0025 & 0.2833±0.0001 \\
 \end{tabular}
+
+\begin{tabular}{lllllll}
+     & \multicolumn{2}{r}{CakeOnSeaDataset} & \multicolumn{2}{r}{ForestCoverDataset} & \multicolumn{2}{r}{WineQualityDataset} \\
+    & LatentShift & Revise & LatentShift & Revise & LatentShift & Revise \\
+    BinaryStretchLoss & 44.9±1.1 & 57.6±0.8 & 51.9±4.2 & 97.6±0.3 & 91.0±0.5 & 99.5±0.2 \\
+    StretchLoss & 29.7±1.9 & 51.7±0.7 & 26.2±1.7 & 30.8±2.6 & 73.9±0.8 & 77.9±0.1 \\
+    TargetLoss & 45.2±1.2 & 57.8±0.7 & 52.6±4.2 & 97.5±0.2 & 91.7±0.5 & 99.4±0.2 \\
+\end{tabular}
+    
+
+
+\begin{tabular}{lllllllllllll}
+    Dataset & \multicolumn{4}{r}{CakeOnSea} & \multicolumn{4}{r}{ForestCover} & \multicolumn{4}{r}{WineQuality} \\
+    Path method & LatentShift & LatentShiftNoDistanceReg & Revise & ReviseNoDistanceReg & LatentShift & LatentShiftNoDistanceReg & Revise & ReviseNoDistanceReg & LatentShift & LatentShiftNoDistanceReg & Revise & ReviseNoDistanceReg \\
+    Loss function &  &  &  &  &  &  &  &  &  &  &  &  \\
+    TargetLoss & 45.2±1.2 & 45.0±1.3 & 71.2±2.7 & 71.3±2.5 & 53.1±4.1 & 52.9±4.1 & 99.8±0.0 & 99.8±0.0 & 92.4±0.6 & 92.4±0.8 & 100.0±0.0 & 100.0±0.0 \\
+    BinaryStretchLoss & 46.2±0.9 & 46.2±0.9 & 90.1±1.3 & 90.2±1.2 & 55.9±4.3 & 55.8±4.0 & 99.6±0.1 & 99.6±0.1 & 91.8±0.7 & 91.8±0.3 & 100.0±0.0 & 99.9±0.1 \\
+    StretchLoss & 34.1±2.3 & 34.2±2.2 & 73.5±8.1 & 73.6±7.8 & 33.2±1.8 & 33.1±1.9 & 30.6±1.0 & 30.4±1.0 & 75.4±0.5 & 75.8±0.6 & 78.1±0.3 & 77.9±0.3 \\
+\end{tabular}
+    

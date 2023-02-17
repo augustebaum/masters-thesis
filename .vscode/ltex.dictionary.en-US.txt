@@ -7,3 +7,4 @@ autoencoder
 logits
 autoencoders
 VAEs
+parametrizable
