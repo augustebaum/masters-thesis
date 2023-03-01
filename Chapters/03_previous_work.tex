@@ -15,68 +15,126 @@ In this chapter we detail some of the topics and works that are either directly 
 \subsection{Contrastive explanations}
 
 Given a chosen concept, measure whether this concept seems to contribute more to a certain class than to another \cite{jacoviContrastive2021}.
+\citenote{}
 
 \subsection{Causal learning and counterfactuals}
 
-\cite{vowelsYa2023}
 
-Counterfactual statements are closely related to causal inference \citenote.
+Counterfactual statements are closely related to causal inference \cite{morganCounterfactuals2015}.
 This link is formally made in Pearl's theory of \emph{structural causal models} (or SCMs for short): given a complete formal description of the causal relationships between variables, the theory describes a natural procedure to compute how a change in one variable would influence the others. \note{Is this true only for additive noise models? or all SCMS}
 
-Karimi \textsl{et al.}~develop this relationship in the context of CFX in the form of a lower bound statement: given some cost function, if the true SCM is known fully, then the Pearl procedure yields a CF that has minimum cost.
+Karimi \textsl{et al.}~develop this relationship in the context of CFX in the form of a lower bound statement: given some cost function, if the true SCM is known fully, then the Pearl procedure yields a CF that has minimum cost \cite{karimiAlgorithmic2020}.
 In other words, any other proposed CF will in some way neglect some variable relationships, and hence include redundant perturbations which increase the cost.
 
 This brings us to the topic of causal discovery: the problem of extracting a causal graph from (usually observational) data.
-As mentioned, the full causal graph for a given task is a powerful tool which enables all kinds of inference to be carried out. However, the data used for training machine learning models seldom includes causal information about how the data were obtained, because real-world tasks often do not allow for causal experiments to take place.
+An introduction to classical methods can be found in \cite{cunninghamCausal2021}, and a review of the literature on ML-powered techniques up to 2022 is presented in \cite{vowelsYa2023}.
+As mentioned, the full causal graph for a given task is a powerful tool which enables all kinds of inference to be carried out.
+However, the data used for training machine learning models seldom includes causal information about how the data were obtained, because real-world data collection processes often do not allow for causal experiments to take place, be it for physical (\eg{} in economy) or ethical reasons (\eg{} in medicine).
 Hence, neural network models (and statistical models more generally) can only uncover \emph{correlations} between variables: the true form of the causal graph can only be known up to undirected edges between variables and possibly some unobserved latent variables.
-% not to mention that the selection process can include bias that is not explicitely declared
-\notecite{}
+% not to mention that the selection process can include bias that is not explicitly declared
 
 \subsection{Semantic latent features}
 
+When building a latent variable generative model, the idea of being able to tune human-understandable parameters is appealing: for example, when generating pictures of human faces, one might want to generate a smiling face in particular, or a face of a person wearing glasses.
+One way to achieve this is to encode into the latent space the concepts of ``smiling'' and ``glasses'', so that a particular direction in latent space represents a given concept.
+Then, given an image latent $z$, we can increase its ``smiling factor'' by perturbing $z$ in the direction representing the concept of smiling.
+
+Thus, some research has been done to promote this encoding of semantic information, and also to analyze whether some popular generative models have this semanticity property even when not explicitly trained for.
+
+For example, recent work demonstrates this exact kind of manipulation on a diffusion model \cite{kwonDiffusion2023}.
+In this work, the authors detail what they mean by semanticity:
+\begin{description}
+	\item[Concepts are universal] If you perturb two inputs in the direction of the same concept $c$, then in both cases the result should exhibit $c$.
+	\item[Concepts add] If you perturb in a direction that is a combination of those representing concepts $c_1$ and $c_2$, then the result will be modified in these two ways at the same time.
+	\item[Concepts scale] If you perturb in the direction of $c$ by 2 units, the result will exhibit the concept more than if you perturb by 1 unit.
+	\item[Non-destructiveness] Perturbing in a semantic direction does not result in an unrealistic (``broken'') point.
+\end{description}
+
+This description is reminiscent of adversarial perturbations, and in particular the universality of semanticity is challenged in \cite{moosavi-dezfooliUniversal2017}.
+In this work, the authors demonstrate that, given a conventional deep learning model, it is possible to find \emph{one} small constant perturbation which, when applied to \emph{any} input in the dataset, leads to a change in prediction.
+
 % PNS Relates causality with feature learning \cite{wangRepresentation2022}
 
-% Semanticity of Diffusion latent space \cite{anonymousDiffusion2022} \citenote{find better source}
-% -> possible rules for a semantic latent space:
-% 1. homomorphism
-% 2. non-destructiveness
-% In fact this is reminiscent of universal adversarial perturbations \cite{moosavi-dezfooliUniversal2017}
-
 % Disentangled feature learning requires supervision \cite{locatelloChallenging2019}
-
-% VAE-NF does exactly that, guiding the latent space to serve the classification task better \cite{zhangInterpretable2022}
-
-% Duality between rule-based and CF explanations \cite{gengComputing2022}
 
 \section{CFX generation methods}
 
 A comprehensive classification and taxonomy up to 2020 is given in \cite{vermaCounterfactual2020}.
 
-% - wachterCounterfactual
-% - REVISE (@joshiRealistic2019, gradient in latent space)
+% Duality between rule-based and CF explanations \cite{gengComputing2022}
+
+% - [ ] wachterCounterfactual
+% - [x] REVISE (@joshiRealistic2019, gradient in latent space)
 %   - gifsplanation, more basic and applied to images (@cohenGifsplanation2022)
-% - Prototypes (CFPrototype, @vanlooverenInterpretable2021)
+% - [x] Prototypes (CFPrototype, @vanlooverenInterpretable2021)
 % - There are repositories containing implementations
 % and benchmarks
-%   - @pawelczykCARLA2021
+%   - [ ] @pawelczykCARLA2021
 %   - @deoliveiraFramework2021
-% - CLUE (to reinforce model certainty)
-% - CRUDS
+% - [ ] CLUE (to reinforce model certainty)
+% - [x] CRUDS
 % - Causality-related
 %   - More sensible if recourse is a desired goal.
-%   - @mahajanPreserving2020
-%   - @karimiAlgorithmic2020
-% - CARE
+%   - [ ] @mahajanPreserving2020
+%   - [x] @karimiAlgorithmic2020
+% - [ ] CARE
 %   - uses genetic algo
-% - DiCE
+% - [x] DiCE
 %   - Determinantal point processes
-% - CERTIFAI
-% - GRAC
+% -generate a set number of CFs, $k$.
+% - gradient descent over all of them at the same time, using DPP diversity regularization (determinant of kernel matrix given some distance)
+% - [ ] CERTIFAI
+% - [ ] GRACE
 
 % Using VAE: \cite{nguyenLearning2020}
 
-Revise (our benchmark)
+possible classification: gradient descent-based, generative model-based, class-aware generative model \citenote{}
+
+\citeauthor{mothilalExplaining2020} generate a diverse set of CFs by gradient descent, solving for $k$ candidate CFs at the same time \cite{mothilalExplaining2020}.
+Diversity is modeled by a metric taken from the study of determinantal point processes, which is based on the pairwise distances between the $k$ CFs.
+Using this constraint, they succeed at keeping a high rate of valid CFs while increasing diversity.
+
+\citeauthor{joshiRealistic2019} follow the strategy outlined by \citeauthor{wachterCounterfactual2017} in that they frame the CF search as a constrained optimization problem and approach it with gradient descent:
+\begin{align*}
+	\CF{x} = & \arg\min_{x'} c(x', x)              \\
+	         & \text{such that } f(x') = y_\target
+\end{align*}
+where $c$ is some cost function that is situation-dependent.
+However, in order to ensure the realism of the CF, they perform the optimization in a latent space learned through a VAE.
+The resulting CF generation algorithm is called \revise{} \cite{joshiRealistic2019}.
+
+\citeauthor{vanlooverenInterpretable2021} also use a VAE to ensure realism, but they follow a different strategy \cite{vanlooverenInterpretable2021}.
+For a given $x$, they build a list of ``prototypes'', one per class, which are interpreted as typical examples of those classes.
+The prototype of class $c$ for $x$, $\text{proto}_c$, is the centroid of the $k$-neighborhood of $\enc(x)$: the average latent over the $k$ points predicted as $c$ closest to $\enc(x)$.
+Then, the optimization algorithm for finding $\CF{x}$ pushes the path towards the closest prototype.
+The reasoning is that $\text{proto}_c$ is likely realistic, because it is an average of real points, and it is likely of class $c$, for the same reason; therefore, the closer $\CF{x}$ is to a prototype, the more realistic and valid it is likely to be.
+
+\subsection{Solutions with class-aware generative models}
+
+\citeauthor{downsCRUDS2020} make use of a conditional subspace VAE (or CSVAE for short) to adapt the latent representation to the classification task:
+the latent space is decomposed (or ``disentangled'') into a product of small spaces: $\latentspace = \mathcal{Z} \times \prod_{i} \mathcal{W}_i$, where each space $\mathcal{W}_i$ contains information on the features most correlated with label $i$ \cite{klysLearning2018}.
+For an input $x$, $\enc(x) = (z, w)$ where $z$ is not sensitive to the label and $w$ is sensitive to the label; thus, by altering only $w$ based on the target class, they can then form a counterfactual latent as $\CF{z} = (z, \CF{w})$ and let $\CF{x} = \dec(\CF{z})$.
+In fact, by sampling several $\CF{w}$ they can obtain a whole set of CFs that are uniquely different from $x$.
+
+\citeauthor{zhangInterpretable2022} train the autoencoder conjointly with the classifier, so that the latent representation used for CFX generation is also used for classification \cite{zhangInterpretable2022}.
+In particular, the latent representation architecture consists of normalizing flows within a VAE, an idea first developed in \cite{rezendeVariational2015}.
 
 \section{Metrics for CFX}
+
+In general, measuring the quality of an explanation is not a straightforward endeavor.
+However, in our case we have at least one precise goal: to change the class to the target.
+When this is achieved, we say that the explanation is \emph{valid}.
+Hence, our first and foremost metric is the \emph{validity rate}: the fraction of CFs that reached the target.
+
+For a CFX to be relevant to the explained input, it should be close enough to the explained input; thus some notion of \emph{distance} is often used, \eg{} the Euclidean norm, written $L_2$.
+Furthermore, it is often preferred to have \emph{sparse} perturbations, in the interest of simplicity; for this the $L_1$ loss is a common choice. \citenote{}
+
+When a method produces several CFs, it is often desirable to guarantee \emph{diversity}, so that the $k$ proposed CFs are not $k$ times the same point.
+
+\subsection{Realism}
+
+Measuring realism of a data point is a topic of research in itself and a number of metrics have been used in the CFX literature.
+Some make use of mathematically justified estimators, such as the \emph{maximum mean discrepancy} (or MMD for short) \cite{zhangInterpretable2022}, which can be cumbersome to compute, while others take advantage of generative models, \eg{} using the reconstruction error of an autoencoder \cite{vanlooverenInterpretable2021}.
+Other metrics such as \emph{proximity} or \emph{connectedness} \cite{laugelIssues2019} are derived from the distance between points and draw from older metrics such as the \emph{local outlier factor} \cite{breunigLOF2000}.
 
 \end{document}

@@ -10,19 +10,21 @@
 
 \subsection{Problem statement}
 
-The authors of \ls{} solve the following problem:
+The authors of \ls{} solve the following problem \cite{cohenGifsplanation2022}:
 
 Let $f: \R^\inputdim \to [0, 1]$ be a binary classifier such that $f(x)$ outputs the predicted probability of $x$ being in class 1.
 Let $x$ be a point that is predicted to be of class 0, \ie{} such that $f(x) < \frac{1}{2}$.
-Find the trajectory of quickest class change for $x$; that is, a path starting at (or around) $x$ and ending at a point $\CF{x}$ for which $f(\CF{x}) > \frac{1}{2}$ such that the path is sufficiently short.
+Find a path starting at (or around) $x$ and ending at a point $\CF{x}$ for which $f(\CF{x}) > \frac{1}{2}$ such that the path is sufficiently simple and easily comprehensible by a human.
 
 They propose building a latent representation $\autoencoder = (\enc, \dec)$, letting $z = \enc(x)$ and computing the gradient of the classifier in that latent space:
 $\nabla_z f(\dec(z))$.
+Then they can recover a potential counterfactual by shifting the latent along the opposite of the gradient: $\CF{x} = \dec(z - \lambda \nabla_z f(\dec(z)))$ where $\lambda$ is some positive real number.
+Since the gradient gives the direction of steepest ascent, going in the opposite direction is the best strategy to decrease $f(\dec(z))$.
 
-In the case of a binary classifier that outputs just one scalar, this might be sufficient. However, in multi-class problems where $f$ outputs a vector in $\R^\outputdim$ there are several possible choices for the gradient computation.
+In the case of a binary classifier that outputs a scalar, this might be sufficient. However, in multi-class problems where $f$ outputs a vector in $\R^\outputdim$ there are several possible choices of functions of which we could compute the gradient.
 We formulate the problem as follows:
 
-Let $f: \R^\inputdim \to \R^\outputdim$ be a multi-class classifier such that $f(x)$ outputs logits which can be transformed into a probability mass for the predicted class of $x$, \eg{} by a $\mathrm{softmax}$.
+Let $f: \R^\inputdim \to \R^\outputdim$ be a multi-class classifier such that $f(x)$ outputs logits which can be transformed into a probability mass for the predicted class of $x$, \eg{} by a $\softmax$.
 Consider a latent representation $\autoencoder = (\enc, \dec)$ of the input space. 
 Let $z = \enc(x)$.
 Find a validity loss $\lossval$ such that
@@ -32,18 +34,23 @@ $\nabla_z \lossval$ gives rise to a class-changing path in input space.
 
 Note that this extension to the multi-class setting means that we have a choice to specify a given target class: we might also prefer to simply change the class, without preference of target class. In our analysis we focus on the case where a target class is specified.
 
-At first glance, it seems that $\lossval = -f(\dec(z))_\target$ (the component of $f(\dec(z))$ corresponding to class $\target$) could be a satisfactory generalization: minimizing this loss is equivalent to maximizing $f(\dec(z))_\target$.
-However, one issue with this choice of $\lossval$ is its output domain: $[-1, 0]$, which is small. This means that the gradients computed from this loss could potentially be very small in magnitude and thus unreliable.
+In order to mimic the solution discussed in \cite{cohenGifsplanation2022}, we could use
+$$\lossval = \softmax(f(\dec(z)))_\target,$$
+\ie{} the component of the output probability mass corresponding to class $\target$.
+As before, the codomain is $[0, 1]$, and the loss corresponds directly to what we wish to achieve.
+
+
+However, because the codomain is small, the gradients computed from this loss could potentially be very small in magnitude and thus unreliable.
 By contrast, a typical loss function used in classification tasks (such as the cross-entropy) often includes a logarithm so that the loss can change more rapidly which promotes larger gradients. \citenote{}
-Hence, we use the cross-entropy instead: $$\lossval = -\ce(f(\dec(z)), y_\target).$$
+Hence, we use the cross-entropy instead: $$\lossval = \ce(f(\dec(z)), y_\target).$$
 We call this validity loss \method{TargetLoss}.
 
-There are other possible variants. For example, one might wish to specify that, if not able to get near the target class, the path should at least get away from the source class. This can be included as follows:
-$$\lossval = -\ce(f(\dec(z)), y_\target) + \ce(f(\dec(z)), y_\source).$$
+There are other possible variants. For example, one might wish to specify that, if not able to reach the target class, the path should at least get away from the source class. This can be included as follows:
+$$\lossval = \ce(f(\dec(z)), y_\target) - \ce(f(\dec(z)), y_\source).$$
 We call this variant \method{BinaryStretchLoss}.
 
 Taking this idea further, one might wish that the path should get away from all classes that are not the target, which we could model as follows:
-$$\lossval = -\ce(f(\dec(z)), y_\target) + \sum_{c \neq \target} \ce(f(\dec(z)), y_c).$$
+$$\lossval = \ce(f(\dec(z)), y_\target) - \sum_{c \neq \target} \ce(f(\dec(z)), y_c).$$
 We call this \method{StretchLoss}. 
 
 % ---
@@ -52,27 +59,29 @@ We call this \method{StretchLoss}.
 
 \subsection{Problem statement}
 
-A typical requirement on a counterfactual $\CF{x}$ for an input $x$ might be $\norm{\CF{x} - x}$ is small, where $\norm{\cdot}$ is the $L_1$ norm for example.
-While this makes sense for methods that produce a discrete set of counterfactuals, we focus on methods that produce continuous explanation paths, hence we wish to extend these requirements to suit this goal.
-For instance, in the case of distance, we might wish that the endpoint of the path be close to the starting point, but also that \emph{on the whole} the path stay as close as possible to the starting point.
+A typical requirement on a counterfactual $\CF{x}$ for an input $x$ might be for $\norm{\CF{x} - x}$ to be small, where $\norm{\cdot}$ could be the $L_1$ norm for example.
+While this makes sense for methods that produce a discrete set of counterfactuals, we focus on methods that produce \emph{continuous explanation paths}, hence we wish to ensure these requirements are satisfied \emph{along the path}.
+For instance, in the case of distance, we might wish that the endpoint of the path $\CF{x} = \dec(z_T)$ be close to the starting point, but also that \emph{on the whole} the path $(z_t)_{t=1}^T$ stay as close as possible to the starting point.
 
-In the case of gradient-descent optimization paths, this can be addressed by placing these constraints in the loss function during the computation of the next step: this is the case in \revise{}, where the loss function includes the $L_1$ distance \cite{joshiRealistic2019}.
+In the case of gradient-descent optimization paths, this can be addressed by placing these constraints in the loss function during the computation of the next step: this is the case in \revise{}, where the loss function includes the $L_1$ distance \cite{joshiRealistic2019}:
+$$
+    \loss_{CF}(z_t) = \lossval(z_t) + \lambda_\text{distance} \norm{\dec(z_t) - x}_1.
+$$
+However, for \ls{} this solution is not appropriate because the gradient is only computed once, for $z = \enc(x)$: even though the first step might be in the right direction, overall the whole path could still go in the wrong direction because the information carried by the gradient is less relevant the further away we go from the input.
+In other words, this solution would amount to optimizing not over the path, but over the first step of the path.
 
-However, for \ls{} this option is not optimal because the gradient is only computed once: even though the first step might be in the right direction, it might be that the whole path could go in the wrong direction, because the information carried by the gradient is less relevant the further away we go from the input.
-In other words, we would not be optimizing over the path, but only over the first step of the path.
-
-In the case of gradient-descent methods it makes sense to use losses that take a $z_t$ as input, but how could we constrain a whole path $(z_t)_{t=1}^T$?
+Hence, our problem statement: in the case of gradient-descent methods it makes sense to use losses that take a $z_t$ as input, but how could we constrain a whole path $(z_t)_{t=1}^T$?
 
 \subsection{Proposed solution}
 
-Since we can extend many of the point-wise measures to whole paths in a natural way, \eg{} with the mean or the area-under-curve, we propose using this a loss on the whole path, which could be used to train the autoencoder in addition to its usual loss function.
+Since we can extend many of the point-wise measures to whole paths in a natural way, \eg{} with the mean or the area-under-curve, we propose using this as a loss on the whole path, which could be used to \emph{train the autoencoder} in addition to its usual loss function.
 This added component to the loss can take various forms, and in general we call it \emph{path regularization}. The full process is described with pseudocode in \autoref{algo:pathreg}.
-Note that in the case of normalizing flow-based representations, the decoder is the inverse of the encoder and thus does not need to be trained the way it would in a VAE. This is why we only show explicitly the parameters of $\enc$ (denoted by $\phi$).
+Note that in NF-based autoencoders, the decoder is the inverse of the encoder and thus does not need to be trained like it would in a VAE; this is why we show explicitly only the trainable parameters of $\enc$ (denoted by $\phi$).
 
 \begin{algorithm}
 \caption{Learning a normalizing flow latent space by SGD with path regularization}
 \label{algo:pathreg}
-\KwData{$f, (\enc_\phi, \dec),$ data, path loss $\loss$}
+\KwData{Classifier $f, \autoencoder (\enc_\phi, \dec),$ (training) data, CF loss $\cfloss$, path loss $\pathloss$, path loss regularization coefficient $\lambda_\apath$}
 \KwOut{$\phi^*$ that minimizes the $\nll$ and the path loss}
 \While{not converged}{
     $x \gets \mathtt{get\_input}(\text{data})$ \\
@@ -80,19 +89,32 @@ Note that in the case of normalizing flow-based representations, the decoder is 
     $\source \gets f(x)$ \\
     $\target \gets \mathtt{random\_target}(x)$
         \tcp*{such that $\target \neq \source$}
-    $\apath \gets \mathtt{generate\_path}(z, \source, \target)$
+$\apath \gets \mathtt{generate\_path}_{\cfloss}(z, \source, \target)$
         \tcp*{$\apath = (\CF{x}_t)_{t=1}^T$}
-    $\phi \gets \phi - \nabla_\phi {(\nll(\phi) + \loss(\apath))}$ \\
+$\phi \gets \phi - \nabla_\phi {(\nll(\phi) + \lambda_\apath \pathloss(\apath))}$ \\
 }
 \end{algorithm}
 
+Since the one obvious constraint on paths is that they should be valid, one way to include this in $\pathloss$ could be to add a count of the number of valid paths in the batch.
+Note that class information is indirectly given during the training of the autoencoder, so the autoencoder is dependent on the classification task.
+This is counter to the
+
+\section{Robustness of path regularization}
+
+\subsection{Problem statement}
+
+\subsection{Proposed solution}
+
 \section{Metrics}
+
 
 \section{Datasets}
 
 In our experiments we use one custom synthetic dataset generated in a parametrizable way, as well as some real datasets.
 
-\subsection{\dataset{CakeOnSea}}
+We always take out the categorical features and we standardize each feature.
+
+\subsection{\CakeOnSea}
 
 Our analyses were complicated by the impossibility of visualizing counterfactuals for tabular data in general.
 Thus, in order to start approaching the problem intuitively, we developed a synthetic dataset with no more than two features that have an influence on the response.
@@ -112,20 +134,50 @@ To generate the dataset, we randomly sample points in the $[0, 50]^2$ and then t
 \begin{figure}[h]
     \centering
     \input{Figures/cake_on_sea}
-    \caption{Decision rule for the \dataset{CakeOnSea} dataset.}
+\caption{Decision rule for the \CakeOnSea dataset.}
     \label{fig:cake_on_sea}
 \end{figure}
 
-\subsection{\dataset{ForestCover}}
+\subsection{\ForestCover}
 
 This dataset is taken from the UCI Machine Learning repository \cite{duaUCI2019} and can be found at this URL: \url{https://archive.ics.uci.edu/ml/datasets/Covertype}. 
 It contains data on about 580000 trees such as their elevation, their horizontal distance to the nearest surface water features and the type of soil they are in, as well as their species (among seven tree species). There is a total of 13 recorded variables, including the tree species. Of the 12 variables used for prediction, two are categorical, and encoded as one-hot columns.
-Because our method does not yet apply to categorical features, we remove the one-hot columns.
+Because our method does not trivially extend to categorical features yet, we remove the one-hot columns.
 
-\subsection{\dataset{WineQuality}}
+\subsection{\WineQuality}
 
-WineQuality: Around 6k rows. Response is quality from 0 to 10, but in fact there are no rows with quality 0, 1, 2 or 10, and 43\% of the rows have a rating of 6.
-Hence we make the following mapping: class 0 corresponds to a quality rating of 5 or lower, class 1 to a rating of 6, and class 2 to a rating of 7 or higher.
+The \WineQuality dataset consists of data on around 6000 wines, such as their pH, their density and their alcohol percentage, as well as a quality rating from 0 to 10.
+There are 12 variables including the quality rating column; except for the quality, all of them are numerical.
+
+In fact, there are no wines with a quality rating of 0, 1, 2 or 10, and 43\% of the rows have a rating of 6 out of 10.
+Hence, for our classification task we create the following class mapping:
+\begin{itemize}
+    \item class 0 corresponds to a quality rating of 5 or lower,
+    \item class 1 to a rating of 6,
+    \item class 2 to a rating of 7 or higher.
+\end{itemize}
 With this mapping, around 33\% of data are in class 0, 43\% in class 1 and 18\% in class 2.
+
+\subsection{Summary of datasets}
+
+All datasets are divided into training, validation, and test sets containing 60\%, 20\%, and 20\% of the data respectively.
+
+In \autoref{tab:datasets} we summarize the relevant information about our datasets and settings when using them for training.
+
+\begin{table}[h!]
+    \centering
+    \caption{Summary of our dataset settings}
+    \label{tab:datasets}
+    \begin{tabular}{lrrrrrr}
+        \toprule
+        Name         & $\inputdim$ & $\outputdim$ & $\card{\trainset}$ & $\card{\valset}$ & $\card{\testset}$ & $\batchsize$ \\
+        \midrule
+        \CakeOnSea   & 2           & 3            & ~60k               & ~20k             & ~20k              & 200          \\
+        \ForestCover & 10          & 7            & ??                 & ??               & ??                & ??           \\
+        \WineQuality & ??          & 3            & ??                 & ??               & ??                & ??           \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
 
 \end{document}

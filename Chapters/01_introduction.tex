@@ -27,10 +27,10 @@ Some of the reasons driving research in explainable AI (referred to as XAI herea
     \item AI practitioners hope to limit unexpected failure scenarios in their work, especially in cases where failure can be costly (e.g. in medicine or finance).
 \end{itemize}
 
-It has been argued \cite{rudinWhy2019} that in many cases (including in the tabular setting) trying to "explain" black-box models is less productive than using more interpretable-by-design techniques.
-
 Because of how ubiquitous AI is becoming, XAI research is also blossoming and the research landscape is vast.
 Accordingly, some taxonomies have emerged recently that help differentiate methods \cite{zhangSurvey2021, bellePrinciples2021}.
+
+Note that it has also been argued that in many cases (including in the tabular setting) trying to "explain" black-box models is less productive than using more interpretable-by-design techniques \cite{rudinWhy2019}.
 
 One key characteristic of an XAI method is its \emph{scope}: a \emph{global} XAI method applies to a \emph{whole} fully trained ML model, while a \emph{local} method gives an explanation of \emph{one prediction} by the model.
 Global methods report general information that does not necessarily reflect
@@ -39,7 +39,7 @@ a more limited range, which can therefore lead to misleading interpretations if 
 
 % It's a trade-off: think of it as looking at just the mean vs. looking at just one point
 
-In the following we focus on local explainability methods, relying on the assumption that aggregating many local explanations can help us grasp the model's general behaviour.
+In the following we focus on local explainability methods, relying on the assumption that aggregating many local explanations can help us grasp the model's general behavior.
 
 \subsection{Local explainability}
 
@@ -47,13 +47,14 @@ Having discarded all global methods, we can still subdivide local methods into s
 
 \paragraph{Local approximation approaches}
 
-One strategy is to transform the model into a simpler, more interpretable proxy model which has the same local behaviour. In LIME \cite{ribeiroWhy2016}, a commonly used method, the proxy is a linear model.
+One strategy is to transform the model into a simpler, more interpretable proxy model which has the same local behavior. In LIME, a commonly used method, the proxy is a linear model \cite{ribeiroWhy2016}.
 Interestingly, it has recently been shown that many pre-existing local explanation methods, including LIME, can in fact be formulated as instances of the same framework called Local Function Approximation \cite{hanWhich2022}.
 
 \paragraph{Rule-based approaches}
 
-A special case of local approximation approaches, rule-based techniques aim to approximate the model's behaviour by simple logical rules on the input features that hold \emph{locally} (i.e. for a high proportion of other input points in the neighborhood of the input of interest).
-One rule-based approach, called \method{Anchors}, does so by reformulating the problem as a multi-armed bandit problem \cite{ribeiroAnchors2018}.
+Rule-based techniques aim to approximate the model's behavior by simple logical rules on the input features that hold \emph{locally} (i.e. for a high proportion of other input points in the neighborhood of the input of interest).
+As such, they can be understood as a special case of local approximation approaches.
+One rule-based approach, called \method{Anchors}, does this by reformulating the problem as a multi-armed bandit problem \cite{ribeiroAnchors2018}.
 The advantage of rules as explanations is their intelligibility; it has been shown that rules depicting why a model behaved a certain way tend to be well understood compared to other types of explanation \cite{limWhy2009}.
 
 % CF is dual to rule-based \cite{gengComputing2022}.
@@ -83,16 +84,17 @@ One of the first and most frequently cited sources on CFX is \citeauthor{wachter
 \end{equation}
 where $f$ is the model of interest, $y_\target$ is the target model output (different from the factual output $y = f(x)$) and $d$ is the aforementioned distance metric, which depends on the use-case.
 
-The authors view CFX as an adequate solution to the ``right to explanation'' requirements set by the GDPR. Furthermore, in certain contexts such as loan applications, a CFX could constitute a useful piece of advice that can be taken advantage of in a future trial. \citenote{}
+The authors view CFX as an adequate solution to the ``right to explanation'' requirements set by the GDPR \cite{kaminskiRight2018}.
+Furthermore, in certain contexts such as loan applications, a CFX could constitute a useful piece of advice that can be taken advantage of in a future trial: the candidate that sees their application denied can tell what they should improve upon first.
 
-While CFX seem helpful in improving trust in black-box machine learning models, further thought surfaces difficult problems that threaten the trustworthiness \emph{of the explanations themselves}.
+Yet, while CFX seem helpful in improving trust in black-box machine learning models, further thought brings to light difficult problems that threaten the trustworthiness \emph{of the explanations themselves}.
 
 \subsection{Formalizing counterfactual explanations}
 
 % Introduction paragraph
 % There are many kinds of explanation, each with their own specific formalism issues. Here are some of those for CFX.
-As we saw when describing local explainability techniques, there are myriad ways of offering local explanations.
-The field of XAI in general suffers from a crisis of formalism. \citenote{}
+As we saw when describing local explainability techniques, there are several ways of offering local explanations.
+The field of XAI in general has suffered from a crisis of formalism \cite{liptonMythos2017, leavittFalsifiable2020}.
 In particular CFX have a unique set of issues relating to rating explanations, that set it apart from its siblings:
 \begin{itemize}
     \item the concurrent goals conflict
@@ -116,14 +118,14 @@ In other words, if a CFX displays that the protected attribute is unchanged, in 
 
 One major drawback with CFX is that, since they generate virtual points, there is a risk that these new points look realistic, yet quite different from the data used to train the model.
 In this case the model could generalize poorly and the explanation could therefore be misleading.
-Worse, the new points could look completely unrealistic (e.g. containing logical inconsistencies), in which case the explanation might be difficult or impossible to interpret.
+Worse, the new points could look completely unrealistic (e.g. containing logical inconsistencies, such as a person having a negative age), in which case the explanation might be difficult or impossible to interpret.
 
 Determining whether a given point in the input space is ``realistic'' is a problem of its own, and is studied through various lenses from different disciplines of data analysis \cite{yangGeneralized2022}.
 In the following we will refer to this as the ``out-of-distribution'' problem.
 
 \subsubsection{Semantic explanations}
 
-We have already discussed the similarity between CFX and adversarial perturbations in \autoref{par:cfx}. 
+% We have already discussed the similarity between CFX and adversarial perturbations in \autoref{par:cfx}. 
 
 % Where adversarial perturbations usually aim to be imperceptible to humans (but highly noticeable to the model), CFX are designed to be recognized as 
 
@@ -134,5 +136,6 @@ If a concept means nothing to you, then by definition you could easily miss it a
 Therefore, if the explanation presents us with what seems to be gibberish, it is not possible to distinguish gibberish that actually constitutes interesting concepts from random noise that truly contains no information.
 
 
+Now that we have presented the overall problem and its stakes, let us detail the technical background needed for our analyses.
 
 \end{document}

@@ -5,11 +5,37 @@
 
 \chapter{Experiments}
 
+\section{Models}
+
+All models are trained using the Adam algorithm \cite{kingmaAdam2014} with a learning rate of $1 \times 10^{-3}$.
+
+\subsection{Classifier}
+
+The classifier architecture in our analyses is an MLP consisting of two 50-node linear layers each followed by a $\relu$, followed by one last linear layer outputting $\outputdim$ logits.
+
+\subsection{Autoencoder}
+
+We build a normalizing flow model according to the NICE architecture \cite{dinhNICE2015}.
+The model is trained according to a Gaussian prior distribution, and its layers are 4 additive coupling layers where we divide the input into the odd columns and the even columns, and the nonlinearity is an MLP with 4 layers of 50 nodes each.
+
 \section{Validity losses}
 
 The goal is to find the best validity loss, the one that maximizes validity rate.
 
 \subsection{Experimental setup}
+
+For a given dataset, we train one classifier.
+Then for this dataset, we train several autoencoders all with the same architecture and with different seeds.
+The seeds are generated uniformly based on one primary seed.
+
+For a given dataset, we measure the validity rate across the whole test set.
+That is, for every test point, we run the classifier to get the $\source$ class, and we sample the target class uniformly from $\setclasses \backslash \{\source\}$.
+Then we generate a path using the given validity loss, and measure its validity.
+We do this with \ls{} and with \revise{}.
+
+We average the rates over the different autoencoders, and report the standard error.
+
+The parameters used are reported in ?? \citenote{}
 
 \subsection{Results}
 

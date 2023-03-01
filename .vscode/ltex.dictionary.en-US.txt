@@ -8,3 +8,5 @@ logits
 autoencoders
 VAEs
 parametrizable
+codomain
+CFs

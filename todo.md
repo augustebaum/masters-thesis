@@ -1,0 +1,20 @@
+- [ ] Abstract
+- [ ] Acknowledgements
+- [ ] Introduction
+    - [ ] Describe IG
+- [ ] Related works
+    - [ ] Describe LS
+- [ ] Methods
+    - [ ] Describe IG in more detail
+    - [ ] Fill out table about datasets
+- [ ] Experiments
+    - [ ] Give train and test accuracy of classifier for each dataset
+    - [ ] Show confusion matrices to see if certain classes are bad?
+    - [ ] Validity losses
+        - [ ] Give justification with gradients
+        - [ ] Show tables with results
+        - [ ] Show losses 
+    - [ ] Path regularization
+        - [ ] Replace LOF with NF realism
+    - [ ] Robustness experiment
+        - Point is $(\max f_i)_i$

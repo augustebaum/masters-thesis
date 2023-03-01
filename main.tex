@@ -17,7 +17,6 @@
 \usepackage[utf8]{inputenc} % Required for inputting international characters
 \usepackage[T1]{fontenc} % Output font encoding for international characters
 
-% \usepackage{mathpazo} % Use the Palatino font by default
 \usepackage{newpxtext,newpxmath}
 
 \usepackage[backend=biber,backref]{biblatex}
@@ -27,7 +26,7 @@
   backrefpages = {pages},% originally "cit. on pp."
 }
 
-\addbibresource{/Users/taabaau2/Nextcloud/ZoteroLib/0_library.bib} % The filename of the bibliography
+\addbibresource{/Users/Auguste/Documents/Nextcloud/ZoteroLib/0_library.bib} % The filename of the bibliography
 
 \usepackage[autostyle=true]{csquotes} % Required to generate language-dependent quotes in the bibliography
 
@@ -73,10 +72,6 @@
 % -----------------------------------------------
 %	CUSTOM COMMANDS
 
-\newcommand{\method}[1]{\texttt{#1}}
-\newcommand{\model}[1]{\texttt{#1}}
-\newcommand{\dataset}[1]{\texttt{#1}}
-
 \usepackage{tikz}
 
 \usepackage{amsmath}
@@ -94,6 +89,7 @@
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\kl}{\mathbb{D}_\text{KL}}
 \newcommand{\after}{\circ}
+\newcommand{\card}[1]{\abs{#1}}
 
 \newcommand{\CF}[1]{#1^\text{CF}}
 
@@ -111,11 +107,26 @@
 \newcommand{\outputdim}{C}
 \newcommand{\latentspace}{\mathcal{H}}
 \newcommand{\latentdim}{H}
+\newcommand{\batchsize}{B}
 
-\newcommand{\loss}{\mathcal{L}}
+\newcommand{\loss}{\mathscr{L}}
 \newcommand{\lossval}{\loss_\text{validity}}
+\newcommand{\pathloss}{\loss_\text{path}}
+\newcommand{\cfloss}{\loss_\text{CF}}
 \newcommand{\ce}{\text{CE}}
+\newcommand{\softmax}{\text{softmax}}
 \renewcommand{\nll}{\text{NLL}}
+\newcommand{\relu}{\text{ReLU}}
+\newcommand{\grad}[2]{\frac{\partial #1}{\partial #2}}
+
+\newcommand{\data}{\mathscr{D}}
+\newcommand{\trainset}{\data_\text{train}}
+\newcommand{\valset}{\data_\text{validation}}
+\newcommand{\testset}{\data_\text{test}}
+
+\newcommand{\method}[1]{\texttt{#1}}
+\newcommand{\model}[1]{\texttt{#1}}
+\newcommand{\dataset}[1]{\texttt{#1}}
 
 % Words and expressions
 \newcommand{\ls}{Latent Shift}
@@ -124,6 +135,15 @@
 \newcommand{\etal}{\textsl{et~al.}\@ }
 \newcommand{\eg}{e.g.\@ }
 \newcommand{\ie}{i.e.\@ }
+
+\newcommand\st{\textsuperscript{st}\xspace}
+\newcommand\nd{\textsuperscript{nd}\xspace}
+\newcommand\rd{\textsuperscript{rd}\xspace}
+\newcommand\nth{\textsuperscript{th}\xspace} %\th is taken already
+
+\newcommand{\CakeOnSea}{\dataset{CakeOnSea}}
+\newcommand{\ForestCover}{\dataset{ForestCover}}
+\newcommand{\WineQuality}{\dataset{WineQuality}}
 
 % Misc
 \newcommand{\note}[1]{\textbf{#1}}
