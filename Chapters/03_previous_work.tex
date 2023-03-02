@@ -14,8 +14,21 @@ In this chapter we detail some of the topics and works that are either directly 
 
 \subsection{Contrastive explanations}
 
-Given a chosen concept, measure whether this concept seems to contribute more to a certain class than to another \cite{jacoviContrastive2021}.
-\citenote{}
+Contrastive explanations are close enough to CFX that they are often dealt with together: \citeauthor{stepinSurvey2021} even bring them together under the name ``contfactual'' \cite{stepinSurvey2021}.
+
+Where counterfactual explanations are virtual points close to the explained input, potentially highlighting underlying concepts which are deemed important by the classifier, contrastive explanations are ratings of the importance given by the classifier of a given \emph{user-defined} concept to a given class.
+Hence, contrastive explanations do not suffer from the problem of semanticity of explanations that was raised in \autoref{intro/semanticity_problem}, but in return it is up to the user to propose meaningful concepts to evaluate.
+\note{does the link work?}
+
+Accordingly, \citeauthor{jacoviContrastive2021} develop a method for text data that evaluates how much a given concept seems to contribute more to a certain class than to another \cite{jacoviContrastive2021}.
+For instance, they train a model for the natural language inference task: given two sequential sentences as input, output whether the first sentence entails, contradicts or is neutral with respect to the second sentence.
+Then, they choose a concept, \eg{} the amount of overlapping words between the two sentences, and validate that in general this concept allows the model to differentiate between entailment and neutrality.
+They say that this concept is ``contrastively important''.
+
+\citeauthor{baiConcept2022} propose ``concept gradients'' (CGs) \cite{baiConcept2022}, a generalization of a pre-existing technique called ``concept activation vectors'' (CAVs) \cite{kimInterpretability2018}.
+In both cases, concepts are evaluated using the correlation of gradients between a corresponding concept vector and the model outputs, but CAVs assume that the concept can be expressed as a linear function, while CGs have no such requirement.
+
+
 
 \subsection{Causal learning and counterfactuals}
 
@@ -45,8 +58,8 @@ For example, recent work demonstrates this exact kind of manipulation on a diffu
 In this work, the authors detail what they mean by semanticity:
 \begin{description}
 	\item[Concepts are universal] If you perturb two inputs in the direction of the same concept $c$, then in both cases the result should exhibit $c$.
-	\item[Concepts add] If you perturb in a direction that is a combination of those representing concepts $c_1$ and $c_2$, then the result will be modified in these two ways at the same time.
-	\item[Concepts scale] If you perturb in the direction of $c$ by 2 units, the result will exhibit the concept more than if you perturb by 1 unit.
+\item[Concepts scale] If you perturb in the direction of $c$ by 2 units, the result will exhibit the concept more than if you perturb by 1 unit.
+\item[Concepts add] If you perturb in a direction that is a combination of those representing concepts $c_1$ and $c_2$, then the result will be modified in these two ways at the same time.
 	\item[Non-destructiveness] Perturbing in a semantic direction does not result in an unrealistic (``broken'') point.
 \end{description}
 
@@ -90,9 +103,14 @@ A comprehensive classification and taxonomy up to 2020 is given in \cite{vermaCo
 
 possible classification: gradient descent-based, generative model-based, class-aware generative model \citenote{}
 
+\paragraph{\method{DiCE}}
+
 \citeauthor{mothilalExplaining2020} generate a diverse set of CFs by gradient descent, solving for $k$ candidate CFs at the same time \cite{mothilalExplaining2020}.
 Diversity is modeled by a metric taken from the study of determinantal point processes, which is based on the pairwise distances between the $k$ CFs.
 Using this constraint, they succeed at keeping a high rate of valid CFs while increasing diversity.
+
+\paragraph{\revise}
+\label{par:revise}
 
 \citeauthor{joshiRealistic2019} follow the strategy outlined by \citeauthor{wachterCounterfactual2017} in that they frame the CF search as a constrained optimization problem and approach it with gradient descent:
 \begin{align*}
@@ -101,7 +119,17 @@ Using this constraint, they succeed at keeping a high rate of valid CFs while in
 \end{align*}
 where $c$ is some cost function that is situation-dependent.
 However, in order to ensure the realism of the CF, they perform the optimization in a latent space learned through a VAE.
+
+For example, they use as a cost function the $L_1$ distance between the original input $x$ and the candidate counterfactual $x'$.
+They assume $x$ is predicted as class 0 and thus the CF should be predicted as 1.
+Letting $z'=\enc(x')$, and $\ell$ a loss function like the one used for training the classifier (such as the CE), the loss that is minimized is the following:
+\begin{equation}
+	\ell(f(\dec(z')), 1)
+	+ \lambda_\text{distance} \norm{\dec(z') - x}_1
+\end{equation}
 The resulting CF generation algorithm is called \revise{} \cite{joshiRealistic2019}.
+
+\paragraph{\method{CFProto}}
 
 \citeauthor{vanlooverenInterpretable2021} also use a VAE to ensure realism, but they follow a different strategy \cite{vanlooverenInterpretable2021}.
 For a given $x$, they build a list of ``prototypes'', one per class, which are interpreted as typical examples of those classes.
@@ -111,10 +139,14 @@ The reasoning is that $\text{proto}_c$ is likely realistic, because it is an ave
 
 \subsection{Solutions with class-aware generative models}
 
+\paragraph{\method{CRUDS}}
+
 \citeauthor{downsCRUDS2020} make use of a conditional subspace VAE (or CSVAE for short) to adapt the latent representation to the classification task:
 the latent space is decomposed (or ``disentangled'') into a product of small spaces: $\latentspace = \mathcal{Z} \times \prod_{i} \mathcal{W}_i$, where each space $\mathcal{W}_i$ contains information on the features most correlated with label $i$ \cite{klysLearning2018}.
 For an input $x$, $\enc(x) = (z, w)$ where $z$ is not sensitive to the label and $w$ is sensitive to the label; thus, by altering only $w$ based on the target class, they can then form a counterfactual latent as $\CF{z} = (z, \CF{w})$ and let $\CF{x} = \dec(\CF{z})$.
 In fact, by sampling several $\CF{w}$ they can obtain a whole set of CFs that are uniquely different from $x$.
+
+\paragraph{VAE-NF blend}
 
 \citeauthor{zhangInterpretable2022} train the autoencoder conjointly with the classifier, so that the latent representation used for CFX generation is also used for classification \cite{zhangInterpretable2022}.
 In particular, the latent representation architecture consists of normalizing flows within a VAE, an idea first developed in \cite{rezendeVariational2015}.
@@ -126,8 +158,11 @@ However, in our case we have at least one precise goal: to change the class to t
 When this is achieved, we say that the explanation is \emph{valid}.
 Hence, our first and foremost metric is the \emph{validity rate}: the fraction of CFs that reached the target.
 
-For a CFX to be relevant to the explained input, it should be close enough to the explained input; thus some notion of \emph{distance} is often used, \eg{} the Euclidean norm, written $L_2$.
+For a CFX to be relevant to the explained input, it should be close enough to the explained input; thus some notion of \emph{distance} is often used, \eg{} the Euclidean ($L_2$) norm.
 Furthermore, it is often preferred to have \emph{sparse} perturbations, in the interest of simplicity; for this the $L_1$ loss is a common choice. \citenote{}
+
+\note{feasibility}
+\note{MAD, percentile shift}
 
 When a method produces several CFs, it is often desirable to guarantee \emph{diversity}, so that the $k$ proposed CFs are not $k$ times the same point.
 

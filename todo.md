@@ -4,12 +4,15 @@
     - [ ] Describe IG
 - [ ] Related works
     - [ ] Describe LS
+    - [ ] CLUE
+    - [ ] CCHVAE
 - [ ] Methods
     - [ ] Describe IG in more detail
     - [ ] Fill out table about datasets
 - [ ] Experiments
     - [ ] Give train and test accuracy of classifier for each dataset
     - [ ] Show confusion matrices to see if certain classes are bad?
+    - [ ] Describe experiments in pseudo-code
     - [ ] Validity losses
         - [ ] Give justification with gradients
         - [ ] Show tables with results

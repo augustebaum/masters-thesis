@@ -80,7 +80,7 @@ The subject of this work will be this last kind of local explanation, and we wil
 \subsection{A first example: \citeauthor{wachterCounterfactual2017}}
 One of the first and most frequently cited sources on CFX is \citeauthor{wachterCounterfactual2017} \cite{wachterCounterfactual2017}. In this work, the problem is formulated as an optimization problem constrained by the distance between the explained input $x$ and the candidate counterfactual $\CF{x}$:
 \begin{equation}
-    \arg\min_{\CF{x}} \max_\lambda \{ \lambda (f(\CF{x}) - y_\target)^2 + d(x, \CF{x}) \}
+\arg\min_{\CF{x}} \min_\lambda \{ \lambda (f(\CF{x}) - y_\target)^2 + d(x, \CF{x}) \}
 \end{equation}
 where $f$ is the model of interest, $y_\target$ is the target model output (different from the factual output $y = f(x)$) and $d$ is the aforementioned distance metric, which depends on the use-case.
 
@@ -124,6 +124,7 @@ Determining whether a given point in the input space is ``realistic'' is a probl
 In the following we will refer to this as the ``out-of-distribution'' problem.
 
 \subsubsection{Semantic explanations}
+\label{intro/semanticity_problem}
 
 % We have already discussed the similarity between CFX and adversarial perturbations in \autoref{par:cfx}. 
 

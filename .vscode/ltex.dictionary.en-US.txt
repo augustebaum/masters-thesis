@@ -10,3 +10,5 @@ VAEs
 parametrizable
 codomain
 CFs
+CAVs
+CGs

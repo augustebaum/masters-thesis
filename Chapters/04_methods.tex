@@ -84,20 +84,19 @@ Note that in NF-based autoencoders, the decoder is the inverse of the encoder an
 \KwData{Classifier $f, \autoencoder (\enc_\phi, \dec),$ (training) data, CF loss $\cfloss$, path loss $\pathloss$, path loss regularization coefficient $\lambda_\apath$}
 \KwOut{$\phi^*$ that minimizes the $\nll$ and the path loss}
 \While{not converged}{
-    $x \gets \mathtt{get\_input}(\text{data})$ \\
-    $z \gets \enc_\phi(x)$ \\
-    $\source \gets f(x)$ \\
-    $\target \gets \mathtt{random\_target}(x)$
-        \tcp*{such that $\target \neq \source$}
-$\apath \gets \mathtt{generate\_path}_{\cfloss}(z, \source, \target)$
-        \tcp*{$\apath = (\CF{x}_t)_{t=1}^T$}
+$x \gets \mathtt{get\_input}(\text{data})$ \\
+$z \gets \enc_\phi(x)$ \\
+$\source \gets f(x)$ \\
+$\target \gets \mathtt{random\_target}(x)$ \tcp*{such that $\target \neq \source$}
+$\apath \gets \mathtt{generate\_path}_{\cfloss}(z, \source, \target)$ \tcp*{$\apath = (\CF{x}_t)_{t=1}^T$}
 $\phi \gets \phi - \nabla_\phi {(\nll(\phi) + \lambda_\apath \pathloss(\apath))}$ \\
 }
 \end{algorithm}
 
 Since the one obvious constraint on paths is that they should be valid, one way to include this in $\pathloss$ could be to add a count of the number of valid paths in the batch.
 Note that class information is indirectly given during the training of the autoencoder, so the autoencoder is dependent on the classification task.
-This is counter to the
+\note{todo}
+% This is counter to the \note{todo}.
 
 \section{Robustness of path regularization}
 
@@ -109,6 +108,7 @@ This is counter to the
 
 
 \section{Datasets}
+\label{sec:datasets}
 
 In our experiments we use one custom synthetic dataset generated in a parametrizable way, as well as some real datasets.
 

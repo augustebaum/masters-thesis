@@ -16,13 +16,14 @@ The classifier architecture in our analyses is an MLP consisting of two 50-node 
 \subsection{Autoencoder}
 
 We build a normalizing flow model according to the NICE architecture \cite{dinhNICE2015}.
-The model is trained according to a Gaussian prior distribution, and its layers are 4 additive coupling layers where we divide the input into the odd columns and the even columns, and the nonlinearity is an MLP with 4 layers of 50 nodes each.
+The model is trained according to a Gaussian prior distribution, and its layers are 4 additive coupling layers where we divide the input into the odd columns and the even columns, and the nonlinearity is an MLP with 4 layers of 50 nodes each \note{check this is the case}.
 
 \section{Validity losses}
 
-The goal is to find the best validity loss, the one that maximizes validity rate.
+In this experiment, the goal is to find the validity loss that maximizes validity rate among a number of choices.
 
-\subsection{Experimental setup}
+\subsection{Description}
+\label{validity_losses/description}
 
 For a given dataset, we train one classifier.
 Then for this dataset, we train several autoencoders all with the same architecture and with different seeds.
@@ -31,22 +32,131 @@ The seeds are generated uniformly based on one primary seed.
 For a given dataset, we measure the validity rate across the whole test set.
 That is, for every test point, we run the classifier to get the $\source$ class, and we sample the target class uniformly from $\setclasses \backslash \{\source\}$.
 Then we generate a path using the given validity loss, and measure its validity.
-We do this with \ls{} and with \revise{}.
 
-We average the rates over the different autoencoders, and report the standard error.
+We average the rates over the different seeds, and report the standard error.
 
-The parameters used are reported in ?? \citenote{}
+The parameters used for training the models and for producing the paths are reported in ?? \note{Link to some yaml?}
+
+\subsection{Baselines}
+
+The paths are produced by variations on \ls{} and with \revise{}.
+Specifically, we run both methods twice: once with regularization on the $L_1$ distance, as explained in \autoref{par:revise}, and one without regularization (with the $\lambda_\text{distance}$ set to 0).
+\note{How are these named in the results table?}
+
+The losses compared in this experiment are as follows:
+\note{todo}
+
+\subsection{Datasets}
+
+We run our experiment on the datasets described in \autoref{sec:datasets}, namely \CakeOnSea, \ForestCover, \WineQuality{} and \OnlineNewsPopularity.
+
+\subsection{Metrics}
+
+The one metric in this experiment is the validity rate, \ie{} the proportion of paths that reach their target class across the whole test set.
 
 \subsection{Results}
 
-\begin{table}
+The results for each dataset and loss are given in \autoref{tbl:validity_losses}.
+
+\begin{table}[h!]
     \caption{Validity rate means with their standard error.}
+\label{tbl:validity_losses}
     \input{Figures/validity_losses.tex}
 \end{table}
 
 \section{Path regularized training}
 
-\subsection{Experimental setup}
+Having determined an appropriate validity loss to use for generating valid paths, we turn now to our objective of interpretability.
+In this experiment we seek to determine if \ls{} equipped with a path regularized autoencoder can perform on the same level as \revise{}.
+
+
+
+
+The parameters used for training the models and for producing the paths are reported in ?? \note{Link to some yaml?}
+
+\subsection{Description}
+
+First, we generate some seeds.
+For a given dataset, we train one classifier, as in \autoref{validity_losses/description}.
+For each seed, we train several autoencoders: one without path regularization, and one per CF generation method.
+
+% {
+%     \newcommand{\var}[1]{\mathrm{#1}}
+%     \newcommand{\fn}[1]{\mathtt{#1}}
+
+%     \newcommand{\seed}{\var{seed}}
+%     \newcommand{\seeds}{\var{seeds}}
+%     \newcommand{\nbSeeds}{N_\seeds}
+
+%     \newcommand{\varDataset}{\var{dataset}}
+%     \newcommand{\varDatasets}{\var{datasets}}
+
+%     \newcommand{\explainer}{\var{explainer}}
+%     \newcommand{\explainers}{\var{explainers}}
+
+%     \newcommand{\autoencoders}{\var{autoencoders}}
+
+%     \newcommand{\metrics}{\var{metrics}}
+%     \newcommand{\aggregatedMetrics}{\var{aggregated\_metrics}}
+
+%     \newcommand{\results}{\var{results}}
+
+%     \newcommand{\generateSeeds}{\fn{generate\_seeds}}
+%     \newcommand{\trainModel}{\fn{train\_model}}
+%     \newcommand{\newAutoencoder}{\fn{new\_autoencoder}}
+%     \newcommand{\randomTarget}{\fn{random\_target}}
+%     \newcommand{\generatePath}{\fn{generate\_path}}
+%     \newcommand{\computeMetrics}{\fn{compute\_metrics}}
+%     \newcommand{\aggregateMetrics}{\fn{aggregate\_metrics}}
+
+%     \begin{algorithm}
+%         \caption{Experiment on path regularization}
+%         \label{algo:pathreg_xp}
+%         \KwData{$\seed$, number of seeds $\nbSeeds$, $\varDatasets$, $\explainers$}
+%         \KwOut{}
+%         $\seeds \gets \generateSeeds(\nbSeeds, \seed)$ \\
+
+%         \ForEach{$\varDataset \in \varDatasets$}{
+%             $\trainModel(\varDataset, f)$ \\
+%             $\autoencoders = \emptyset$ \\
+
+%             $\results \gets \emptyset$ \\
+
+%             \ForEach{$\seed \in \seeds$}{
+%                 $\autoencoder \gets \newAutoencoder(\seed, null)$
+%                 \tcp*{no path regularization}
+%                 $\trainModel(\varDataset, \autoencoder)$ \\
+%                 $\autoencoders = \autoencoders \cup \{\autoencoder\}$ \\
+
+%                 \ForEach{$\explainer \in \explainers$}{
+%                     $\autoencoder \gets \newAutoencoder(\seed, \explainer)$ \\
+%                     $\trainModel_\explainer(\varDataset, \autoencoder)$ \\
+
+%                     $\autoencoders = \autoencoders \cup \{ \autoencoder \}$ \\
+%                 }
+%             }
+
+%             \seedMetrics \gets \emptyset \\
+%             \ForEach{$\autoencoder \in \autoencoders$}{
+%                 $\metrics = \emptyset$ \\
+%                 \ForEach{$x \in \testset$}{
+%                     $\target \gets \randomTarget(x)$ \\
+%                     $\apath \gets \generatePath(x, \target)$ \\
+%                     $\metrics \gets \metrics \cup \computeMetrics(\apath, \target)$ \\
+%                 }
+%                 $\aggregatedMetrics = \aggregateMetrics(\metrics)$  \\
+%             }
+
+%         }
+%     \end{algorithm}
+% }
+
+\subsection{Baselines}
+
+\subsection{Datasets}
+
+\subsection{Metrics}
+
 
 \subsection{Results}
 
