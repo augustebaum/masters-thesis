@@ -1,68 +1,57 @@
+\DeclareMathOperator{\dec}{Dec}
+\DeclareMathOperator{\enc}{Enc}
 
-\newcommand{\normal}{\mathcal{N}}
-\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
-\newcommand{\abs}[1]{\left\lvert#1\right\rvert}
-\newcommand{\diff}[2]{\frac{\mathrm{d} #1}{\mathrm{d} #2}}
-\newcommand{\R}{\mathbb{R}}
-\newcommand{\kl}{\mathbb{D}_\text{KL}}
-\newcommand{\after}{\circ}
-\newcommand{\card}[1]{\abs{#1}}
+\newcommand\nd{\textsuperscript{nd}\xspace}
+\newcommand\nth{\textsuperscript{th}\xspace} %\th is taken already
+\newcommand\rd{\textsuperscript{rd}\xspace}
+\newcommand\st{\textsuperscript{st}\xspace}
 
 \newcommand{\CF}[1]{#1^\text{CF}}
-
-\newcommand{\source}{\mathrm{source}}
-\newcommand{\target}{\mathrm{target}}
-\newcommand{\apath}{\mathrm{path}}
-
-\newcommand{\autoencoder}{\mathrm{AE}}
-\DeclareMathOperator{\enc}{Enc}
-\DeclareMathOperator{\dec}{Dec}
-
-\newcommand{\inputspace}{\mathcal{X}}
-\newcommand{\inputdim}{D}
-\newcommand{\setclasses}{\mathcal{C}}
-\newcommand{\outputdim}{C}
-\newcommand{\latentspace}{\mathcal{H}}
-\newcommand{\latentdim}{H}
-\newcommand{\batchsize}{B}
-
-\newcommand{\loss}{\mathscr{L}}
-\newcommand{\lossval}{\loss_\text{validity}}
-\newcommand{\pathloss}{\loss_\text{path}}
-\newcommand{\cfloss}{\loss_\text{CF}}
-\newcommand{\ce}{\text{CE}}
-\newcommand{\softmax}{\text{softmax}}
-\renewcommand{\nll}{\text{NLL}}
-\newcommand{\relu}{\text{ReLU}}
-\newcommand{\grad}[2]{\frac{\partial #1}{\partial #2}}
-
-\newcommand{\data}{\mathscr{D}}
-\newcommand{\trainset}{\data_\text{train}}
-\newcommand{\valset}{\data_\text{validation}}
-\newcommand{\testset}{\data_\text{test}}
-
-\newcommand{\method}[1]{\texttt{#1}}
-\newcommand{\model}[1]{\texttt{#1}}
-\newcommand{\dataset}[1]{\texttt{#1}}
-
-% Words and expressions
-\newcommand{\ls}{Latent Shift}
-\newcommand{\revise}{\method{Revise}}
-\newcommand{\adhoc}{\textsl{ad~hoc}}
-\newcommand{\etal}{\textsl{et~al.}\@ }
-\newcommand{\eg}{e.g.\@ }
-\newcommand{\ie}{i.e.\@ }
-
-\newcommand\st{\textsuperscript{st}\xspace}
-\newcommand\nd{\textsuperscript{nd}\xspace}
-\newcommand\rd{\textsuperscript{rd}\xspace}
-\newcommand\nth{\textsuperscript{th}\xspace} %\th is taken already
-
 \newcommand{\CakeOnSea}{\dataset{CakeOnSea}}
 \newcommand{\ForestCover}{\dataset{ForestCover}}
-\newcommand{\WineQuality}{\dataset{WineQuality}}
 \newcommand{\OnlineNewsPopularity}{\dataset{OnlineNewsPopularity}}
-
-% Misc
-\newcommand{\note}[1]{\textbf{NOTE: #1}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\WineQuality}{\dataset{WineQuality}}
+\newcommand{\abs}[1]{\left\lvert#1\right\rvert}
+\newcommand{\adhoc}{\textsl{ad~hoc}}
+\newcommand{\after}{\circ}
+\newcommand{\apath}{\mathrm{path}}
+\newcommand{\autoencoder}{\mathrm{AE}}
+\newcommand{\batchsize}{B}
+\newcommand{\card}[1]{\abs{#1}}
+\newcommand{\ce}{\text{CE}}
+\newcommand{\cfloss}{\loss_\text{CF}}
 \newcommand{\citenote}{\note{CITE}}
+\newcommand{\dataset}[1]{\texttt{#1}}
+\newcommand{\data}{\mathscr{D}}
+\newcommand{\diff}[2]{\frac{\mathrm{d} #1}{\mathrm{d} #2}}
+\newcommand{\e}{\mathrm{e}}
+\newcommand{\eg}{e.g.\@ }
+\newcommand{\etal}{\textsl{et~al.}\@ }
+\newcommand{\grad}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\ie}{i.e.\@ }
+\newcommand{\inputdim}{D}
+\newcommand{\inputspace}{\mathcal{X}}
+\newcommand{\kl}{\mathbb{D}_\text{KL}}
+\newcommand{\latentdim}{H}
+\newcommand{\latentspace}{\mathcal{H}}
+\newcommand{\lossval}{\loss_\text{validity}}
+\newcommand{\loss}{\mathscr{L}}
+\newcommand{\ls}{Latent Shift}
+\newcommand{\method}[1]{\texttt{#1}}
+\newcommand{\model}[1]{\texttt{#1}}
+\renewcommand{\nll}{\text{NLL}}
+\newcommand{\normal}{\mathcal{N}}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\note}[1]{\textbf{NOTE: #1}}
+\newcommand{\outputdim}{C}
+\newcommand{\pathloss}{\loss_\text{path}}
+\newcommand{\relu}{\text{ReLU}}
+\newcommand{\revise}{\method{Revise}}
+\newcommand{\setclasses}{\mathcal{C}}
+\newcommand{\softmax}{\mathrm{softmax}}
+\newcommand{\source}{\mathrm{source}}
+\newcommand{\target}{\mathrm{target}}
+\newcommand{\testset}{\data_\text{test}}
+\newcommand{\trainset}{\data_\text{train}}
+\newcommand{\valset}{\data_\text{validation}}

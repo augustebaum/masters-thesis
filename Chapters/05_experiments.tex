@@ -11,11 +11,11 @@ All models are trained using the Adam algorithm \cite{kingmaAdam2014} with a lea
 
 \subsection{Classifier}
 
-The classifier architecture in our analyses is an MLP consisting of two 50-node linear layers each followed by a $\relu$, followed by one last linear layer outputting $\outputdim$ logits.
+The classifier architecture in our analyses is an MLP consisting of two 50-node linear layers each followed by a $\relu$, then one last linear layer outputting $\outputdim$ logits.
 
 \subsection{Autoencoder}
 
-We build a normalizing flow model according to the NICE architecture \cite{dinhNICE2015}.
+We build a normalizing flow model according to the NICE architecture described in \autoref{bg/nf} \cite{dinhNICE2015}.
 The model is trained according to a Gaussian prior distribution, and its layers are 4 additive coupling layers where we divide the input into the odd columns and the even columns, and the nonlinearity is an MLP with 4 layers of 50 nodes each \note{check this is the case}.
 
 \section{Validity losses}
@@ -64,10 +64,17 @@ The results for each dataset and loss are given in \autoref{tbl:validity_losses}
     \input{Figures/validity_losses.tex}
 \end{table}
 
+\subsection{Interpretation}
+
+As expected, the validity rate achieved by \revise{} is much more acceptable than that of \ls{}, across all losses.
+Additionally, it would seem the best results are obtained with ?? \note{todo}.
+\note{is this surprising? if so why?}
+
 \section{Path regularized training}
+\label{exp/path_reg}
 
 Having determined an appropriate validity loss to use for generating valid paths, we turn now to our objective of interpretability.
-In this experiment we seek to determine if \ls{} equipped with a path regularized autoencoder can perform on the same level as \revise{}.
+In this experiment we seek to determine if \ls{} equipped with a path regularized autoencoder can perform on the same level as \revise{}, increasing interpretability without compromising validity.
 
 
 
@@ -78,7 +85,11 @@ The parameters used for training the models and for producing the paths are repo
 
 First, we generate some seeds.
 For a given dataset, we train one classifier, as in \autoref{validity_losses/description}.
-For each seed, we train several autoencoders: one without path regularization, and one per CF generation method.
+For each seed, we train several autoencoders: one without path regularization, and then one per CF generation method.
+
+Then, each autoencoder is used to produce explanation paths on the whole test set, like in \autoref{validity_losses/description}, and metrics are computed with the paths as input.
+
+Finally, for each explanation method, we aggregate the metrics obtained for each seed to get an average and standard error.
 
 % {
 %     \newcommand{\var}[1]{\mathrm{#1}}
@@ -157,7 +168,36 @@ For each seed, we train several autoencoders: one without path regularization, a
 
 \subsection{Metrics}
 
+\subsection{Results}
+
+\subsection{Interpretation}
+
+\section{Robustness of explanations with path regularization}
+
+\newcommand{\xgoal}{x^\bullet}
+
+Given that we were able to achieve more interpretable paths using path regularization, we ask whether it is possible to meet any interpretability criterion, even a nonsensical one.
+For example, can we use path regularization so that all paths pass through one designated point, regardless of $x$ and $\target$?
+To do so, we select a point $\xgoal \in \inputspace$ that we can reasonably expect to be unrealistic, but is not completely out of reach compared to points in the train set.
+Then, we devise a path loss that encodes the distance from a path to $x^\bullet$, and let our path regularization training enforce this constraint.
+
+The parameters used for training the models and for producing the paths are reported in ?? \note{Link to some yaml?}
+
+\subsection{Description}
+
+We perform path regularized training as described in \autoref{exp/path_reg}, but with a different choice of regularization: for a path $(x_t)_{t=1}^T$, our path loss measures the minimum distance between $x'$ and $\xgoal = (\max\{ x_i : x \in \trainset \})_{i=1}^D$: $\pathloss = \min_{t \in \{1, \ldots, T\}} \norm{x_t, \xgoal}$.
+
+\subsection{Baselines}
+
+\subsection{Datasets}
+
+\subsection{Metrics}
+
+As before, we analyze the trade-off that is incurred by applying path regularization.
+We measure the validity rate, as well as the realism score and the path loss.
 
 \subsection{Results}
+
+\subsection{Interpretation}
 
 \end{document}

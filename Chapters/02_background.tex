@@ -71,6 +71,7 @@ In addition, for our purposes it is not sufficient that the reconstruction error
 For a more detailed introduction to VAEs we highly recommend the tutorial by \citeauthor{doerschTutorial2021} \cite{doerschTutorial2021}.
 
 \subsection{Flow-based models}
+\label{bg/nf}
 
 Another type of generative model is the normalizing flow (or NF for short), in which we assume again a latent variable $z$ that is typically standard Gaussian-distributed and that leads to an $x$ via a transformation $g$ (our $\dec$ function).
 Usually, this $g$ is decomposed into several small perturbations $g_i$ so that $x = g(z) = (g_K \after g_{K-1} \after \ldots \after g_1) (z)$.
@@ -117,15 +118,19 @@ Importantly, each $g_i$ is \emph{invertible}, hence $g$ itself is invertible and
     }\quad \text{(defining $z_0 = z$)}
 \end{align*}
 where $\det$ denotes the determinant and $\diff{g}{z}$ the Jacobian matrix of $g$.
+We can then train the model using the negative log-likelihood (or NLL for short)
 
 Unlike VAEs, the transformation $g$ is guaranteed to be invertible, but this requires that the dimensionality of $\latentspace$ be at least $\inputdim$.
 
 \subsubsection{Nonlinear independent components estimation}
 
-This implementation of a NF, hereafter referred to as NICE, allows crafting flows $g_i$ that are invertible, even if they contain highly nonlinear components.
+This implementation of a NF first presented in \cite{dinhNICE2015}, hereafter referred to as NICE, allows crafting flows $g_i$ that are invertible, even if they contain highly nonlinear components.
+The $g_i$ are referred to as \emph{coupling layers}.
 
 This is achieved by separating $z_i$ into two parts: one left unmodified and the other put through some nonlinear layer with learnable parameters.
-By construction, the transformation is invertible regardless of the nonlinearity: in \autoref{eq:coupling_layer} we show the relation between layer $i$ and layer $i+1$, with the linearity in this layer denoted by $h_{i+1}$. $z_i$ is divided into parts $A$ and $B$, and it is possible to get $z_i$ back completely from $z_{i+1}$:
+Then, the two parts are passed to a coupling layer that should be invertible with respect to its first argument given the second.
+For example, in an \emph{additive coupling layer} the coupling layer is an addition: $g_i(a; b) = a + b$, which is indeed invertible with respect to $a$ given $b$: namely, its inverse is $g_i^{-1}(a; b) = a - b$.
+Thus, by construction, the transformation is invertible regardless of the nonlinearity: in \autoref{eq:coupling_layer} we show the relation between layer $i$ and layer $i+1$, with the linearity in this layer denoted by $h_{i+1}$. $z_i$ is divided into parts $A$ and $B$, and it is possible to get $z_i$ back entirely from $z_{i+1}$:
 
 \begin{equation}
     \label{eq:coupling_layer}
@@ -140,6 +145,5 @@ By construction, the transformation is invertible regardless of the nonlinearity
     \end{cases}
 \end{equation}
 
-The NICE architecture was first presented in \cite{dinhNICE2015}.
 
 \end{document}

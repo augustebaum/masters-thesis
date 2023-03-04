@@ -6,10 +6,31 @@
 \chapter{Previous work}
 \label{ch:previous_work}
 
-In this chapter we detail some of the topics and works that are either directly relevant to our work, or were otherwise of interest during this project.
+\section{Latent shift}
+
+We now describe the basis of our work, \ls{}.
+This method was presented by \citeauthor{cohenGifsplanation2022} in 2022 as a CF generation method for binary classification models on image data, specifically X-ray images of human lungs \cite{cohenGifsplanation2022}.
+Given an input image $x$ predicted as class 0, the method perturbs $x$ according to the gradient of the classifier $f$ (the direction of steepest ascent), in order for $f$ to increase.
+However, instead of computing the gradient in input space, they use an autoencoder $(\enc, \dec)$ and computing the gradient of the classifier \emph{in latent space}: $\nabla_z f(\dec(z))$ where $z = \enc(x)$.
+The reason for this is to promote realistic images: indeed, autoencoders typically filter out information that is considered to be noise, so performing the perturbation in latent space is safer \note{todo}
+Also it works especially well for images because even though they have many features (a 28-by-28 pixel image has $28^2 = 784$ features, times 3 if it has RGB data), those features tend to be highly correlated \note{cite}.
+
+A summary of the \ls{} procedure is shown in \autoref{fig:latent_shift}.
+On the left, the data manifold in input space is non-convex, so by perturbing along the gradient we risk exiting the data manifold.
+Hence, we first run the encoder $\enc$, then perturb the latent following the gradient of the classifier by some factor $\lambda$, and finally run the decoder $\dec$ to get the candidate counterfactual $\CF{x}$.
+
+\begin{figure}[htbp]
+    \centering
+    \subfile{Figures/latent_shift.tex}
+    \caption{A sketch of the \ls{} algorithm. Step 1 is applying $\enc$, step 2 is perturbing along the gradient of the classifier, and step 3 is applying $\dec$. Adapted from \cite{cohenGifsplanation2022}.}
+    \label{fig:latent_shift}
+\end{figure}
+
+One point of interest in this method is that we can easily visualize the equivalent continuous path taken in input space (outlined in the left part of \autoref{fig:latent_shift}) by running the procedure with different values of $\lambda$; thus we can see the final result $\CF{x}$, but also the full progression leading to it.
 
 % A comprehensive overview of algorithms, evaluation metrics as well as open problems is given in \cite{vermaCounterfactual2020}.
 % note to self: verma include "progressive explanations" as one of their "open research" topics. Which is kind of what i'm doing!
+
 \section{Related topics}
 
 \subsection{Contrastive explanations}
@@ -20,15 +41,13 @@ Where counterfactual explanations are virtual points close to the explained inpu
 Hence, contrastive explanations do not suffer from the problem of semanticity of explanations that was raised in \autoref{intro/semanticity_problem}, but in return it is up to the user to propose meaningful concepts to evaluate.
 \note{does the link work?}
 
-Accordingly, \citeauthor{jacoviContrastive2021} develop a method for text data that evaluates how much a given concept seems to contribute more to a certain class than to another \cite{jacoviContrastive2021}.
-For instance, they train a model for the natural language inference task: given two sequential sentences as input, output whether the first sentence entails, contradicts or is neutral with respect to the second sentence.
-Then, they choose a concept, \eg{} the amount of overlapping words between the two sentences, and validate that in general this concept allows the model to differentiate between entailment and neutrality.
-They say that this concept is ``contrastively important''.
+Accordingly, \citeauthor{jacoviContrastive2021} develop a method for text data that evaluates how much a given concept contributes to a certain class compared to another \cite{jacoviContrastive2021}.
+For instance, they train a model for the ``natural language inference'' task: given two sequential sentences as input, the model should output whether the first sentence entails, contradicts or is neutral with respect to the second sentence.
+Then, given a concept of their choosing, \eg{} the amount of overlapping words between the two sentences, they can compute a metric of contrastive importance of this concept between two classes.
+In the case of word overlap, they validate that in general this concept allows the model to differentiate between entailment and neutrality.
 
 \citeauthor{baiConcept2022} propose ``concept gradients'' (CGs) \cite{baiConcept2022}, a generalization of a pre-existing technique called ``concept activation vectors'' (CAVs) \cite{kimInterpretability2018}.
 In both cases, concepts are evaluated using the correlation of gradients between a corresponding concept vector and the model outputs, but CAVs assume that the concept can be expressed as a linear function, while CGs have no such requirement.
-
-
 
 \subsection{Causal learning and counterfactuals}
 
@@ -36,7 +55,7 @@ In both cases, concepts are evaluated using the correlation of gradients between
 Counterfactual statements are closely related to causal inference \cite{morganCounterfactuals2015}.
 This link is formally made in Pearl's theory of \emph{structural causal models} (or SCMs for short): given a complete formal description of the causal relationships between variables, the theory describes a natural procedure to compute how a change in one variable would influence the others. \note{Is this true only for additive noise models? or all SCMS}
 
-Karimi \textsl{et al.}~develop this relationship in the context of CFX in the form of a lower bound statement: given some cost function, if the true SCM is known fully, then the Pearl procedure yields a CF that has minimum cost \cite{karimiAlgorithmic2020}.
+\citeauthor{karimiAlgorithmic2020} develop this relationship in the context of CFX in the form of a lower bound statement: given some cost function, if the true SCM is known fully, then the Pearl procedure yields a CF that has minimum cost \cite{karimiAlgorithmic2020}.
 In other words, any other proposed CF will in some way neglect some variable relationships, and hence include redundant perturbations which increase the cost.
 
 This brings us to the topic of causal discovery: the problem of extracting a causal graph from (usually observational) data.
@@ -64,7 +83,7 @@ In this work, the authors detail what they mean by semanticity:
 \end{description}
 
 This description is reminiscent of adversarial perturbations, and in particular the universality of semanticity is challenged in \cite{moosavi-dezfooliUniversal2017}.
-In this work, the authors demonstrate that, given a conventional deep learning model, it is possible to find \emph{one} small constant perturbation which, when applied to \emph{any} input in the dataset, leads to a change in prediction.
+In this work, the authors demonstrate that, given a conventional deep learning model, it is possible to find \emph{one} small constant perturbation which, when applied to \emph{any} input in the dataset, leads to a change in model prediction.
 
 % PNS Relates causality with feature learning \cite{wangRepresentation2022}
 
@@ -109,7 +128,7 @@ possible classification: gradient descent-based, generative model-based, class-a
 Diversity is modeled by a metric taken from the study of determinantal point processes, which is based on the pairwise distances between the $k$ CFs.
 Using this constraint, they succeed at keeping a high rate of valid CFs while increasing diversity.
 
-\paragraph{\revise}
+\paragraph{\revise{}}
 \label{par:revise}
 
 \citeauthor{joshiRealistic2019} follow the strategy outlined by \citeauthor{wachterCounterfactual2017} in that they frame the CF search as a constrained optimization problem and approach it with gradient descent:
