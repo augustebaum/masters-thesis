@@ -6,7 +6,7 @@
 \newcommand\rd{\textsuperscript{rd}\xspace}
 \newcommand\st{\textsuperscript{st}\xspace}
 
-\newcommand{\CF}[1]{#1^\text{CF}}
+\newcommand{\CF}[1]{#1^\mathrm{CF}}
 \newcommand{\CakeOnSea}{\dataset{CakeOnSea}}
 \newcommand{\ForestCover}{\dataset{ForestCover}}
 \newcommand{\OnlineNewsPopularity}{\dataset{OnlineNewsPopularity}}
@@ -25,7 +25,11 @@
 \newcommand{\dataset}[1]{\texttt{#1}}
 \newcommand{\data}{\mathscr{D}}
 \newcommand{\diff}[2]{\frac{\mathrm{d} #1}{\mathrm{d} #2}}
+\newcommand{\dij}{\delta_{ij}}
+\newcommand{\djt}{\delta_{j, \target}}
+\newcommand{\djs}{\delta_{j, \source}}
 \newcommand{\e}{\mathrm{e}}
+\newcommand{\eu}[1]{\e^{u_{#1}}}
 \newcommand{\eg}{e.g.\@ }
 \newcommand{\etal}{\textsl{et~al.}\@ }
 \newcommand{\grad}[2]{\frac{\partial #1}{\partial #2}}
@@ -37,21 +41,37 @@
 \newcommand{\latentspace}{\mathcal{H}}
 \newcommand{\lossval}{\loss_\text{validity}}
 \newcommand{\loss}{\mathscr{L}}
+\newcommand{\LogitTarget}{\mathtt{LogitTarget}}
+\newcommand{\LogitSource}[1]{\mathtt{LogitSource}_{#1}}
+\newcommand{\LogitOthers}[1]{\mathtt{LogitOthers}_{#1}}
+\newcommand{\PrbTarget}{\mathtt{PrbTarget}}
+\newcommand{\PrbSource}[1]{\mathtt{PrbSource}_{#1}}
+\newcommand{\PrbOthers}[1]{\mathtt{PrbOthers}_{#1}}
+\newcommand{\LogPrbTarget}{\mathtt{LogPrbTarget}}
+\newcommand{\LogPrbSource}[1]{\mathtt{LogPrbSource}_{#1}}
+\newcommand{\LogPrbOthers}[1]{\mathtt{LogPrbOthers}_{#1}}
 \newcommand{\ls}{Latent Shift}
 \newcommand{\method}[1]{\texttt{#1}}
 \newcommand{\model}[1]{\texttt{#1}}
+\newcommand{\mysum}[1]{\sum_{\substack{{#1}=1 \\ {#1} \neq \target}}^\outputdim}
+\newcommand{\nbsteps}{S}
 \renewcommand{\nll}{\text{NLL}}
 \newcommand{\normal}{\mathcal{N}}
 \newcommand{\norm}[1]{\left\lVert#1\right\rVert}
 \newcommand{\note}[1]{\textbf{NOTE: #1}}
 \newcommand{\outputdim}{C}
 \newcommand{\pathloss}{\loss_\text{path}}
+\newcommand{\pathmask}{\mathtt{path\_mask}}
 \newcommand{\relu}{\text{ReLU}}
 \newcommand{\revise}{\method{Revise}}
 \newcommand{\setclasses}{\mathcal{C}}
+\newcommand{\sklearn}{\texttt{scikit-learn}}
 \newcommand{\softmax}{\mathrm{softmax}}
+\newcommand{\su}[1]{s_{#1}}
+\newcommand{\seu}{\sum_{c \in \setclasses} \eu{c}}
 \newcommand{\source}{\mathrm{source}}
 \newcommand{\target}{\mathrm{target}}
 \newcommand{\testset}{\data_\text{test}}
 \newcommand{\trainset}{\data_\text{train}}
 \newcommand{\valset}{\data_\text{validation}}
+\newcommand{\xgoal}{x^\bullet}

@@ -29,6 +29,7 @@ Usually the outputs of the classifier are referred to as \emph{logits}, and they
     \softmax(x) = (\softmax_i(x))_{i=1}^{\outputdim} \text{ where }
     \softmax_i(x) = \frac{\exp x_i}{\sum_{j=1}^{\outputdim} \exp x_j}
 \end{equation}
+We use the notations $\softmax_i(x)$ and $\softmax(x)_i$ interchangeably.
 
 Finding the optimal parameters of a deep learning model is usually done with an iterative optimization algorithm that minimizes a loss function $\loss$, typically \emph{gradient descent}.
 Gradient descent consists in computing the gradient of $\loss$ with respect to the model parameters, written $\nabla_w \loss$ or $\grad{\loss}{w}$, which gives the ``direction of steepest ascent'' of $\loss$.

@@ -6,6 +6,10 @@
 \chapter{Methods}
 \label{ch:methods}
 
+We now present our work in more detail.
+First, we discuss the specific problems we addressed and offer our proposed solutions along with theoretical justifications.
+Then, we introduce the metrics and datasets that will be used in our experiments.
+
 \section{Problem 1: Multi-class extension}
 
 \subsection{Problem statement}
@@ -64,39 +68,220 @@ Indeed, in the binary classification case, reaching towards the target class is 
 By contrast, in the multi-class setting, different priorities need to be distinguished on a case-by-case basis: is it more important to reach the target (at the risk of potentially staying in the source class) or to get away from the source (at the risk of not reaching the target)?
 The natural extension we presented is favoring the first option, but perhaps some variation of it could be preferable.
 
-Thus, we introduce the following alternative loss:
+Thus, we introduce the following alternative loss, with regularization $\lambda \in [0, 1]$:
 \begin{equation}
     \lossval(z) = -\softmax(f(\dec(z)))_\target
-    + \softmax(f(\dec(z)))_\source
++ \lambda \softmax(f(\dec(z)))_\source
 \end{equation}
 which can be interpreted as adding the constraint of going away from the source as well as going towards the target.
 
-We can validate our intuition, we can compute the gradient of the validity loss:
+To validate our intuition, we can compute the gradient of the validity loss:
 \begin{align}
     \grad{\lossval}{z}
     =  \grad{}{z} \left( - \softmax(f(\dec(z)))_\target + \softmax(f(\dec(z)))_\source \right)
 \end{align}
 
 Because $z$ will only ever appear within $f(\dec(z))$, let $u = f(\dec(z))$; by the chain rule, we have $\grad{\lossval}{z} = \grad{\lossval}{u} \grad{u}{z}$.
+
 $\grad{u}{z}$ does not change with the loss so we focus on $\grad{\lossval}{u}$:
-\begin{align}
+\begin{align*}
     \grad{\lossval}{u}
     =  \grad{}{u} \left( - \softmax(u)_\target + \softmax(u)_\source \right)
-\end{align}
+\end{align*}
 
-{
-\newcommand{\eu}[1]{\e^{u_{#1}}}
-\newcommand{\seu}{\sum_{c \in \setclasses} \eu{c}}
-
+Let us compute the gradient of $\softmax$ in general:
 \begin{align*}
     \grad{\softmax(u)_i}{u_j}
      & = \grad{}{u_j} \frac{\eu{i}}{\seu}                                                 \\
      & = \frac{\grad{\eu{i}}{u_j} \seu - \eu{i} \grad{}{u_j} \seu}{\left( \seu \right)^2} \\
-     & = \frac{\delta_{ij} \eu{i} \seu - \eu{i} \eu{j}}{\left(\seu \right)^{2}}           \\
-     & = \delta_{ij} \frac{\eu{i}}{\seu} - \frac{\eu{i}}{\seu} \frac{\eu{j}}{\seu}        \\
-     & = \softmax(u)_i ( \delta_{ij}  -  \softmax(u)_j)
+& = \frac{\dij \eu{i} \seu - \eu{i} \eu{j}}{\left(\seu \right)^{2}}           \\
+& = \dij \frac{\eu{i}}{\seu} - \frac{\eu{i}}{\seu} \frac{\eu{j}}{\seu}        \\
+& = \softmax(u)_i ( \dij  -  \softmax(u)_j)
 \end{align*}
-}
+To lighten the notation we define $p_i = \softmax(u)_i$.
+With this, the gradient of the loss is now written:
+\begin{align*}
+    \grad{\lossval}{u_j}
+    =  - & \grad{p_\target }{u_j} + \grad{p_\source}{u_j}  \\
+    =  - & p_\target (\djt - p_j) + p_\source (\djs - p_j)
+\end{align*}
+
+What can we learn from this?
+The validity loss should fulfill some basic requirements, which we list here:
+\begin{itemize}
+    \item When $p_\target$ is 1, we expect the gradient to be close to 0; indeed, if the target is reached, there is no reason to keep perturbing $x$.
+    \item When $p_\target$ is 0, we expect the gradient to be lower in the component corresponding to $\target$, so that the opposite of the gradient is higher in that component, which indicates the path is pushed towards $\target$.
+\end{itemize}
+
+Let us now examine whether these requirements are satisfied:
+\begin{itemize}
+    \item When $p_\target$ is 1, this means $p_j = \djt$, so we have for all $j$:
+          \begin{equation*}
+              \grad{\lossval}{u_j} = -1 \times (\djt -\djt) + 0 \times (\djs - p_j) = 0
+          \end{equation*}
+    \item When $p_\target$ is 0, we get:
+          \begin{align*}
+              \grad{\lossval}{u_j}
+               & = -0 + p_\source (\djs - p_j)                        \\
+               & = \begin{cases}
+                       0                         & \text{if } j = \target \\
+                       p_\source (1 - p_\source) & \text{if } j = \source \\
+                       - p_\source p_j           & \text{otherwise}
+                   \end{cases}
+          \end{align*}
+          The components for the classes that are not $\source$ or $\target$ are negative, which means these classes are favored compared to $\target$ which is counter to our intuition.
+\end{itemize}
+Compare this with our naive extension:
+for $\lossval(u) = -p_\target$, the gradient is
+$\grad{\lossval}{u_j} =  -  p_\target (\djt - p_j)$
+so when
+$p_\target = 1$, $\grad{\lossval}{u_j} = -1 \times (\djt - \djt) = 0$ as required,
+and when
+$p_\target = 0$, $\grad{\lossval}{u_j} = 0$ so the loss does not increase $u_\target$ at all (or any other class), which is not optimal.
+
+\subsection{Log-probability-based losses}
+
+Setting the probability as an objective goes counter to the usual loss functions for training classifiers; a more common choice is the cross-entropy $\ce$.
+Indeed, the cross-entropy represents the information that is shared between two distributions, which is a more natural metric than a conventional distance such as the $L_2$ norm \cite{murphyMachine2012}.
+The cross-entropy involves the logarithm of the predicted probabilities, so we can easily modify our previous attempts to get:
+\begin{align*}
+    \LogPrbTarget{}:        & \quad    \lossval(u) = - \log p_\target                              \\
+    \LogPrbSource{\lambda}: & \quad     \lossval(u) = - \log p_\target + \lambda \log p_\source    \\
+    \LogPrbOthers{\lambda}: & \quad    \lossval(u) = - \log p_\target + \lambda \mysum{c} \log p_c
+\end{align*}
+where $\lambda \in [0, 1]$ is a regularization parameter.
+$\LogPrbOthers{}$ encodes the objective to not only increase the probability of $\target$ but also to decrease all the others.
+This is important because in \ls{} the objective of increasing $p_\target$ is equivalent to decreasing $\mysum{c} p_c$, since in binary classification this is just $p_\source$; however, in multi-class problems they are distinct quantities.
+
+In fact, with this naming scheme we can also give names to the previous losses:
+\begin{align*}
+    \PrbTarget{}:        & \quad    \lossval(u) = - p_\target                         \\
+    \PrbSource{\lambda}: & \quad     \lossval(u) = - p_\target + \lambda p_\source    \\
+    \PrbOthers{\lambda}: & \quad    \lossval(u) = - p_\target + \lambda \mysum{c} p_c
+\end{align*}
+But notice
+\begin{align*}
+    \PrbOthers{\lambda}(u)
+     & = - p_\target + \lambda (1 - p_\target) \\
+     & = -(\lambda + 1)p_\target + \lambda
+\end{align*}
+which resembles $\PrbTarget{}$, so in practice $\PrbOthers{}$ is not used.
+
+Let us compute the gradients of our log-probability losses to get a better understanding of their behavior.
+
+We have
+\begin{align*}
+    \grad{\log p_i}{u_j}
+     & = \frac{\grad{p_i}{u_j} }{p_i}  \\
+     & = \frac{p_i (\dij - p_j) }{p_i} \\
+     & = \dij - p_j
+\end{align*}
+Hence
+\begin{align*}
+    \grad{\LogPrbSource{\lambda}}{u_j}
+     & = - \grad{\log p_\target}{u_j} + \lambda \grad{\log p_\source}{u_j} \\
+     & = - (\djt - p_j) + \lambda (\djs - p_j)                             \\
+     & = - \djt + p_j + \lambda \djs - \lambda p_j                         \\
+     & = (1 - \lambda) p_j + \lambda \djs - \djt
+\end{align*}
+
+We check our intuition:
+\begin{itemize}
+    \item For $p_\target = 1$ this gives us
+          \begin{align*}
+              \grad{\LogPrbSource{\lambda}}{u_j}
+               & = (1 - \lambda) \djt + \lambda \djs - \djt \\
+               & = \lambda(\djs - \djt)                     \\
+               & = \begin{cases}
+                       -\lambda & \text{if } j = \target \\
+                       \lambda  & \text{if } j = \source \\
+                       0        & \text{otherwise}
+                   \end{cases}
+          \end{align*}
+          so the gradient pushes the logit of class $\target$ higher and that for class $\source$ lower.
+          When $\lambda = 0$, which corresponds to $\LogPrbTarget$, the gradient is zero which is also acceptable intuitively.
+
+    \item For $p_\target = 0$ we get
+          \begin{align*}
+              \grad{\LogPrbSource{\lambda}}{u_j}
+               & = (1 - \lambda) p_j + \lambda \djs - \djt                 \\
+               & = \begin{cases}
+                       0 + 0 - 1 = -1                 & \text{if } j = \target \\
+                       (1-\lambda)p_\source + \lambda & \text{if } j = \source \\
+                       (1 - \lambda) p_j              & \text{otherwise}
+                   \end{cases}
+          \end{align*}
+          So when $j \neq \target$ the gradient is larger than 0; again, class $\target$ dominates.
+\end{itemize}
+
+For $\LogPrbOthers{}$ we have:
+\begin{align*}
+    \grad{\LogPrbOthers{\lambda}}{u_j}
+     & = - \grad{\log p_\target}{u_j} + \lambda \mysum{c}\grad{\log p_c}{u_j}          \\
+     & = - (\djt - p_j) + \lambda \mysum{c} (\delta_{cj} - p_j)                        \\
+     & = - \djt + p_j + \lambda (\mysum{c} \delta_{cj}) - \lambda \mysum{c} p_j        \\
+     & = - \djt + p_j + \lambda (\mysum{c} \delta_{cj}) - \lambda p_j \mysum{c} 1      \\
+     & = - \djt + p_j + \lambda (\mysum{c} \delta_{cj}) - \lambda p_j (\outputdim - 1) \\
+     & = - \djt + p_j (1 - \lambda (\outputdim - 1)) + \lambda (\mysum{c} \delta_{cj}) \\
+     & = \begin{cases}
+             - 1 + p_\target (1 - \lambda (\outputdim - 1))   & \text{if } j = \target \\
+             0 + p_j (1 - \lambda (\outputdim - 1)) + \lambda & \text{otherwise}
+         \end{cases}     \\
+     & = - \djt + p_j (1 - \lambda (\outputdim - 1)) + \lambda (1 - \djt)              \\
+     & = p_j (1 - \lambda (\outputdim - 1)) + \lambda (1 - \djt) - \djt
+\end{align*}
+
+We check our intuition:
+\begin{itemize}
+    \item For $p_\target = 1$ this gives us
+          \begin{align*}
+              \grad{\LogPrbOthers{\lambda}}{u_j}
+               & = \djt (1 - \lambda (\outputdim - 1)) + \lambda (1 - \djt) - \djt      \\
+               & = \djt - \djt \lambda (\outputdim - 1) + \lambda - \lambda \djt - \djt \\
+               & = - \djt \lambda (\outputdim - 1) + \lambda - \lambda \djt             \\
+               & = - \lambda (\djt (\outputdim - 1) - 1 + \djt)                         \\
+               & = - \lambda (\outputdim \djt - 1)                                      \\
+               & = \begin{cases}
+                       - (\outputdim - 1) \lambda & \text{if } j = \target \\
+                       \lambda                    & \text{otherwise}
+                   \end{cases}
+          \end{align*}
+          so the gradient pushes the logit of class $\target$ higher than that for other classes
+
+    \item For $p_\target = 0$ we get
+          \begin{align*}
+              \grad{\LogPrbOthers{\lambda}}{u_j}
+               & = p_j (1 - \lambda (\outputdim - 1)) + \lambda (1 - \djt) - \djt        \\
+               & = \begin{cases}
+                       -1                                           & \text{if } j = \target \\
+                       p_j(1 - \lambda ( \outputdim -1 )) + \lambda & \text{otherwise}
+                   \end{cases}
+          \end{align*}
+          Can a component for class $j$ be more negative than -1? Yes: for example, if $\lambda = 1$ and some $p_j = 1$ then we get $(1 - (\outputdim -1)) + 1 = 3 - \outputdim$ so for $\outputdim > 4$ logit $j$ will be pushed further up than $\target$.
+\end{itemize}
+
+
+\subsubsection{Logit-based losses}
+
+Our previous loss functions are somewhat difficult to control because of the interactions between the different classes:
+when we state our requirement to increase $p_\target$, this can be understood either as increasing $u_\target = f(\dec(z))_\target$, or as decreasing the other $u_c$.
+For this reason, we revisit the previous attempts but optimizing for the logits directly.
+
+Hence, we define the following losses, with regularization parameter $\lambda \in [0, 1]$:
+\begin{align*}
+    \LogitTarget{}:        & \quad    \lossval(u) = - u_\target                         \\
+    \LogitSource{\lambda}: & \quad     \lossval(u) = - u_\target + \lambda u_\source    \\
+    \LogitOthers{\lambda}: & \quad    \lossval(u) = - u_\target + \lambda \mysum{c} u_c
+\end{align*}
+
+Here the gradients are easy to compute since the loss is linear in the logits:
+\begin{align*}
+\grad{\LogitTarget{}}{u_j} &= - \djt                         \\
+\grad{\LogitSource{\lambda}}{u_j} &= - \djt + \lambda \djs                        \\
+\grad{\LogitOthers{\lambda}}{u_j} &= - \djt + \lambda (1-\djt) = -(\lambda + 1)\djt + \lambda
+\end{align*}
+
+
 
 
 \section{Problem 2: Path regularization}
@@ -125,7 +310,7 @@ Note that in NF-based autoencoders, the decoder is the inverse of the encoder an
 \begin{algorithm}
 \caption{Learning a normalizing flow latent space by SGD with path regularization}
 \label{algo:pathreg}
-\KwData{Classifier $f, \autoencoder (\enc_\phi, \dec),$ (training) data, CF loss $\cfloss$, path loss $\pathloss$, path loss regularization coefficient $\lambda_\apath$}
+\KwData{Classifier $f, \autoencoder\ (\enc_\phi, \dec),$ (training) data, CF loss $\cfloss$, path loss $\pathloss$, path loss regularization coefficient $\lambda_\apath$}
 \KwOut{$\phi^*$ that minimizes the $\nll$ and the path loss}
 \While{not converged}{
 $x \gets \mathtt{get\_input}(\text{data})$ \\
@@ -139,17 +324,74 @@ $\phi \gets \phi - \nabla_\phi {(\nll(\phi) + \lambda_\apath \pathloss(\apath))}
 
 Since the one obvious constraint on paths is that they should be valid, one way to include this in $\pathloss$ could be to add a count of the number of valid paths in the batch.
 Note that class information is indirectly given during the training of the autoencoder, so the autoencoder is dependent on the classification task.
-\note{todo}
-% This is counter to the \note{todo}.
+By contrast, in vanilla \ls{} the authors make a conscious decision to keep the autoencoder entirely separate from the classifier.
+Their justification is that this allows for reusing the autoencoder on classifiers that have learned different tasks but that act on the same input data; for example, different classifiers each trained to detect a particular lung disease.
+This is a perfectly sound argument, but in the CFX generation literature class-aware generative models tend to be the norm because class information is very valuable when the objective is to change the class.
 
 \section{Robustness of path regularization}
+\label{methods:robustness}
 
 \subsection{Problem statement}
 
-\subsection{Proposed solution}
+The path regularization algorithm admits a general loss $\pathloss$ which is problem-dependent.
+Yet, this raises a question: can the path regularization algorithm accommodate for any path loss, however extraneous?
+If so, this procedure could potentially be manipulated to produce adversarial paths that do not reflect the true behavior of the explained model.
+
+\subsection{Proposed experiment}
+
+To probe the possibility of abuse of the path regularization procedure, we formulate an adversarial loss that promotes paths going through a specific point $\xgoal$:
+\begin{align}
+    \pathloss(\xgoal, (z_t)_{t=1}^T) = \min_{t \in \{1, \ldots, T\}} \{ \norm{\dec(z_t) - \xgoal}_2 \}
+\end{align}
 
 \section{Metrics}
 
+\subsection{Validity}
+
+Validity is the one requirement where the metric of interest is unambiguous: either a path is valid or it is not.
+Hence, for testing a path generation method on some test set, we measure the validity rate, which is the proportion of valid paths.
+
+\subsection{Computational performance}
+
+Ensuring that CFs generation is fast is an important concern for stakeholders, especially since one might need to generate paths for many points of interest.
+Hence, we measure the time taken for one step of one path.
+This is because depending on the number of steps chosen by the user, a path can take longer to generate, and methods such as \ls{} can take advantage of GPU optimizations to compute many paths at once.
+
+\subsection{Realism}
+
+
+% \paragraph{NF negative log-likelihood}
+
+% The first method is utilizing a normalizing flow.
+
+Following the reasoning presented in \cite{vanlooverenInterpretable2021}, we measure realism using a generative model.
+However, while \citeauthor{vanlooverenInterpretable2021} use a VAE and thus estimate realism using the reconstruction error, we can compute the likelihood directly.
+Indeed, normalizing flows are typically trained to minimize the negative log-likelihood (or NLL for short ) $\nll = - \log P(x)$, so we can compute it easily.
+$P(x)$ is in $[0, 1]$ so the $\nll$ is in $\R_+$ and the closer it is to 0, the more realistic the point is deemed to be.
+
+
+% \paragraph{Local Outlier Factor}
+
+% The other metric we consider is the local outlier factor (or LOF for short) \cite{breunigLOF2000}, for which an implementation is provided by the \sklearn{} package\footnote{\url{https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.LocalOutlierFactor.html}}.
+% The LOF score is derived from comparing the density around the point of interest to the density of its $k$ nearest neighbors: if the point has a low density compared to its neighbors then it is more likely to be an outlier.
+% In our experiments we take the $L_2$ norm as the distance and $k = 20$ neighbors as these are the default values set in the \sklearn{} implementation.
+% The score is in $]-\infty, 1]$; the higher the score, the more the point is considered to be an inlier and a negative score is an indication that the point is an outlier.
+
+\subsection{Extending metrics to a path}
+
+Many metrics take a point $x' \in \inputspace$ as input and return a score, but we wish to score a whole path $(x_t)_{t=1}^T$.
+Hence, given a metric, we aggregate over the path (that is, from its starting point to the first step at which $\target$ is reached).
+
+For this, we first produce paths in the form of a 3-dimensional tensor in $\R^{\nbsteps \times \batchsize \times \inputdim}$.
+We compute the model classes resulting in a 2-dimensional tensor in $\setclasses^{\nbsteps \times \batchsize}$.
+Based on this and our target classes in $\R^\batchsize$, we construct a mask $\pathmask \in \{0, 1\}^{\nbsteps \times \batchsize}$ that highlights the valid paths:
+if path $j$ is not valid, then
+$\forall i \in \{1, \ldots, \nbsteps\} \pathmask_{ij} = 0$, and if path $j$ is valid then $\pathmask_{ij} = 1$ up to and \emph{not including} the first index where $\target$ is reached, and 0 after that.
+
+Then we can take the element-wise product of, \eg{} the $\nll$ computed for all points of all paths, to mask the unwanted points.
+
+Note that if no paths are valid, the resulting product will be equal to zero, which can be misleading: $\nll = 0$ is a perfect score.
+For this reason we take care to always report the validity rate alongside any metric computed this way.
 
 \section{Datasets}
 \label{sec:datasets}
@@ -184,17 +426,19 @@ To generate the dataset, we randomly sample points in the $[0, 50]^2$ and then t
 
 \subsection{\ForestCover}
 
-This dataset is taken from the UCI Machine Learning repository \cite{duaUCI2019} and can be found at this URL: \url{https://archive.ics.uci.edu/ml/datasets/Covertype}. 
-\note{cite orginal authors}
-It contains data on about 580000 trees such as their elevation, their horizontal distance to the nearest surface water features and the type of soil they are in, as well as their species (among seven tree species). There is a total of 13 recorded variables, including the tree species. Of the 12 variables used for prediction, two are categorical, and encoded as one-hot columns.
-Because our method does not trivially extend to categorical features yet, we remove the one-hot columns.
+This dataset is taken from the UCI Machine Learning repository \cite{duaUCI2019} based on work in \cite{blackardComparative1999}. It was found at this URL: \url{https://archive.ics.uci.edu/ml/datasets/Covertype}.
+It contains data on 581012 trees such as their elevation, their horizontal distance to the nearest surface water features and the type of soil they are in, as well as their species, among seven tree species. There is a total of 13 recorded variables, including the tree species. Of the 12 variables used for prediction, two are categorical, and encoded as one-hot columns.
+Because our method does not trivially extend to categorical features yet, we remove the one-hot columns; we thus have $D = 10$.
 
 \subsection{\WineQuality}
 
-The \WineQuality dataset consists of data on around 6000 wines, such as their pH, their density and their alcohol percentage, as well as a quality rating from 0 to 10.
-There are 12 variables including the quality rating column; except for the quality, all of them are numerical.
-\note{cite}
+The \WineQuality{} dataset originates from \cite{cortezModeling2009} and can be found on the UCI repository at this link: \url{https://archive.ics.uci.edu/ml/datasets/Wine+Quality}.
+It consists of data on around 6498 Portuguese ``Vinho Verde'' wines, such as their pH, their density and their alcohol percentage, as well as a quality rating from 0 to 10.
+There are 13 variables including the quality rating column; except for the quality and whether they are red or white, all of them are numerical.
+As before, we remove the red/white information.
 
+Because the wine quality is an ordinal variable (categorical but ordered), it might not be appropriate to run a classifier on the dataset directly.
+To mitigate this we group quality ratings together into 3 classes.
 In fact, there are no wines with a quality rating of 0, 1, 2 or 10, and 43\% of the rows have a rating of 6 out of 10.
 Hence, for our classification task we create the following class mapping:
 \begin{itemize}
@@ -206,18 +450,17 @@ With this mapping, around 33\% of data are in class 0, 43\% in class 1 and 18\% 
 
 \subsection{\OnlineNewsPopularity}
 
-This dataset contains data on about 30000 news posts
-\note{how was data recorded? cite orig paper}
+This dataset \cite{fernandesProactive2015} contains data on 39644 news posts recovered from the Mashable website, such as the number of HTML tags of a certain type, the time of publishing, and also machine-learning-powered features such as the subjectivity and polarity of the language used, and how well the post fits within a given topic as determined by LDA.
+As before, we remove the categorical columns, leaving us with 46 columns including the target variable.
+
 The target variable is the number of shares of a given article, which is an integer; in order to make it usable for classification tasks, we create the following class mapping:
 \begin{itemize}
     \item Articles with a number of shares below the median (\ie{} in the worst 50\%) are considered to be in class 0,
     \item Articles between the 50\% and the 75\% percentiles are considered class 1,
     \item Articles between the 75\% and 95\% percentiles are considered class 2,
-    \item Articles within the 95\% percentile (\ie{} in the best 5\%) are considered class 3.
+\item Articles above the 95\% percentile (\ie{} in the best 5\%) are considered class 3.
 \end{itemize}
 Thus, class 0 contains 50\% of the data, class 1 contains 25\%, class 2 contains 20\% and class 3 contains 5\%.
-
-\note{explain why this mapping}
 
 \subsection{Summary of datasets}
 
@@ -229,14 +472,15 @@ In \autoref{tab:datasets} we summarize the relevant information about our datase
     \centering
     \caption{Summary of our dataset settings}
     \label{tab:datasets}
-    \begin{tabular}{lrrrrrr}
+\begin{tabular}{lrrrrrrr}
         \toprule
-        Name         & $\inputdim$ & $\outputdim$ & $\card{\trainset}$ & $\card{\valset}$ & $\card{\testset}$ & $\batchsize$ \\
+Name          & $\inputdim$ & $\outputdim$ & $\card{\trainset}$     & $\card{\valset}$     & $\card{\testset}$    & $
+    \card{\trainset} / \inputdim$ & $\batchsize$ \\
         \midrule
-        \CakeOnSea   & 2           & 3            & ~60k               & ~20k             & ~20k              & 200          \\
-        \ForestCover & 10          & 7            & ??                 & ??               & ??                & ??           \\
-        \WineQuality & ??          & 3            & ??                 & ??               & ??                & ??           \\
-\OnlineNewsPopularity & ??          & 4           & ??                 & ??               & ??                & ??           \\
+\CakeOnSea            & 2           & 3            & 57607                  & 19202                & 19202        & 28803         & ??           \\
+\ForestCover          & 10          & 7            & 348608                 & 116202               & 116202       & 34861        & ??           \\
+\WineQuality          & 11          & 3            & 3900                   & 1299                 & 1299          & 355        & ??           \\
+\OnlineNewsPopularity & 45          & 4            & 23788                  & 7928                 & 7928          & 529        & ??           \\
         \bottomrule
     \end{tabular}
 \end{table}

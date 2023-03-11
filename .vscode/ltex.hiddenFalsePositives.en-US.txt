@@ -7,3 +7,5 @@
 {"rule":"POSSESSIVE_APOSTROPHE","sentence":"^\\QNonlinear independent components estimation.\\E$"}
 {"rule":"THE_SUPERLATIVE","sentence":"^\\QSince the gradient gives the direction of steepest ascent, going in the opposite direction is the best strategy to decrease \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q.\\E$"}
 {"rule":"MORFOLOGIK_RULE_EN_US","sentence":"^\\Q\\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q generate a diverse set of CFs by gradient descent, solving for \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q candidate CFs at the same time \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q.\\E$"}
+{"rule":"COMMA_PARENTHESIS_WHITESPACE","sentence":"^\\QWe run our experiment on the datasets described in \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q, namely , , and .\\E$"}
+{"rule":"DOUBLE_PUNCTUATION","sentence":"^\\QWe run our experiment on the datasets described in \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q, namely , , and .\\E$"}

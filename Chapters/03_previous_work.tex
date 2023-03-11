@@ -10,23 +10,25 @@
 
 We now describe the basis of our work, \ls{}.
 This method was presented by \citeauthor{cohenGifsplanation2022} in 2022 as a CF generation method for binary classification models on image data, specifically X-ray images of human lungs \cite{cohenGifsplanation2022}.
-Given an input image $x$ predicted as class 0, the method perturbs $x$ according to the gradient of the classifier $f$ (the direction of steepest ascent), in order for $f$ to increase.
-However, instead of computing the gradient in input space, they use an autoencoder $(\enc, \dec)$ and computing the gradient of the classifier \emph{in latent space}: $\nabla_z f(\dec(z))$ where $z = \enc(x)$.
-The reason for this is to promote realistic images: indeed, autoencoders typically filter out information that is considered to be noise, so performing the perturbation in latent space is safer \note{todo}
-Also it works especially well for images because even though they have many features (a 28-by-28 pixel image has $28^2 = 784$ features, times 3 if it has RGB data), those features tend to be highly correlated \note{cite}.
+Given an input image $x$ predicted as class 0 (\ie{} for which $f(x)$ is low), the method aims to produce a new image close to $x$ that is predicted as class 1 (\ie{} for which $f(x)$ is high.).
+To achieve this, $x$ is perturbed according to the gradient of the classifier $f$ (the direction of steepest ascent), in order for $f$ to increase.
+However, instead of computing the gradient in input space, they use an autoencoder $(\enc, \dec)$ and compute the gradient of the classifier \emph{in latent space}: $\nabla_z f(\dec(z))$ where $z = \enc(x)$.
+This is to promote realistic images: indeed, autoencoders typically filter out information that is considered to be noise, so performing the perturbation in latent space is safer in this regard to avoid unrealistic images.
+Contracting the image space can also result in a loss of relevant information, but in general for images this effect is less pronounced because even though they have many features (a 28-by-28 pixel image has $28^2 = 784$ features, times 3 with RGB information), those features tend to be highly correlated \note{cite}.
 
 A summary of the \ls{} procedure is shown in \autoref{fig:latent_shift}.
-On the left, the data manifold in input space is non-convex, so by perturbing along the gradient we risk exiting the data manifold.
+On the left, the data manifold in input space is non-convex, so by perturbing along the gradient in the input space we risk exiting the data manifold.
 Hence, we first run the encoder $\enc$, then perturb the latent following the gradient of the classifier by some factor $\lambda$, and finally run the decoder $\dec$ to get the candidate counterfactual $\CF{x}$.
 
 \begin{figure}[htbp]
     \centering
-    \subfile{Figures/latent_shift.tex}
+\subfile{../Figures/latent_shift.tex}
     \caption{A sketch of the \ls{} algorithm. Step 1 is applying $\enc$, step 2 is perturbing along the gradient of the classifier, and step 3 is applying $\dec$. Adapted from \cite{cohenGifsplanation2022}.}
     \label{fig:latent_shift}
 \end{figure}
 
 One point of interest in this method is that we can easily visualize the equivalent continuous path taken in input space (outlined in the left part of \autoref{fig:latent_shift}) by running the procedure with different values of $\lambda$; thus we can see the final result $\CF{x}$, but also the full progression leading to it.
+Also, by setting $\lambda$ to a negative value we could also produce new points that are \emph{more strongly} predicted as class 0.
 
 % A comprehensive overview of algorithms, evaluation metrics as well as open problems is given in \cite{vermaCounterfactual2020}.
 % note to self: verma include "progressive explanations" as one of their "open research" topics. Which is kind of what i'm doing!
@@ -85,9 +87,10 @@ In this work, the authors detail what they mean by semanticity:
 This description is reminiscent of adversarial perturbations, and in particular the universality of semanticity is challenged in \cite{moosavi-dezfooliUniversal2017}.
 In this work, the authors demonstrate that, given a conventional deep learning model, it is possible to find \emph{one} small constant perturbation which, when applied to \emph{any} input in the dataset, leads to a change in model prediction.
 
-% PNS Relates causality with feature learning \cite{wangRepresentation2022}
-
-% Disentangled feature learning requires supervision \cite{locatelloChallenging2019}
+Yet, for many applications it is often sufficient to require weaker properties of latent features, such as disentanglement, efficiency or non-spuriousness.
+\citeauthor{wangRepresentation2022} bridge the gap between latent representations and causal learning by formulating the above-mentioned properties in terms of causal quantities; because these quantities are difficult to compute in general, they derive a metric approximating the degree of efficiency and non-spuriousness, which can be used to regularize representation learning models \cite{wangRepresentation2022}.
+This can only be used in the supervised learning setting, where a label is known and can be used for training.
+In fact, \citeauthor{locatelloChallenging2019} demonstrate that achieving a disentangled representation is not possible without labels \cite{locatelloChallenging2019}.
 
 \section{CFX generation methods}
 
@@ -103,7 +106,7 @@ A comprehensive classification and taxonomy up to 2020 is given in \cite{vermaCo
 % and benchmarks
 %   - [ ] @pawelczykCARLA2021
 %   - @deoliveiraFramework2021
-% - [ ] CLUE (to reinforce model certainty)
+% - [X] CLUE (to reinforce model certainty)
 % - [x] CRUDS
 % - Causality-related
 %   - More sensible if recourse is a desired goal.
@@ -158,6 +161,18 @@ The reasoning is that $\text{proto}_c$ is likely realistic, because it is an ave
 
 \subsection{Solutions with class-aware generative models}
 
+\paragraph{\method{CLUE}}
+
+\citeauthor{antoranGetting2021} introduce CLUE \cite{antoranGetting2021}, a method for producing counterfactuals that are as realistic as possible by way of a conditional VAE. The method is very similar to \revise: the loss function that is minimized to perturb $x$ via gradient descent is
+\begin{equation}
+    \loss(z') = h(y | \dec(z')) + \norm{\dec(z') - x}_1
+\end{equation}
+where $h$ is some measure of ``uncertainty'' (what we call realism) of $\dec(z')$ with respect to a target label $y$.
+Their approach to evaluation of CFX is intriguing:
+to get a known ground-truth data distribution without resorting to purely fabricated datasets, they train a ``ground-truth'' VAE on a real dataset (they take the example of the MNIST hand-written digits); the VAE is then used to generate an artificial dataset, and the method is tested on these data where metrics such as the ``ground-truth'' log-likelihood.
+
+Importantly, the authors validate their finding with a user study, which is not that frequent in works on CFX.
+
 \paragraph{\method{CRUDS}}
 
 \citeauthor{downsCRUDS2020} make use of a conditional subspace VAE (or CSVAE for short) to adapt the latent representation to the classification task:
@@ -177,13 +192,28 @@ However, in our case we have at least one precise goal: to change the class to t
 When this is achieved, we say that the explanation is \emph{valid}.
 Hence, our first and foremost metric is the \emph{validity rate}: the fraction of CFs that reached the target.
 
+When a method produces several CFs, it is often desirable to guarantee \emph{diversity}, so that the $k$ proposed CFs are not $k$ times the same point.
+
+\subsection{Distance}
+
 For a CFX to be relevant to the explained input, it should be close enough to the explained input; thus some notion of \emph{distance} is often used, \eg{} the Euclidean ($L_2$) norm.
 Furthermore, it is often preferred to have \emph{sparse} perturbations, in the interest of simplicity; for this the $L_1$ loss is a common choice. \citenote{}
+\citeauthor{vanlooverenInterpretable2021} even propose a linear combination of the two.
 
-\note{feasibility}
-\note{MAD, percentile shift}
+\subsection{Feasibility}
 
-When a method produces several CFs, it is often desirable to guarantee \emph{diversity}, so that the $k$ proposed CFs are not $k$ times the same point.
+When a CFX is intended to provide recourse, authors tend to mention \emph{feasibility} as a requirement.
+This refers to the possibility for, \eg{}, a user, to actually follow the recourse path proposed in the form of a CFX.
+% Several metrics aim to capture feasibility, including:
+
+For example, \citeauthor{pawelczykLearning2020} introduce metrics based on \emph{percentile shift}, that is, for feature $i$, how far $\CF{x}_i$ has shifted in terms of percentile compared to $x_i$.
+For example, letting $\text{percentile}_i^\data(x) \in [0, 1]$ denote the percentile of $x$ for feature $i \in \{1, \ldots, \inputdim\}$, they define
+\begin{align*}
+    \text{\emph{total percentile shift} as }   & \sum_{i=1}^\inputdim \abs{ \text{percentile}_i^\data(\CF{x}) - \text{percentile}_i^\data(x) }                  \\
+    \text{\emph{maximum percentile shift} as } & \max_{i \in \{1, \ldots, \inputdim\}} \abs{ \text{percentile}_i^\data(\CF{x}) - \text{percentile}_i^\data(x) }
+\end{align*}
+
+\note{MAD,}
 
 \subsection{Realism}
 

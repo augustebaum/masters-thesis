@@ -27,15 +27,18 @@ Some of the reasons driving research in explainable AI (referred to as XAI herea
     \item AI practitioners hope to limit unexpected failure scenarios in their work, especially in cases where failure can be costly (e.g. in medicine or finance).
 \end{itemize}
 
+% Note that it has also been argued that in many cases (including in the tabular setting) trying to "explain" black-box models is less productive than using more interpretable-by-design techniques \cite{rudinWhy2019}.
+
 Because of how ubiquitous AI is becoming, XAI research is also blossoming and the research landscape is vast.
 Accordingly, some taxonomies have emerged recently that help differentiate methods \cite{zhangSurvey2021, bellePrinciples2021}.
+In particular, as mentioned, there exist methods that alter the training process of the model of interest to make it more interpretable; these are called \emph{embedded} methods.
+On the other hand, many methods are designed to be applied to pre-trained models in a frozen state -- the models can only be probed, not modified. These methods are referred to as \textsl{post hoc} (literally ``after the fact'').
+In this work we focus on the more general-purpose \textsl{post hoc} methods.
 
-Note that it has also been argued that in many cases (including in the tabular setting) trying to "explain" black-box models is less productive than using more interpretable-by-design techniques \cite{rudinWhy2019}.
-
-One key characteristic of an XAI method is its \emph{scope}: a \emph{global} XAI method applies to a \emph{whole} fully trained ML model, while a \emph{local} method gives an explanation of \emph{one prediction} by the model.
-Global methods report general information that does not necessarily reflect
+One other key characteristic of an XAI method is its \emph{scope}: a \emph{global} XAI method applies to a \emph{whole} fully trained ML model, while a \emph{local} method gives an explanation of \emph{one prediction} by the model.
+Global methods produce compact results, but they report general information that does not necessarily reflect
 how the model acts in all situations, while local methods produce results with
-a more limited range, which can therefore lead to misleading interpretations if applied to far-removed situations.
+a more limited range, which are more precise but can lead to misleading interpretations if applied to far-removed situations.
 
 % It's a trade-off: think of it as looking at just the mean vs. looking at just one point
 
@@ -43,23 +46,43 @@ In the following we focus on local explainability methods, relying on the assump
 
 \subsection{Local explainability}
 
-Having discarded all global methods, we can still subdivide local methods into several types of explanation. Some of them are outlined in \cite{bellePrinciples2021}:
+Setting aside global methods, we can still subdivide local methods into several types of explanation.
+Some of them are outlined in \cite{bellePrinciples2021}:
 
-\paragraph{Local approximation approaches}
+\subsubsection{Local feature attribution approaches}
 
-One strategy is to transform the model into a simpler, more interpretable proxy model which has the same local behavior. In LIME, a commonly used method, the proxy is a linear model \cite{ribeiroWhy2016}.
-Interestingly, it has recently been shown that many pre-existing local explanation methods, including LIME, can in fact be formulated as instances of the same framework called Local Function Approximation \cite{hanWhich2022}.
+A popular format for explanations is \emph{feature attributions}: ratings of importance of each input feature, which give an answer to the question ``Which features matter to the model for its prediction?''.
+Broadly speaking, there are two types of methods outputting feature attributions: perturbation-based methods and gradient-based methods.
 
-\paragraph{Rule-based approaches}
+\paragraph{Perturbation-based methods}
 
-Rule-based techniques aim to approximate the model's behavior by simple logical rules on the input features that hold \emph{locally} (i.e. for a high proportion of other input points in the neighborhood of the input of interest).
+One strategy is to find an approximation of the model: a simpler, more interpretable proxy model which has the same local behavior. In \method{LIME}, a commonly used method, the proxy is a linear model \cite{ribeiroWhy2016}.
+With the proxy model, it is often straightforward to extract information such as feature attribution: in the case of a linear model, the weight of each feature in the prediction is related to the magnitude of the regression coefficients.
+
+
+However, finding a proxy model can take a long time, and the proxy would only hold for one point of interest.
+Similarly, finding the approximation requires access to at least some training data points, which means that part of the dataset needs to be available on the same machine where the proxy model is generated -- which increases memory consumption and constitutes a potential privacy issue.
+Worse, it has been shown that \method{LIME} and other methods can be fooled into proposing explanations that do not accurately reflect the model behavior \cite{slackFooling2020}.
+
+\paragraph{Gradient-based methods}
+
+Another strategy involves computing the gradient of the classification function with respect to the input features: indeed, by definition of the gradient, this precisely measures how sensitive the prediction is to a change in one of the input features.
+One of the most frequently used methods of this kind is \method{IntegratedGradients} \cite{sundararajanAxiomatic2017}, which answers the question: ``How relevant to the prediction is feature $i$ of the point of interest $x$ compared with some other reference point $x'$?''.
+
+Notice that the explanation is only given with respect to the reference point $x'$, so choosing a different $x'$ can yield a different explanation; furthermore, the choice of $x'$ is not always obvious.
+
+Interestingly, it has recently been shown that many pre-existing local explanation methods, including \method{LIME}, can in fact be formulated as instances of the same framework called Local Function Approximation \cite{hanWhich2022}.
+
+\subsubsection{Rule-based approaches}
+
+Rule-based techniques aim to approximate the model's behavior by simple logical rules on the input features that hold locally (\ie{} for a high proportion of other input points in the neighborhood of the input of interest).
 As such, they can be understood as a special case of local approximation approaches.
 One rule-based approach, called \method{Anchors}, does this by reformulating the problem as a multi-armed bandit problem \cite{ribeiroAnchors2018}.
 The advantage of rules as explanations is their intelligibility; it has been shown that rules depicting why a model behaved a certain way tend to be well understood compared to other types of explanation \cite{limWhy2009}.
 
 % CF is dual to rule-based \cite{gengComputing2022}.
 
-\paragraph{Counterfactual approaches}\label{par:cfx}
+\subsubsection{Counterfactual approaches}\label{par:cfx}
 
 A counterfactual explanation (CFX hereafter) is one or more \emph{virtual points} that are close to the explained input, but for which \emph{the model prediction is different}.
 Such an explanation aims to answer the question: ``What would have to change in the input for the model to change its prediction?''

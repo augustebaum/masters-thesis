@@ -5,79 +5,135 @@
 
 \chapter{Experiments}
 
+We now present our three experiments aiming to address the problems stated in \autoref{ch:methods}.
+
+First we give details on settings common to all experiments.
+
 \section{Models}
 
 All models are trained using the Adam algorithm \cite{kingmaAdam2014} with a learning rate of $1 \times 10^{-3}$.
 
 \subsection{Classifier}
+\label{exp/classifiers}
 
 The classifier architecture in our analyses is an MLP consisting of two 50-node linear layers each followed by a $\relu$, then one last linear layer outputting $\outputdim$ logits.
+
+In \autoref{fig:confusion_matrices} we show the test predictions of our classifier architecture, trained on each dataset with the batch size given in \autoref{tab:datasets}.
+\begin{figure}
+    \centering
+    \begin{subfigure}[b]{0.4\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./confusion_matrices/cake_on_sea/confusion_matrix_svg-tex.pdf}
+        \caption{Accuracy on \CakeOnSea.}
+        % \label{fig:y equals x}
+    \end{subfigure}
+    % \hfill
+    \begin{subfigure}[b]{0.4\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./confusion_matrices/forest_cover/confusion_matrix_svg-tex.pdf}
+        \caption{Accuracy on \ForestCover.}
+        % \label{fig:three sin x}
+    \end{subfigure}
+
+    \begin{subfigure}[b]{0.4\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./confusion_matrices/wine_quality/confusion_matrix_svg-tex.pdf}
+        \caption{Accuracy on \WineQuality.}
+        % \label{fig:y equals x}
+    \end{subfigure}
+    % \hfill
+    \begin{subfigure}[b]{0.4\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./confusion_matrices/online_news_popularity/confusion_matrix_svg-tex.pdf}
+        \caption{Accuracy on \OnlineNewsPopularity.}
+        % \label{fig:three sin x}
+    \end{subfigure}
+
+    \caption{Accuracy of our MLP classifier on each dataset.}
+    \label{fig:confusion_matrices}
+\end{figure}
+
+It seems the classifier achieves low accuracy on \WineQuality{} and \OnlineNewsPopularity{} in particular.
+These datasets are originally designed for regression, so they are perhaps not well adapted to classification; however, their size is also likely a factor: they have on the order of $10^2$ training examples per dimension where the others have on the order of $10^4$.
+
+All datasets also have significant class imbalance: in \ForestCover{} the test set contains 56382 points with true class 1 while only 554 points in class 3.
 
 \subsection{Autoencoder}
 
 We build a normalizing flow model according to the NICE architecture described in \autoref{bg/nf} \cite{dinhNICE2015}.
-The model is trained according to a Gaussian prior distribution, and its layers are 4 additive coupling layers where we divide the input into the odd columns and the even columns, and the nonlinearity is an MLP with 4 layers of 50 nodes each \note{check this is the case}.
+The model is trained according to a Gaussian prior distribution, and its layers are 4 additive coupling layers where we divide the input into the odd columns and the even columns, and the nonlinearity is an MLP with 4 layers of 50 nodes each. \note{check this is the case}
 
-\section{Validity losses}
+\section{Experiment 1: Validity losses}
 
-In this experiment, the goal is to find the validity loss that maximizes validity rate among a number of choices.
+In this experiment, we seek to determine the validity loss that maximizes validity rate among a number of choices.
+For this we measure the validity rate over CFs generated from the test set across several CF methods and losses.
 
-\subsection{Description}
+\paragraph{Description}
 \label{validity_losses/description}
 
 For a given dataset, we train one classifier.
-Then for this dataset, we train several autoencoders all with the same architecture and with different seeds.
+Then for this dataset, we train several autoencoders all with the same architecture and with different seeds to average out random effects due to model initialization and dataset train-test split.
 The seeds are generated uniformly based on one primary seed.
 
 For a given dataset, we measure the validity rate across the whole test set.
-That is, for every test point, we run the classifier to get the $\source$ class, and we sample the target class uniformly from $\setclasses \backslash \{\source\}$.
-Then we generate a path using the given validity loss, and measure its validity.
+That is, for every test point, we run the classifier to get the $\source$ class ($\source = \arg\max_{c \in \setclasses} \softmax( f(x) )$), and we sample the target class uniformly from $\setclasses \backslash \{\source\}$.
+Then we generate a path using the given validity loss $\lossval$, and measure its validity (1 if $\target$ was reached, 0 otherwise).
+It is important to sample the $\target$ uniformly to get a full understanding because, even though the label distribution might not be uniform, explanations should be
 
 We average the rates over the different seeds, and report the standard error.
 
-The parameters used for training the models and for producing the paths are reported in ?? \note{Link to some yaml?}
+The parameters used for training the models and for producing the paths are reported in ?? \note{Link to some yaml in appendix?}
 
-\subsection{Baselines}
+\paragraph{Baselines}
 
-The paths are produced by variations on \ls{} and with \revise{}.
-Specifically, we run both methods twice: once with regularization on the $L_1$ distance, as explained in \autoref{par:revise}, and one without regularization (with the $\lambda_\text{distance}$ set to 0).
+The methods we use to produce the paths are variations on \ls{} and \revise{}.
+Specifically, we run both methods twice: once with regularization on the $L_1$ distance, with $\lambda_\text{distance} = 0.3$ and one without regularization (with $\lambda_\text{distance}$ set to 0).
+In the future using some automatic tuning procedure would be preferable: in our case $\lambda_\text{distance} = 1$ led to immobile paths whereas $\lambda_\text{distance} = 0.3$ might be too close to regularization at all.
 \note{How are these named in the results table?}
 
 The losses compared in this experiment are as follows:
-\note{todo}
+\begin{itemize}
+    \item The probability-based losses: $\PrbTarget, \PrbSource{}$
+    \item The log-probability-based losses: $\LogPrbTarget, \LogPrbSource{}, \LogPrbOthers{}$
+    \item The logit-based losses: $\LogitTarget, \LogitSource{}, \LogitOthers{}$
+\end{itemize}
+where we test all losses that can be parametrized with the default parameter of $\lambda = 1$ and also with $\lambda = 0.1$, for a total of 13 losses ($\PrbTarget$ is not parametrized, and recall that $\PrbOthers{}$ is equivalent to $\PrbTarget$.).
+Here again, a larger scale parameter search could have been interesting, but instead we first select the best-performing loss and show the progression for $\lambda \in [0, 1]$.
+\note{do it}
 
-\subsection{Datasets}
+\paragraph{Datasets}
 
 We run our experiment on the datasets described in \autoref{sec:datasets}, namely \CakeOnSea, \ForestCover, \WineQuality{} and \OnlineNewsPopularity.
 
-\subsection{Metrics}
+\paragraph{Metrics}
 
 The one metric in this experiment is the validity rate, \ie{} the proportion of paths that reach their target class across the whole test set.
 
-\subsection{Results}
+\paragraph{Results}
 
 The results for each dataset and loss are given in \autoref{tbl:validity_losses}.
 
 \begin{table}[h!]
+\centering
+\subfile{Figures/validity_losses.tex}
     \caption{Validity rate means with their standard error.}
 \label{tbl:validity_losses}
-    \input{Figures/validity_losses.tex}
 \end{table}
 
-\subsection{Interpretation}
+\paragraph{Interpretation}
 
 As expected, the validity rate achieved by \revise{} is much more acceptable than that of \ls{}, across all losses.
 Additionally, it would seem the best results are obtained with ?? \note{todo}.
 \note{is this surprising? if so why?}
 
-\section{Path regularized training}
+\section{Experiment 2: Path regularized training}
 \label{exp/path_reg}
 
 Having determined an appropriate validity loss to use for generating valid paths, we turn now to our objective of interpretability.
 In this experiment we seek to determine if \ls{} equipped with a path regularized autoencoder can perform on the same level as \revise{}, increasing interpretability without compromising validity.
 
-
-
+Our proxy for complexity of a path is the number of class boundary crossings:
+the path should ideally transition from $\source$ to $\target$ without going through other classes.
 
 The parameters used for training the models and for producing the paths are reported in ?? \note{Link to some yaml?}
 
@@ -162,42 +218,62 @@ Finally, for each explanation method, we aggregate the metrics obtained for each
 %     \end{algorithm}
 % }
 
-\subsection{Baselines}
-
-\subsection{Datasets}
 
 \subsection{Metrics}
+
+We measure the validity, the number of boundary crossings \emph{before reaching $\target$} (so if the path goes directly from $\source$ to $\target$ the value is 0)
+
+For measuring realism, we use two metrics:
+
+
+The first is the mean area-under-curve of the LOF.
+Specifically, we train the LOF estimator model from \texttt{scikit-learn} on the train set, then for a given path, we compute the LOF for every point in the path until $\target$ is reached.
+For the AUC, we normalize the number of steps so that 0 is the beginning of the path and 1 is the end (the first step at which $\target$ is predicted).
+
+
+
+the mean NLL,
 
 \subsection{Results}
 
 \subsection{Interpretation}
 
-\section{Robustness of explanations with path regularization}
+\section{Experiment 3: Robustness of explanations with path regularization}
 
-\newcommand{\xgoal}{x^\bullet}
 
 Given that we were able to achieve more interpretable paths using path regularization, we ask whether it is possible to meet any interpretability criterion, even a nonsensical one.
 For example, can we use path regularization so that all paths pass through one designated point, regardless of $x$ and $\target$?
 To do so, we select a point $\xgoal \in \inputspace$ that we can reasonably expect to be unrealistic, but is not completely out of reach compared to points in the train set.
-Then, we devise a path loss that encodes the distance from a path to $x^\bullet$, and let our path regularization training enforce this constraint.
+Then, we devise a path loss that encodes the distance from a path to $\xgoal$, and let our path regularization training enforce this constraint.
 
 The parameters used for training the models and for producing the paths are reported in ?? \note{Link to some yaml?}
 
-\subsection{Description}
+\paragraph{Description}
 
-We perform path regularized training as described in \autoref{exp/path_reg}, but with a different choice of regularization: for a path $(x_t)_{t=1}^T$, our path loss measures the minimum distance between $x'$ and $\xgoal = (\max\{ x_i : x \in \trainset \})_{i=1}^D$: $\pathloss = \min_{t \in \{1, \ldots, T\}} \norm{x_t, \xgoal}$.
+We perform path regularized training using the adversarial path loss described in \autoref{methods:robustness}.
+The loss encodes how close a path passes by a given point $\xgoal$, which is potentially unrealistic.
+In our experiment, we pick a $\xgoal$ that is easy to compute, likely unrealistic yet not completely out of bounds for the dataset:
+\begin{equation}
+    \xgoal = (\max\{ x_i : x \in \trainset \})_{i=1}^D
+\end{equation}
+\ie{} $\xgoal_i$ is the largest value encountered in the dataset for feature $i$.
 
-\subsection{Baselines}
+Apart from this the setup is the same as that described in \autoref{exp/path_reg}, where we compare paths with the distance path regularization and without.
 
-\subsection{Datasets}
+\paragraph{Baselines}
 
-\subsection{Metrics}
+\paragraph{Datasets}
+
+\paragraph{Metrics}
 
 As before, we analyze the trade-off that is incurred by applying path regularization.
 We measure the validity rate, as well as the realism score and the path loss.
 
-\subsection{Results}
+Since we seek to minimize the distance from a path to $\xgoal$, we  include our path distance loss as a measure.
+Yet, it is important that manipulated paths retain the validity quality for the attack to be successful, hence we measure validity as well.
 
-\subsection{Interpretation}
+\paragraph{Results}
+
+\paragraph{Interpretation}
 
 \end{document}

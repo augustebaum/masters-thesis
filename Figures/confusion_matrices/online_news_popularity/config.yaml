@@ -1,0 +1,23 @@
+seed: 42
+data_module:
+  seed: 42
+  args:
+    validation_data_proportion: 0.2
+    test_data_proportion: 0.2
+    correct_for_class_imbalance: false
+    batch_size: 3000
+  dataset:
+    class_name: tabsplanation.data.OnlineNewsPopularityDataset
+    args: null
+training:
+  patience: 3
+  max_epochs: -1
+model:
+  class_name: Classifier
+  args:
+    hidden_dims:
+    - 50
+    - 50
+    batch_norm: false
+    dropout: null
+    learning_rate: 0.001
