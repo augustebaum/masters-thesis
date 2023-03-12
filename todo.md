@@ -12,17 +12,18 @@
     - [ ] Fill out table about datasets
     - [ ] Implementation of LazyRevise to recompute the gradient a variable number of times.
 - [ ] Experiments
-    - [ ] Give train and test accuracy of classifier for each dataset
-    - [ ] Show confusion matrices to see if certain classes are bad?
+    - [X] Give train and test accuracy of classifier for each dataset
+    - [X] Show confusion matrices to see if certain classes are bad?
     - [?] Describe experiments in pseudo-code
     - [ ] Validity losses
-        - [ ] Give justification with gradients
-        - [ ] Show tables with results
+        - [X] Give justification with gradients
+        - [X] Show tables with results
         - [ ] Show losses 
     - [ ] Path regularization
         - [X] Replace LOF with NF realism
     - [ ] Robustness experiment
         - Point is $(\max f_i)_i$
+- [ ] Conclusion
 
 Reading on 6/3:
 

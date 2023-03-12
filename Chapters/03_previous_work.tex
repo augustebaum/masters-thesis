@@ -18,7 +18,7 @@ Contracting the image space can also result in a loss of relevant information, b
 
 A summary of the \ls{} procedure is shown in \autoref{fig:latent_shift}.
 On the left, the data manifold in input space is non-convex, so by perturbing along the gradient in the input space we risk exiting the data manifold.
-Hence, we first run the encoder $\enc$, then perturb the latent following the gradient of the classifier by some factor $\lambda$, and finally run the decoder $\dec$ to get the candidate counterfactual $\CF{x}$.
+Hence, we first run the encoder $\enc$, then perturb the latent following the gradient of the classifier by some factor $\lambda_\text{LS}$, and finally run the decoder $\dec$ to get the candidate counterfactual $\CF{x}$.
 
 \begin{figure}[htbp]
     \centering
@@ -27,8 +27,8 @@ Hence, we first run the encoder $\enc$, then perturb the latent following the gr
     \label{fig:latent_shift}
 \end{figure}
 
-One point of interest in this method is that we can easily visualize the equivalent continuous path taken in input space (outlined in the left part of \autoref{fig:latent_shift}) by running the procedure with different values of $\lambda$; thus we can see the final result $\CF{x}$, but also the full progression leading to it.
-Also, by setting $\lambda$ to a negative value we could also produce new points that are \emph{more strongly} predicted as class 0.
+One point of interest in this method is that we can easily visualize the equivalent continuous path taken in input space (outlined in the left part of \autoref{fig:latent_shift}) by running the procedure with different values of $\lambda_\text{LS}$; thus we can see the final result $\CF{x}$, but also the full progression leading to it.
+Also, by setting $\lambda_\text{LS}$ to a negative value we could also produce new points that are \emph{more strongly} predicted as class 0.
 
 % A comprehensive overview of algorithms, evaluation metrics as well as open problems is given in \cite{vermaCounterfactual2020}.
 % note to self: verma include "progressive explanations" as one of their "open research" topics. Which is kind of what i'm doing!
@@ -158,6 +158,17 @@ For a given $x$, they build a list of ``prototypes'', one per class, which are i
 The prototype of class $c$ for $x$, $\text{proto}_c$, is the centroid of the $k$-neighborhood of $\enc(x)$: the average latent over the $k$ points predicted as $c$ closest to $\enc(x)$.
 Then, the optimization algorithm for finding $\CF{x}$ pushes the path towards the closest prototype.
 The reasoning is that $\text{proto}_c$ is likely realistic, because it is an average of real points, and it is likely of class $c$, for the same reason; therefore, the closer $\CF{x}$ is to a prototype, the more realistic and valid it is likely to be.
+
+\paragraph{Diffeomorphic Counterfactuals}
+
+\revise{}, which we discussed in \autoref{par:revise}, makes use a VAE to promote realistic CFs, while in \ls{} the authors use a bare autoencoder.
+However, these models are in general not invertible, so that there is a loss of information when sending inputs through them.
+This is problematic when it comes to trustworthiness of the explanations: for example, in \ls{}, the CF path never actually goes through the explained input, even when setting the shift factor $\lambda_\text{LS}$ to zero.
+
+For this reason, in \cite{dombrowskiDiffeomorphic2021} \citeauthor{dombrowskiDiffeomorphic2021} use normalizing flows instead, which are invertible by design.
+Furthermore, they make topological arguments to prove that if the NF is well-trained, then the CF path stays within the data manifold.
+
+They show that for multi-class problems on images, their method achieves sensible counterfactuals compared to simply perturbing the inputs in input space.
 
 \subsection{Solutions with class-aware generative models}
 

@@ -244,9 +244,11 @@
 %	COLOURS
 %----------------------------------------------------------------------------------------
 
-\usepackage{xcolor} % Required for specifying custom colours
+\usepackage[table,x11names]{xcolor}
+\usepackage{colortbl}
 
 \colorlet{mdtRed}{red!50!black}
+\colorlet{lightgray}{black!10!white}
 
 %----------------------------------------------------------------------------------------
 %	MARGINS

@@ -1,0 +1,41 @@
+\documentclass[../main.tex]{subfiles}
+
+\begin{document}
+
+\chapter{Theoretical details and proofs}
+\label{ch:proofs}
+
+\paragraph{Gradient of $\softmax$}
+\label{eq:grad_softmax}
+
+Let us compute the gradient of $\softmax$ in general:
+\begin{align*}
+    \grad{\softmax(u)_i}{u_j}
+     & = \grad{}{u_j} \frac{\eu{i}}{\seu}                                                 \\
+     & = \frac{\grad{\eu{i}}{u_j} \seu - \eu{i} \grad{}{u_j} \seu}{\left( \seu \right)^2} \\
+     & = \frac{\dij \eu{i} \seu - \eu{i} \eu{j}}{\left(\seu \right)^{2}}                  \\
+     & = \dij \frac{\eu{i}}{\seu} - \frac{\eu{i}}{\seu} \frac{\eu{j}}{\seu}               \\
+     & = \softmax(u)_i ( \dij  -  \softmax(u)_j).
+\end{align*}
+
+\paragraph{Gradient of $\LogPrbOthers{\lambda}$}
+\label{eq:grad_log_prb_others}
+
+We have
+\begin{align*}
+    \grad{\LogPrbOthers{\lambda}}{u_j}
+     & = - \grad{\log p_\target}{u_j} + \lambda \mysum{c}\grad{\log p_c}{u_j}          \\
+     & = - (\djt - p_j) + \lambda \mysum{c} (\delta_{cj} - p_j)                        \\
+     & = - \djt + p_j + \lambda (\mysum{c} \delta_{cj}) - \lambda \mysum{c} p_j        \\
+     & = - \djt + p_j + \lambda (\mysum{c} \delta_{cj}) - \lambda p_j \mysum{c} 1      \\
+     & = - \djt + p_j + \lambda (\mysum{c} \delta_{cj}) - \lambda p_j (\outputdim - 1) \\
+     & = - \djt + p_j (1 - \lambda (\outputdim - 1)) + \lambda (\mysum{c} \delta_{cj}) \\
+     & = \begin{cases}
+             - 1 + p_\target (1 - \lambda (\outputdim - 1))   & \text{if } j = \target \\
+             0 + p_j (1 - \lambda (\outputdim - 1)) + \lambda & \text{otherwise}
+         \end{cases}     \\
+     & = - \djt + p_j (1 - \lambda (\outputdim - 1)) + \lambda (1 - \djt)              \\
+     & = p_j (1 - \lambda (\outputdim - 1)) + \lambda (1 - \djt) - \djt.
+\end{align*}
+
+\end{document}
