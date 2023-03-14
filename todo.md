@@ -42,4 +42,5 @@
     - [x] methods
     - [X] exp
     - [x] Discussion
+- [x] Mention Cube specs
 - [ ] Could have made CakeOnSea less convex in terms of the classes

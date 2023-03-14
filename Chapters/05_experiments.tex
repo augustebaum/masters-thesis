@@ -13,6 +13,8 @@ First we give details on settings common to all experiments.
 
 All models are trained using the Adam algorithm \cite{kingmaAdam2014} with a learning rate of $1 \times 10^{-3}$.
 
+They are implemented in \texttt{pytorch}, and trained on one Nvidia G-Force i7-7800X GPU via CUDA 11.7.
+
 \subsection{Classifier}
 \label{exp/classifiers}
 
@@ -263,6 +265,15 @@ Since we seek to minimize the distance from a path to $\xgoal$, we  include our 
 Yet, it is important that manipulated paths retain the validity quality for the attack to be successful, hence we measure validity as well.
 
 \paragraph{Results}
+
+The results for each dataset and method are given in \autoref{tbl:path_reg}.
+
+\begin{table}[h!]
+    \centering
+    \subfile{../Figures/path_reg.tex}
+    \caption{Path metrics with their standard error.}
+    \label{tbl:path_reg}
+\end{table}
 
 \paragraph{Interpretation}
 
