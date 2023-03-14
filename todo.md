@@ -1,33 +1,45 @@
-- [ ] Abstract
+- [ ] Conclusion
 - [ ] Acknowledgements
+- [ ] Path regularization
+    - [X] Replace LOF with NF realism
+- [ ] Robustness experiment
+    - Point is $experiments(\max f_i)_i$
+- [ ] Make sure there are no \note anymore
+- [ ] Revisit citations to update those from arxiv
+- [ ] Mention that my implementation of losses allows for differentiating between source and others
 - [ ] Introduction
     - [ ] Describe IG in more detail?
-    - [ ] VAE
-- [ ] Related works
+    - [X] VAE
+- [x] Abstract
+- [o] Related works
     - [X] Describe LS
     - [X] CLUE
-    - [ ] CCHVAE
-- [ ] Methods
-    - [ ] Describe IG in more detail? Am i using it in experiments?
-    - [ ] Fill out table about datasets
-    - [ ] Implementation of LazyRevise to recompute the gradient a variable number of times.
-- [ ] Experiments
+    - [X] diffeomorphic CFs
+    - [x] summary table?
+- [x] Methods
+    - [X] Fill out table about datasets
+    - [X] Implementation of LazyRevise to recompute the gradient a variable number of times.
+- [o] Experiments
     - [X] Give train and test accuracy of classifier for each dataset
     - [X] Show confusion matrices to see if certain classes are bad?
     - [?] Describe experiments in pseudo-code
-    - [ ] Validity losses
+    - [O] Validity losses
         - [X] Give justification with gradients
         - [X] Show tables with results
-        - [ ] Show losses 
-    - [ ] Path regularization
-        - [X] Replace LOF with NF realism
-    - [ ] Robustness experiment
-        - Point is $(\max f_i)_i$
-- [ ] Conclusion
-
-Reading on 6/3:
-
-Intro:
-- 'reasoning' does not need to be in italics.
-- still need to cite.
-
+        - [X] Show losses 
+            - [x] Make the full plots fit (in the appendix)
+- [O] Discussion and future work
+    - [X] Mention why NICE
+    - [X] Mention why no images (business use-case)
+    - [X] Mention it only works for continuous
+    - [X] Differences between diffeomorphic CFs
+- [x] Mention i use NFs because it's invertible (i do it in diffeomorphic cfs but is it okay to be there?)
+- [X] Write on the differences between image and tabular data (correlations between features, realism is better defined for images)
+- [x] Transitions between sections.
+    - [x] intro
+    - [x] bg
+    - [x] prev work
+    - [x] methods
+    - [X] exp
+    - [x] Discussion
+- [ ] Could have made CakeOnSea less convex in terms of the classes

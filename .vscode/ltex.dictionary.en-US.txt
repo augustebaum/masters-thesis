@@ -21,3 +21,6 @@ CFProto
 CRUDS
 inlier
 Diffeomorphic
+logit
+Fréchet
+logit-based

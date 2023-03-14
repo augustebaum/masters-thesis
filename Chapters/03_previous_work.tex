@@ -6,32 +6,9 @@
 \chapter{Previous work}
 \label{ch:previous_work}
 
-\section{Latent shift}
-
-We now describe the basis of our work, \ls{}.
-This method was presented by \citeauthor{cohenGifsplanation2022} in 2022 as a CF generation method for binary classification models on image data, specifically X-ray images of human lungs \cite{cohenGifsplanation2022}.
-Given an input image $x$ predicted as class 0 (\ie{} for which $f(x)$ is low), the method aims to produce a new image close to $x$ that is predicted as class 1 (\ie{} for which $f(x)$ is high.).
-To achieve this, $x$ is perturbed according to the gradient of the classifier $f$ (the direction of steepest ascent), in order for $f$ to increase.
-However, instead of computing the gradient in input space, they use an autoencoder $(\enc, \dec)$ and compute the gradient of the classifier \emph{in latent space}: $\nabla_z f(\dec(z))$ where $z = \enc(x)$.
-This is to promote realistic images: indeed, autoencoders typically filter out information that is considered to be noise, so performing the perturbation in latent space is safer in this regard to avoid unrealistic images.
-Contracting the image space can also result in a loss of relevant information, but in general for images this effect is less pronounced because even though they have many features (a 28-by-28 pixel image has $28^2 = 784$ features, times 3 with RGB information), those features tend to be highly correlated \note{cite}.
-
-A summary of the \ls{} procedure is shown in \autoref{fig:latent_shift}.
-On the left, the data manifold in input space is non-convex, so by perturbing along the gradient in the input space we risk exiting the data manifold.
-Hence, we first run the encoder $\enc$, then perturb the latent following the gradient of the classifier by some factor $\lambda_\text{LS}$, and finally run the decoder $\dec$ to get the candidate counterfactual $\CF{x}$.
-
-\begin{figure}[htbp]
-    \centering
-\subfile{../Figures/latent_shift.tex}
-    \caption{A sketch of the \ls{} algorithm. Step 1 is applying $\enc$, step 2 is perturbing along the gradient of the classifier, and step 3 is applying $\dec$. Adapted from \cite{cohenGifsplanation2022}.}
-    \label{fig:latent_shift}
-\end{figure}
-
-One point of interest in this method is that we can easily visualize the equivalent continuous path taken in input space (outlined in the left part of \autoref{fig:latent_shift}) by running the procedure with different values of $\lambda_\text{LS}$; thus we can see the final result $\CF{x}$, but also the full progression leading to it.
-Also, by setting $\lambda_\text{LS}$ to a negative value we could also produce new points that are \emph{more strongly} predicted as class 0.
-
-% A comprehensive overview of algorithms, evaluation metrics as well as open problems is given in \cite{vermaCounterfactual2020}.
-% note to self: verma include "progressive explanations" as one of their "open research" topics. Which is kind of what i'm doing!
+In this chapter we describe some attempts at CFX generation and related topics that were of interest during this project.
+First we present some areas of research that are closely linked to CFX generation, then we provide an overview on methods that rely on generative models to promote realistic CFs.
+A comprehensive review of many other CFX generation methods can be found in \cite{vermaCounterfactual2020}.
 
 \section{Related topics}
 
@@ -41,21 +18,19 @@ Contrastive explanations are close enough to CFX that they are often dealt with 
 
 Where counterfactual explanations are virtual points close to the explained input, potentially highlighting underlying concepts which are deemed important by the classifier, contrastive explanations are ratings of the importance given by the classifier of a given \emph{user-defined} concept to a given class.
 Hence, contrastive explanations do not suffer from the problem of semanticity of explanations that was raised in \autoref{intro/semanticity_problem}, but in return it is up to the user to propose meaningful concepts to evaluate.
-\note{does the link work?}
 
 Accordingly, \citeauthor{jacoviContrastive2021} develop a method for text data that evaluates how much a given concept contributes to a certain class compared to another \cite{jacoviContrastive2021}.
 For instance, they train a model for the ``natural language inference'' task: given two sequential sentences as input, the model should output whether the first sentence entails, contradicts or is neutral with respect to the second sentence.
 Then, given a concept of their choosing, \eg{} the amount of overlapping words between the two sentences, they can compute a metric of contrastive importance of this concept between two classes.
 In the case of word overlap, they validate that in general this concept allows the model to differentiate between entailment and neutrality.
 
-\citeauthor{baiConcept2022} propose ``concept gradients'' (CGs) \cite{baiConcept2022}, a generalization of a pre-existing technique called ``concept activation vectors'' (CAVs) \cite{kimInterpretability2018}.
-In both cases, concepts are evaluated using the correlation of gradients between a corresponding concept vector and the model outputs, but CAVs assume that the concept can be expressed as a linear function, while CGs have no such requirement.
+\citeauthor{baiConcept2022} propose ``concept gradients'' (CGs) \cite{baiConcept2022}, a generalization of a pre-existing technique called ``concept activation vectors'' (CAVs) \cite{kimInterpretability2018}, to evaluate how much a concept influences the model behavior, which gives an indication of whether the model makes use of this concept in its prediction.
+More precisely, concepts are evaluated using the correlation of gradients between a corresponding concept vector and the model outputs; however, CAVs assume that the concept can be expressed as a linear function, whereas CGs have no such requirement and is therefore capable of evaluating more flexible concepts.
 
 \subsection{Causal learning and counterfactuals}
 
-
 Counterfactual statements are closely related to causal inference \cite{morganCounterfactuals2015}.
-This link is formally made in Pearl's theory of \emph{structural causal models} (or SCMs for short): given a complete formal description of the causal relationships between variables, the theory describes a natural procedure to compute how a change in one variable would influence the others. \note{Is this true only for additive noise models? or all SCMS}
+This link is formally made in Pearl's theory of \emph{structural causal models} (or SCMs for short): given a complete formal description of the causal relationships between variables, the theory describes a natural procedure to compute how a change in one variable would influence the others \cite{pearlCausal2016}.
 
 \citeauthor{karimiAlgorithmic2020} develop this relationship in the context of CFX in the form of a lower bound statement: given some cost function, if the true SCM is known fully, then the Pearl procedure yields a CF that has minimum cost \cite{karimiAlgorithmic2020}.
 In other words, any other proposed CF will in some way neglect some variable relationships, and hence include redundant perturbations which increase the cost.
@@ -94,9 +69,7 @@ In fact, \citeauthor{locatelloChallenging2019} demonstrate that achieving a dise
 
 \section{CFX generation methods}
 
-A comprehensive classification and taxonomy up to 2020 is given in \cite{vermaCounterfactual2020}.
-
-% Duality between rule-based and CF explanations \cite{gengComputing2022}
+We now present some previous works on CF generation methods, covering in particular those that rely on generative models (all except $\method{DiCE}$).
 
 % - [ ] wachterCounterfactual
 % - [x] REVISE (@joshiRealistic2019, gradient in latent space)
@@ -123,7 +96,14 @@ A comprehensive classification and taxonomy up to 2020 is given in \cite{vermaCo
 
 % Using VAE: \cite{nguyenLearning2020}
 
-possible classification: gradient descent-based, generative model-based, class-aware generative model \citenote{}
+
+\subsection{Methods without generative models}
+
+\paragraph{CF-Rule duality}
+
+\citeauthor{gengComputing2022} prove a duality theorem linking rule-based and CFX, assuming that certain properties hold on the CFX \cite{gengComputing2022}.
+They exploit this duality in one direction by devising two methods for extracting rule-based explanations from CFX.
+In doing so, they demonstrate that a great many methods in the literature do not fit the requirements for producing proper rules, namely, the ability to specify logical feasibility constraints on the CFs (\eg{} an age cannot be negative).
 
 \paragraph{\method{DiCE}}
 
@@ -131,7 +111,13 @@ possible classification: gradient descent-based, generative model-based, class-a
 Diversity is modeled by a metric taken from the study of determinantal point processes, which is based on the pairwise distances between the $k$ CFs.
 Using this constraint, they succeed at keeping a high rate of valid CFs while increasing diversity.
 
-\paragraph{\revise{}}
+\paragraph{Wachter}
+
+We described the gradient-descent procedure presented by \citeauthor{wachterCounterfactual2017} \cite{wachterCounterfactual2017} in \autoref{intro/wachter}; many other gradient-descent-based methods are inspired by this work.
+
+\subsection{Methods with generative models}
+
+\paragraph{\revise}
 \label{par:revise}
 
 \citeauthor{joshiRealistic2019} follow the strategy outlined by \citeauthor{wachterCounterfactual2017} in that they frame the CF search as a constrained optimization problem and approach it with gradient descent:
@@ -160,6 +146,7 @@ Then, the optimization algorithm for finding $\CF{x}$ pushes the path towards th
 The reasoning is that $\text{proto}_c$ is likely realistic, because it is an average of real points, and it is likely of class $c$, for the same reason; therefore, the closer $\CF{x}$ is to a prototype, the more realistic and valid it is likely to be.
 
 \paragraph{Diffeomorphic Counterfactuals}
+\label{previous_work:diffeo}
 
 \revise{}, which we discussed in \autoref{par:revise}, makes use a VAE to promote realistic CFs, while in \ls{} the authors use a bare autoencoder.
 However, these models are in general not invertible, so that there is a loss of information when sending inputs through them.
@@ -170,11 +157,9 @@ Furthermore, they make topological arguments to prove that if the NF is well-tra
 
 They show that for multi-class problems on images, their method achieves sensible counterfactuals compared to simply perturbing the inputs in input space.
 
-\subsection{Solutions with class-aware generative models}
-
 \paragraph{\method{CLUE}}
 
-\citeauthor{antoranGetting2021} introduce CLUE \cite{antoranGetting2021}, a method for producing counterfactuals that are as realistic as possible by way of a conditional VAE. The method is very similar to \revise: the loss function that is minimized to perturb $x$ via gradient descent is
+\citeauthor{antoranGetting2021} introduce \method{CLUE} \cite{antoranGetting2021}, a method for producing counterfactuals that are as realistic as possible by way of a conditional VAE. The method is very similar to \revise: the loss function that is minimized to perturb $x$ via gradient descent is
 \begin{equation}
     \loss(z') = h(y | \dec(z')) + \norm{\dec(z') - x}_1
 \end{equation}
@@ -183,6 +168,8 @@ Their approach to evaluation of CFX is intriguing:
 to get a known ground-truth data distribution without resorting to purely fabricated datasets, they train a ``ground-truth'' VAE on a real dataset (they take the example of the MNIST hand-written digits); the VAE is then used to generate an artificial dataset, and the method is tested on these data where metrics such as the ``ground-truth'' log-likelihood.
 
 Importantly, the authors validate their finding with a user study, which is not that frequent in works on CFX.
+
+\subsection{Methods with class-aware generative models}
 
 \paragraph{\method{CRUDS}}
 
@@ -196,6 +183,29 @@ In fact, by sampling several $\CF{w}$ they can obtain a whole set of CFs that ar
 \citeauthor{zhangInterpretable2022} train the autoencoder conjointly with the classifier, so that the latent representation used for CFX generation is also used for classification \cite{zhangInterpretable2022}.
 In particular, the latent representation architecture consists of normalizing flows within a VAE, an idea first developed in \cite{rezendeVariational2015}.
 
+\subsection{Summary of methods}
+
+\begin{table}[htbp]
+	\centering
+	\begin{tabular}{lccc}
+		\toprule
+		                                                     & Tabular data & Generative model                       & Class-aware \\
+		\midrule
+		\method{CFProto} \cite{vanlooverenInterpretable2021} & Yes          & VAE                                    & No          \\
+		\method{CLUE} \cite{antoranGetting2021}              & Yes          & VAE                                    & No          \\
+		\method{CRUDS} \cite{downsCRUDS2020}                 & Yes          & CSVAE                                  & Yes         \\
+		Diffeo.~CF \cite{dombrowskiDiffeomorphic2021}        & No           & RealNVP                                & No          \\
+		\revise{} \cite{joshiRealistic2019}                  & Yes          & VAE                                    & No          \\
+		VAE-NF \cite{zhangInterpretable2022}                 & Yes          & VAE$+$NF \cite{rezendeVariational2015} & Yes         \\
+		\midrule
+		\method{DiCE} \cite{mothilalExplaining2020}          & Yes          & None                                   & NA          \\
+		Rule-CF duality \cite{gengComputing2022}             & Yes          & None                                   & NA          \\
+		Wachter \cite{wachterCounterfactual2017}             & Yes          & None                                   & NA          \\
+		\bottomrule
+	\end{tabular}
+	\caption{Summary of CF generation methods we presented, in alphabetical order. ``Tabular data'' refers to whether or not the work specifically addresses tabular data; ``Class-aware'' refers to whether or not the generative model is trained with access to class labels or similar information.}
+\end{table}
+
 \section{Metrics for CFX}
 
 In general, measuring the quality of an explanation is not a straightforward endeavor.
@@ -208,8 +218,8 @@ When a method produces several CFs, it is often desirable to guarantee \emph{div
 \subsection{Distance}
 
 For a CFX to be relevant to the explained input, it should be close enough to the explained input; thus some notion of \emph{distance} is often used, \eg{} the Euclidean ($L_2$) norm.
-Furthermore, it is often preferred to have \emph{sparse} perturbations, in the interest of simplicity; for this the $L_1$ loss is a common choice. \citenote{}
-\citeauthor{vanlooverenInterpretable2021} even propose a linear combination of the two.
+Furthermore, it is often preferred to have \emph{sparse} perturbations, in the interest of simplicity; for this the $L_1$ loss is a common choice \cite{joshiRealistic2019,antoranGetting2021}.
+\citeauthor{vanlooverenInterpretable2021} even propose a linear combination of the two \cite{vanlooverenInterpretable2021}.
 
 \subsection{Feasibility}
 
@@ -217,19 +227,34 @@ When a CFX is intended to provide recourse, authors tend to mention \emph{feasib
 This refers to the possibility for, \eg{}, a user, to actually follow the recourse path proposed in the form of a CFX.
 % Several metrics aim to capture feasibility, including:
 
-For example, \citeauthor{pawelczykLearning2020} introduce metrics based on \emph{percentile shift}, that is, for feature $i$, how far $\CF{x}_i$ has shifted in terms of percentile compared to $x_i$.
+For example, \citeauthor{pawelczykLearning2020} introduce metrics based on \emph{percentile shift}, that is, for feature $i$, how far $\CF{x}_i$ has shifted in terms of percentile compared to $x_i$ \cite{pawelczykLearning2020}.
 For example, letting $\text{percentile}_i^\data(x) \in [0, 1]$ denote the percentile of $x$ for feature $i \in \{1, \ldots, \inputdim\}$, they define
 \begin{align*}
     \text{\emph{total percentile shift} as }   & \sum_{i=1}^\inputdim \abs{ \text{percentile}_i^\data(\CF{x}) - \text{percentile}_i^\data(x) }                  \\
     \text{\emph{maximum percentile shift} as } & \max_{i \in \{1, \ldots, \inputdim\}} \abs{ \text{percentile}_i^\data(\CF{x}) - \text{percentile}_i^\data(x) }
 \end{align*}
 
-\note{MAD,}
+Before them, \citeauthor{wachterCounterfactual2017} already considered a metric of distributional shift, which is based on the median absolute deviation for feature $k$ \cite{wachterCounterfactual2017}:
+\begin{align*}
+	\text{MAD}_k
+	= \text{median}_{j \in P} \left\{
+	\abs{
+		x_{j,k} - \text{median}_{l \in P} \{ x_{l, k} \}
+	}
+	\right\}
+\end{align*}
+where $P$ is the set of data points and $x_{j, k}$ is feature $k$ of point $x_j$; the metric is then
+\begin{align*}
+	d(x, x') = \sum_{k \in F} \frac{\abs{x_k - x'_k}}{\text{MAD}_k}
+\end{align*}
+with $F$ the set of features.
 
 \subsection{Realism}
 
 Measuring realism of a data point is a topic of research in itself and a number of metrics have been used in the CFX literature.
 Some make use of mathematically justified estimators, such as the \emph{maximum mean discrepancy} (or MMD for short) \cite{zhangInterpretable2022}, which can be cumbersome to compute, while others take advantage of generative models, \eg{} using the reconstruction error of an autoencoder \cite{vanlooverenInterpretable2021}.
 Other metrics such as \emph{proximity} or \emph{connectedness} \cite{laugelIssues2019} are derived from the distance between points and draw from older metrics such as the \emph{local outlier factor} \cite{breunigLOF2000}.
+
+Now that we have covered some of the recent advances on CFX generation with generative models, let us present our original work.
 
 \end{document}

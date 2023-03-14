@@ -201,7 +201,7 @@
 \RequirePackage{booktabs} % Required for better table rules
 
 \RequirePackage{caption} % Required for customising the captions
-\captionsetup{justification=centerlast,font=small,labelfont=sc,margin=50pt}
+\captionsetup{font=small,labelfont=sc,margin=25pt}
 
 %----------------------------------------------------------------------------------------
 %	DEFINE CUSTOM THESIS INFORMATION COMMANDS
@@ -523,7 +523,7 @@ KOMA-script documentation for details.}]{fancyhdr}
 \hypersetup{pdfpagemode={UseOutlines},
 bookmarksopen=true,
 bookmarksopenlevel=0,
-colorlinks=true,% Set to false to disable coloring links
+colorlinks=false,% Set to false to disable coloring links
 citecolor=magenta,% The color of citations
 linkcolor=red,% The color of references to document elements (sections, figures, etc)
 urlcolor=mdtRed,% The color of hyperlinks (URLs)

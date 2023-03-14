@@ -11,3 +11,5 @@
 {"rule":"DOUBLE_PUNCTUATION","sentence":"^\\QWe run our experiment on the datasets described in \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q, namely , , and .\\E$"}
 {"rule":"DOUBLE_PUNCTUATION","sentence":"^\\Q../Figures/validity_losses.tex Validity rate means with their standard error.\\E$"}
 {"rule":"COMMA_PARENTHESIS_WHITESPACE","sentence":"^\\QThis is problematic when it comes to trustworthiness of the explanations: for example, in , the CF path never actually goes through the explained input, even when setting the shift factor \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\QLS to zero.\\E$"}
+{"rule":"COMMA_PARENTHESIS_WHITESPACE","sentence":"^\\QAs expected, the validity rate achieved by is generally much more acceptable than that of , across all losses.\\E$"}
+{"rule":"COMMA_PARENTHESIS_WHITESPACE","sentence":"^\\QTo make better sense of our findings, we also plot our various losses and their gradients on .\\E$"}

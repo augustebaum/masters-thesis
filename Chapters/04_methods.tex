@@ -10,24 +10,72 @@ We now present our work in more detail.
 First, we discuss the specific problems we addressed and our proposed solutions.
 Then, we introduce the metrics and datasets that will be used in our experiments.
 
+\section{Problem 0: CFX generation}
+
+\subsection{Problem statement}
+
+One possible formulation of the CFX generation problem is as follows:
+\begin{quote}
+Let $f: \R^\inputdim \to [0, 1]$ be a binary classifier such that $f(x)$ outputs the predicted probability of $x$ being in class 1.
+Let $x$ be a point that is predicted to be of class 0, \ie{} such that $f(x) < \frac{1}{2}$.
+Find a point $\CF{x}$ for which $f(\CF{x}) > \frac{1}{2}$ such that $\CF{x}$ is comparable with $x$ by a human.
+\end{quote}
+
+\subsection{Proposed solutions}
+
+Let us describe the basis for our work, \ls{}.
+This method was presented by \citeauthor{cohenGifsplanation2022} in 2022 as a CF generation method for binary classification models on image data, specifically X-ray images of human lungs \cite{cohenGifsplanation2022}.
+
+Given an input image $x$ predicted as class 0 (\ie{} for which $f(x)$ is low), the method aims to produce a new image close to $x$ that is predicted as class 1 (\ie{} for which $f(x)$ is high.).
+To achieve this, $x$ is perturbed according to the gradient of the classifier $f$ (the direction of steepest ascent), in order for $f$ to increase.
+However, instead of computing the gradient in input space, they use an autoencoder $(\enc, \dec)$ and compute the gradient of the classifier \emph{in latent space}: $\nabla_z f(\dec(z))$ where $z = \enc(x)$.
+This is to promote realistic images: indeed, autoencoders typically filter out information that is considered to be noise, so performing the perturbation in latent space is safer in this regard to avoid unrealistic images.
+Indeed, as discussed in \autoref{intro/image_data}, for many image problems the data can be assumed to lie on a low-dimensional subspace of $\inputspace$; therefore, if a generative model can recover this subspace, it can encode the input data in fewer dimensions with little information loss.
+
+A summary of the \ls{} procedure is shown in \autoref{fig:latent_shift}.
+On the left, the data manifold in input space is non-convex, so by perturbing along the gradient in the input space we risk exiting the data manifold.
+Hence, we first run the encoder $\enc$, then perturb the latent following the gradient of the classifier by some factor $\lambda_\text{LS}$, and finally run the decoder $\dec$ to get the candidate counterfactual $\CF{x}$.
+
+\begin{figure}[htbp]
+	\centering
+	\subfile{../Figures/latent_shift.tex}
+	\caption{A sketch of the \ls{} algorithm. Step 1 is applying $\enc$, step 2 is perturbing along the gradient of the classifier, and step 3 is applying $\dec$. Adapted from \cite{cohenGifsplanation2022}.}
+	\label{fig:latent_shift}
+\end{figure}
+
+We outline some of the benefits of \ls{} here:
+
+\begin{enumerate}
+	\item First, this method is generally simple and easy to implement compared to some of those discussed in \autoref{ch:previous_work}.
+	      It is also fast to perform once the generative model is trained, as it requires only one gradient computation (compared to an undetermined number in classical gradient-descent based solutions).
+
+	\item Yet, one very interesting aspect of this method is that we can easily visualize the equivalent continuous path taken in input space (outlined in the left part of \autoref{fig:latent_shift}) by running the procedure with different values of $\lambda_\text{LS}$; thus we can see the final result $\CF{x}$, but also the full progression leading to it.
+	      This is relevant for the problem of recourse mentioned in \autoref{par:cfx}: if a CFX is meant as advice for a data subject to alter their behavior to achieve a better outcome, then this advice would be more meaningful if the CFX would detail what \emph{individual steps} are needed to achieve that change.
+	      This is outlined in research challenge no.~2 of \cite{vermaCounterfactual2020}.
+
+	\item Finally, by setting $\lambda_\text{LS}$ to a negative value we could also produce new points that are \emph{more strongly} predicted as class 0.
+\end{enumerate}
+
+However, in the original \ls{} work the method is applied to images, and the generative model used is an autoencoder architecture based on residual networks \cite{heDeep2015}.
+This is an acceptable choice of model to image data, but it has two important consequences:
+\begin{enumerate}
+	\item The reconstruction error of the autoencoder is non-zero: encoding an image to get the starting point of the path is not an invertible operation.
+	      As explained in \autoref{previous_work:diffeo}, this implies the CF path in input space generally does not go through the original point, even for $\lambda_\text{LS} = 0$; in fact, if the reconstruction error is too large this problem could impact the trustworthiness of the explanation.
+
+	\item Basic autoencoders have no requirement to map inputs \emph{continuously}, so the generated path could potentially look very complex which also makes the explanation less trustworthy.
+\end{enumerate}
+
+To overcome these issues, we turn to normalizing flows: generative models that are invertible by design.
+Our analyses are generally not specific to normalizing flows though, so in the following we refer to our generative model as an autoencoder or a normalzing flow interchangeably.
+
 \section{Problem 1: Multi-class extension}
 
 \subsection{Problem statement}
 
-Recall that the authors of \ls{} solve the following problem \cite{cohenGifsplanation2022}:
+Recall that the authors of \ls{} propose to recover a potential counterfactual by perturbing the input using the gradient of the classifier in latent space: $\CF{x} = \dec(z + \lambda_\text{LS} \nabla_z f(\dec(z)))$.
 
-\begin{quote}
-Let $f: \R^\inputdim \to [0, 1]$ be a binary classifier such that $f(x)$ outputs the predicted probability of $x$ being in class 1.
-Let $x$ be a point that is predicted to be of class 0, \ie{} such that $f(x) < \frac{1}{2}$.
-Find a path starting at (or around) $x$ and ending at a point $\CF{x}$ for which $f(\CF{x}) > \frac{1}{2}$ such that the path is sufficiently simple and easily comprehensible by a human.
-\end{quote}
-
-They propose building a latent representation $\autoencoder = (\enc, \dec)$, letting $z = \enc(x)$ and computing the gradient of the classifier in that latent space:
-$\nabla_z f(\dec(z))$.
-Then they can recover a potential counterfactual by shifting the latent along the gradient: $\CF{x} = \dec(z + \lambda \nabla_z f(\dec(z)))$ where $\lambda$ is some positive real number.
-Since the gradient gives the direction of steepest ascent, going in this direction is a good strategy to increase $f(\dec(z))$ and therefore obtain a valid $\CF{x}$.
-
-In the case of a binary classifier that outputs a scalar, this might be sufficient. However, in multi-class problems where $f$ outputs a vector in $\R^\outputdim$ there are several possible choices of functions of which we could compute the gradient.
+In the case where $f$ is a binary classifier outputting the predicted probability that $x$ is of class 1, this might be sufficient.
+However, in multi-class problems where $f$ outputs a vector in $\R^\outputdim$ there are several possible choices of functions of which we could compute the gradient.
 To see this, we reformulate the latent shift strategy with a generic loss that accounts for validity, denoted by $\lossval$:
 
 Let $f$ be the classifier of interest, which outputs logits in $\R^\outputdim$ rather than a probability mass.
@@ -42,6 +90,7 @@ Find a validity loss $\lossval$ that, for a given $x \in \inputspace$, gives ris
 \end{quote}
 
 \subsection{Proposed solutions}
+\label{sec:validity_losses}
 
 Note that this extension to the multi-class setting means that we have a choice to specify a given target class: we might also prefer to simply change the class, without preference of target class. In our analysis we focus on the case where a target class is specified.
 
@@ -131,7 +180,7 @@ Let us now examine whether these requirements are satisfied:
 Compare this with $\PrbTarget$: since $\PrbTarget = \PrbSource{\lambda=0}$ we see that in both cases $\grad{\PrbTarget}{u} = 0$.
 This means that if the path gets stuck at $p_\target = 0$ then it cannot recover.
 
-\subsection{Log-probability-based losses}
+\subsubsection{Log-probability-based losses}
 
 Setting the probability as an objective goes counter to the usual loss functions for training classifiers; a more common choice is the cross-entropy $\ce$.
 Indeed, the cross-entropy represents the information that is shared between two distributions, which is a more natural metric than a conventional distance such as the $L_2$ norm \cite{murphyMachine2012}.
@@ -223,7 +272,8 @@ We check our intuition:
                        p_j(1 - \lambda ( \outputdim -1 )) + \lambda & \text{otherwise}
                    \end{cases}
           \end{align*}
-          Here it is unclear if $u_j$ be more negative than -1. It turns out it can: for example, if $\lambda = 1$ and $p_j = 1$ then we get $1 - (\outputdim -1) + 1 = 3 - \outputdim$, so for $\outputdim > 4$ $u_j$ will be pushed higher than $u_\target$.
+Here it is unclear if $u_j$ be more negative than $-1$.
+It turns out it can: for example, if $\lambda = 1$ and $p_j = 1$ then we get $1 - (\outputdim -1) + 1 = 3 - \outputdim$, so for $\outputdim > 4$ $u_j$ will be pushed higher than $u_\target$.
 \end{itemize}
 
 
@@ -243,8 +293,8 @@ Here the gradients are easy to compute since the loss is linear in the logits:
 \grad{\LogitTarget{}}{u_j} &= - \djt                         \\
 \grad{\LogitSource{\lambda}}{u_j} &= - \djt + \lambda \djs                        \\
 \grad{\LogitOthers{\lambda}}{u_j}
-&= - \djt + \lambda \mysum{c} \delta_{jc}
-&= - \djt + \lambda (1 - \djt)
+&= - \djt + \lambda \mysum{c} \delta_{jc} \\
+&= - \djt + \lambda (1 - \djt) \\
 &= -(\lambda + 1)\djt + \lambda
 \end{align*}
 Hence the behavior is also clear: $u_\target$ always gets pushed up higher than the other logits, no matter the value of $u$.
@@ -255,7 +305,7 @@ Hence the behavior is also clear: $u_\target$ always gets pushed up higher than 
 
 \subsection{Problem statement}
 
-A typical requirement on a counterfactual $\CF{x}$ for an input $x$ might be for $\norm{\CF{x} - x}$ to be small, where $\norm{\cdot}$ could be the $L_1$ norm for example \note{cite}.
+A typical requirement on a counterfactual $\CF{x}$ for an input $x$ might be for $\norm{\CF{x} - x}$ to be small, where $\norm{\cdot}$ could be the $L_1$ norm for example.
 While this makes sense for methods that produce a discrete set of counterfactuals, we focus on methods that produce \emph{continuous explanation paths}, hence we wish to ensure these requirements are satisfied \emph{along the path}.
 For distance, we might wish that the endpoint of the path $\CF{x} = \dec(z_T)$ be close to the starting point, but also that \emph{on the whole} the path $(z_t)_{t=1}^T$ stay as close as possible to the starting point.
 
@@ -342,7 +392,7 @@ Hence, for testing a path generation method on some test set, we measure the val
 \subsection{Computational performance}
 
 Ensuring that CFs generation is fast is an important concern for stakeholders, especially since one might need to generate paths for many points of interest.
-Hence, we measure the time taken for one step of one path.
+Hence, we measure the time taken \emph{for one step of one path}.
 This is because depending on the number of steps chosen by the user, a path can take longer to generate, and methods such as \ls{} can take advantage of optimizations to compute many paths at once.
 
 \subsection{Realism}
@@ -355,7 +405,6 @@ $P(x)$ is in non-negative so the $\nll$ is in $\R_+$ and the closer it is to 0, 
 For some time we also used the local outlier factor \cite{breunigLOF2000}, for which an implementation is provided by the \sklearn{} Python package, but it could not scale to all of our datasets.
 
 \subsection{Extending metrics to a path}
-\note{does this belong here?}
 
 Many metrics take a point $x' \in \inputspace$ as input and return a score, but we wish to score a whole path $(x_t)_{t=1}^T$.
 Hence, given a metric, we aggregate over the path (that is, from its starting point to the first step at which $\target$ is reached).
@@ -364,7 +413,7 @@ For this, we first produce paths in the form of a 3-dimensional tensor in $\R^{\
 We compute the model predictions resulting in a 2-dimensional tensor in $\setclasses^{\nbsteps \times \batchsize}$.
 Based on this and the target classes we generated in $\setclasses^\batchsize$, we construct a mask $\pathmask \in \{0, 1\}^{\nbsteps \times \batchsize}$ that highlights the valid paths:
 if path $j$ is not valid, then
-$\forall i \in \{1, \ldots, \nbsteps\}\ \pathmask_{ij} = 0$, and if path $j$ is valid then $\pathmask_{ij} = 1$ up to and \emph{not including} the first index where $\target$ is reached, and 0 after that.
+$\forall i \in \{1, \ldots, \nbsteps\}$ ${\pathmask_{ij} = 0}$, and if path $j$ is valid then $\pathmask_{ij} = 1$ up to and \emph{not including} the first index where $\target$ is reached, and 0 after that.
 
 Then we can take the element-wise product of, \eg{} the $\nll$ computed for all points of all paths, to mask the unwanted points.
 
@@ -452,18 +501,19 @@ In \autoref{tab:datasets} we summarize the relevant information about our datase
     \centering
     \caption{Summary of our dataset settings}
     \label{tab:datasets}
-\begin{tabular}{lrrrrrrr}
+\begin{tabular}{lrrrrrr}
         \toprule
 Name          & $\inputdim$ & $\outputdim$ & $\card{\trainset}$     & $\card{\valset}$     & $\card{\testset}$    & $
-    \card{\trainset} / \inputdim$ & $\batchsize$ \\
+\card{\trainset} / \inputdim$  \\
         \midrule
-\CakeOnSea            & 2           & 3            & 57607                  & 19202                & 19202        & 28803         & ??           \\
-\ForestCover          & 10          & 7            & 348608                 & 116202               & 116202       & 34861        & ??           \\
-\WineQuality          & 11          & 3            & 3900                   & 1299                 & 1299          & 355        & ??           \\
-\OnlineNewsPopularity & 45          & 4            & 23788                  & 7928                 & 7928          & 529        & ??           \\
+\CakeOnSea            & 2           & 3            & 57607                  & 19202                & 19202        & 28803                    \\
+\ForestCover          & 10          & 7            & 348608                 & 116202               & 116202       & 34861                   \\
+\WineQuality          & 11          & 3            & 3900                   & 1299                 & 1299          & 355                  \\
+\OnlineNewsPopularity & 45          & 4            & 23788                  & 7928                 & 7928          & 529                   \\
         \bottomrule
     \end{tabular}
 \end{table}
 
+We are now in position to describe our experiments and findings.
 
 \end{document}

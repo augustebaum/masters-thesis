@@ -25,7 +25,7 @@ In \autoref{fig:confusion_matrices} we show the test predictions of our classifi
         \centering
         \includegraphics[width=\textwidth]{./confusion_matrices/cake_on_sea/confusion_matrix_svg-tex.pdf}
         \caption{Accuracy on \CakeOnSea.}
-        % \label{fig:y equals x}
+\label{fig:cos_confusion_matrix}
     \end{subfigure}
     % \hfill
     \begin{subfigure}[b]{0.4\textwidth}
@@ -61,7 +61,7 @@ All datasets also have significant class imbalance: in \ForestCover{} the test s
 \subsection{Autoencoder}
 
 We build a normalizing flow model according to the NICE architecture described in \autoref{bg/nf} \cite{dinhNICE2015}.
-The model is trained according to a Gaussian prior distribution, and its layers are 4 additive coupling layers where we divide the input into the odd columns and the even columns, and the nonlinearity is an MLP with 4 layers of 50 nodes each. \note{check this is the case}
+The model is trained according to a Gaussian prior distribution, and its layers are 4 additive coupling layers where we divide the input into the odd columns and the even columns, and the nonlinearity is an MLP with 2 layers of 20 nodes each.
 
 \section{Experiment 1: Validity losses}
 
@@ -76,13 +76,11 @@ Then for this dataset, we train several autoencoders all with the same architect
 The seeds are generated uniformly based on one primary seed.
 
 For a given dataset, we measure the validity rate across the whole test set.
-That is, for every test point, we run the classifier to get the $\source$ class ($\source = \arg\max_{c \in \setclasses} \softmax( f(x) )$), and we sample the target class uniformly from $\setclasses \backslash \{\source\}$.
+That is, for every test point, we run the classifier to get the $\source$ class ($\source = \arg\max_{c \in \setclasses} f(x)$), and we sample the target class uniformly from $\setclasses \backslash \{\source\}$.
 Then we generate a path using the given loss $\lossval$, and count it as valid or not.
-It is important to sample the $\target$ uniformly to get a full understanding because, even though the label distribution might not be uniform, explanations should be
+It is important to sample the $\target$ uniformly to get a full understanding because, even though the label distribution might not be uniform, in general there is no reason to prefer explanations for a given target rather than another.
 
 We average the rates over the different seeds, and report the standard error.
-
-The parameters used for training the models and for producing the paths are reported in ?? \note{Link to some yaml in appendix?}
 
 \paragraph{Baselines}
 
@@ -101,12 +99,20 @@ The losses compared in this experiment are as follows:
     \item The logit-based losses: $\LogitTarget, \LogitSource{}, \LogitOthers{}$
 \end{itemize}
 where we test all losses that can be parametrized with the default parameter of $\lambda = 1$ and also with $\lambda = 0.1$, for a total of 13 losses ($\PrbTarget$ is not parametrized, and recall that $\PrbOthers{}$ is equivalent to $\PrbTarget$.).
-Here again, a larger scale parameter search could have been interesting, but instead we first select the best-performing loss and show the progression for $\lambda \in [0, 1]$.
-\note{do it}
+Here again, a larger scale parameter search could have been interesting, but instead we first select the best-performing loss and then show the progression for $\lambda \in [0, 1]$.
 
 \paragraph{Datasets}
 
 We run our experiment on the datasets described in \autoref{sec:datasets}, namely \CakeOnSea, \ForestCover, \WineQuality{} and \OnlineNewsPopularity.
+
+The batch sizes are chosen so that one epoch takes less than 10 steps, except for \ForestCover{} where the size of the train set would have made very large batches.
+The final numbers are:
+\begin{itemize}
+    \item \CakeOnSea: 12000
+    \item \ForestCover: 25000
+    \item \WineQuality: 500
+    \item \OnlineNewsPopularity: 3000
+\end{itemize}
 
 \paragraph{Metrics}
 
@@ -124,9 +130,9 @@ We highlight in gray the five losses that yield the best average validity rate a
 \label{tbl:validity_losses}
 \end{table}
 
+As expected, the validity rate achieved by \revise{} is generally much more acceptable than that of \ls{}, across all losses.
 It would seem $\LogitSource{}$ is always among the best validity losses. However, it is not always clear which value of $\lambda$ should be used.
 Hence, we show the validity rate for several values of $\lambda$ in \autoref{fig:lambda_progression}.
-This leads us to choose $\LogitSource{\lambda=1}$ as validity loss in the rest of our analyses.
 
 \begin{figure}[htbp]
     \centering
@@ -136,11 +142,32 @@ This leads us to choose $\LogitSource{\lambda=1}$ as validity loss in the rest o
     \label{fig:lambda_progression}
 \end{figure}
 
+To make better sense of our findings, we also plot our various losses and their gradients on \CakeOnSea.
+The plots are shown in full in \autoref{fig:cf_losses_all} and \autoref{fig:cf_gradients_all}.
+Here, we select plots for some losses and where the target class is always class 2.
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{./cf_losses/cf_losses_detail}
+    \caption{Loss profile for various losses on \CakeOnSea, with ${\target = 2}$.}
+    \label{fig:cf_losses_detail}
+
+    \vspace*{\floatsep}% https://tex.stackexchange.com/q/26521/5764
+
+    \includegraphics[width=\textwidth]{./cf_losses/cf_gradients_detail}
+    \caption{Opposite of the loss gradient for various losses on \CakeOnSea, with $\target = 2$.}
+    \label{fig:cf_gradients_detail}
+\end{figure}
+
 \paragraph{Interpretation}
 
-As expected, the validity rate achieved by \revise{} is generally much more acceptable than that of \ls{}, across all losses.
-Additionally, it would seem the best results are obtained with ?? \note{todo}.
-\note{is this surprising? if so why?}
+From the test accuracy of our classifier which we showed in \autoref{fig:cos_confusion_matrix}, we know that the prediction probabilities are all close to 1, except near the decision boundaries of course.
+Hence, we can verify our intuitive thinking from \autoref{sec:validity_losses}: for the probability-based losses, the loss is very flat, \ie{} the gradient is close to zero.
+For $\LogPrbOthers{}$ it seems the logits from the other classes counteract the target logit, so that paradoxically the paths get pushed away from class 2 in places.
+For the logit-based losses however, the behavior is fairly uniform across the whole data distribution, and so the gradients clearly point the path towards class 2.
+
+This leads us to choose $\LogitSource{\lambda=1}$ as validity loss in the rest of our analyses.
 
 \section{Experiment 2: Path regularized training}
 \label{exp/path_reg}
@@ -150,96 +177,51 @@ In this experiment we seek to determine if \ls{} equipped with a path regularize
 
 Our proxy for complexity of a path is \emph{the number of class boundary crossings}:
 the path should ideally transition from $\source$ to $\target$ without going through other classes.
+We thus add our $\BoundaryCrossLoss$ to the $\nll$ when computing the loss of the autoencoder.
+Our final loss for training the autoencoder is
+\begin{align*}
+    \loss(\phi) = \nll(\phi) + \BoundaryCrossLoss(\apath)
+\end{align*}
+where $\apath$ is a path generated with some CF method.
 
-The parameters used for training the models and for producing the paths are reported in ?? \note{Link to some yaml?}
 
-\subsection{Description}
+\paragraph{Description}
 
 First, we generate some seeds.
 For a given dataset, we train one classifier, as in \autoref{validity_losses/description}.
-For each seed, we train several autoencoders: one without path regularization, and then one per CF generation method.
+For each seed, we train several autoencoders: one without path regularization, and then one per CF generation method using the path regularized training procedure.
 
 Then, each autoencoder is used to produce explanation paths on the whole test set, like in \autoref{validity_losses/description}, and metrics are computed with the paths as input.
 Finally, for each explanation method, we aggregate the metrics obtained for each seed and report the standard error.
 
-% {
-%     \newcommand{\var}[1]{\mathrm{#1}}
-%     \newcommand{\fn}[1]{\mathtt{#1}}
+The paths are 100 points long (including the starting point, so the number of steps is 99) and the step size $\lambda_\text{LS}$ is 0.1. We found this to be satisfactory so that the path is long enough to reach the target class, yet with step size short enough that the path does not go too far too quickly.
 
-%     \newcommand{\seed}{\var{seed}}
-%     \newcommand{\seeds}{\var{seeds}}
-%     \newcommand{\nbSeeds}{N_\seeds}
+\paragraph{Baselines}
+\label{exp/path_reg/baselines}
 
-%     \newcommand{\varDataset}{\var{dataset}}
-%     \newcommand{\varDatasets}{\var{datasets}}
+Since the distance parameter seems inconsequential from our previous results,
+in this experiment we use \ls{} and \revise{} in their basic form, \ie{} with no distance regularization for \ls{} and with $\lambda_\text{distance} = 0.3$ for \revise.
 
-%     \newcommand{\explainer}{\var{explainer}}
-%     \newcommand{\explainers}{\var{explainers}}
+\paragraph{Datasets}
 
-%     \newcommand{\autoencoders}{\var{autoencoders}}
+For memory performance reasons we adapt the batch size for each dataset.
+We compute the batch size so that one training epoch (one pass through $\trainset$) takes 20 steps, except for \ForestCover{} where the batches are still too big.
+The final numbers are:
+\begin{itemize}
+    \item \CakeOnSea: 2881
+    \item \ForestCover: 5000
+    \item \WineQuality: 195
+    \item \OnlineNewsPopularity: 1190
+\end{itemize}
 
-%     \newcommand{\metrics}{\var{metrics}}
-%     \newcommand{\aggregatedMetrics}{\var{aggregated\_metrics}}
-
-%     \newcommand{\results}{\var{results}}
-
-%     \newcommand{\generateSeeds}{\fn{generate\_seeds}}
-%     \newcommand{\trainModel}{\fn{train\_model}}
-%     \newcommand{\newAutoencoder}{\fn{new\_autoencoder}}
-%     \newcommand{\randomTarget}{\fn{random\_target}}
-%     \newcommand{\generatePath}{\fn{generate\_path}}
-%     \newcommand{\computeMetrics}{\fn{compute\_metrics}}
-%     \newcommand{\aggregateMetrics}{\fn{aggregate\_metrics}}
-
-%     \begin{algorithm}
-%         \caption{Experiment on path regularization}
-%         \label{algo:pathreg_xp}
-%         \KwData{$\seed$, number of seeds $\nbSeeds$, $\varDatasets$, $\explainers$}
-%         \KwOut{}
-%         $\seeds \gets \generateSeeds(\nbSeeds, \seed)$ \\
-
-%         \ForEach{$\varDataset \in \varDatasets$}{
-%             $\trainModel(\varDataset, f)$ \\
-%             $\autoencoders = \emptyset$ \\
-
-%             $\results \gets \emptyset$ \\
-
-%             \ForEach{$\seed \in \seeds$}{
-%                 $\autoencoder \gets \newAutoencoder(\seed, null)$
-%                 \tcp*{no path regularization}
-%                 $\trainModel(\varDataset, \autoencoder)$ \\
-%                 $\autoencoders = \autoencoders \cup \{\autoencoder\}$ \\
-
-%                 \ForEach{$\explainer \in \explainers$}{
-%                     $\autoencoder \gets \newAutoencoder(\seed, \explainer)$ \\
-%                     $\trainModel_\explainer(\varDataset, \autoencoder)$ \\
-
-%                     $\autoencoders = \autoencoders \cup \{ \autoencoder \}$ \\
-%                 }
-%             }
-
-%             \seedMetrics \gets \emptyset \\
-%             \ForEach{$\autoencoder \in \autoencoders$}{
-%                 $\metrics = \emptyset$ \\
-%                 \ForEach{$x \in \testset$}{
-%                     $\target \gets \randomTarget(x)$ \\
-%                     $\apath \gets \generatePath(x, \target)$ \\
-%                     $\metrics \gets \metrics \cup \computeMetrics(\apath, \target)$ \\
-%                 }
-%                 $\aggregatedMetrics = \aggregateMetrics(\metrics)$  \\
-%             }
-
-%         }
-%     \end{algorithm}
-% }
-
-
-\subsection{Metrics}
+\paragraph{Metrics}
 
 We measure the validity rate, as before, as well the number of boundary crossings \emph{before reaching $\target$} (so if the path goes directly from $\source$ to $\target$ the value is 0) which is the proxy for interpretability we chose.
 
 For measuring realism, we use a specially-trained autoencoder with the same architecture as the others, trained using only the $\nll$ as a loss.
 The realism score for $\CF{x}$ is given by its $\nll$ as computed by our special autoencoder.
+
+We also measure the computational complexity (the duration for one computing one step of one path).
 
 \subsection{Results}
 
@@ -251,8 +233,6 @@ Given that we were able to achieve more interpretable paths using path regulariz
 For example, can we use path regularization so that all paths pass through one designated point, regardless of $x$ and $\target$?
 To do so, we select a point $\xgoal \in \inputspace$ that we can reasonably expect to be unrealistic, but is not completely out of reach compared to points in the train set.
 Then, we devise a path loss that encodes the distance from a path to $\xgoal$, and let our path regularization training enforce this constraint.
-
-The parameters used for training the models and for producing the paths are reported in ?? \note{Link to some yaml?}
 
 \paragraph{Description}
 
@@ -268,7 +248,11 @@ Apart from this the setup is the same as that described in \autoref{exp/path_reg
 
 \paragraph{Baselines}
 
+We use the same baselines as in the previous experiment (\autoref{exp/path_reg/baselines}).
+
 \paragraph{Datasets}
+
+We use the same datasets as in the previous experiments.
 
 \paragraph{Metrics}
 
@@ -281,5 +265,7 @@ Yet, it is important that manipulated paths retain the validity quality for the 
 \paragraph{Results}
 
 \paragraph{Interpretation}
+
+
 
 \end{document}

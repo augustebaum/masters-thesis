@@ -64,10 +64,9 @@ In addition, for our purposes it is not sufficient that the reconstruction error
 
 \subsection{Variational autoencoder}
 
-\citenote{review definition of vae}
-% A variational autoencoder (or VAE for short) \cite{kingmaAutoEncoding2014} is an autoencoder model in which we learn a distribution $Q(z | x)$ that corresponds to the likelihood of a $z$ giving rise to a particular $x$.
-% This distribution is assumed to be a standard Gaussian parametrized by $x$: $Q(z | x) = \normal(\mu(x), \Sigma(x))$ where $\mu(x)$ and $\Sigma(x)$ are learnable networks that output respectively the mean and the covariance matrix of the Gaussian. We then enforce this assumption by minimizing the KL-divergence $\kl(\normal(\mu(x), \Sigma(x)) \| \normal(0, I))$
-% The encoder $\enc$ is then given by $\enc(x) = \mu(x)$.
+A variational autoencoder (or VAE for short) \cite{kingmaAutoEncoding2014} is an autoencoder model in which we learn a distribution $Q(z | x)$ that corresponds to the likelihood of a $z$ giving rise to a particular $x$.
+This distribution is assumed to be a standard Gaussian parametrized by $x$: $Q(z | x) = \normal(\mu(x), \Sigma(x))$ where $\mu(x)$ and $\Sigma(x)$ are learnable networks that output respectively the mean and the covariance matrix of the Gaussian. We then enforce this assumption by minimizing the KL-divergence $\kl(\normal(\mu(x), \Sigma(x)) \| \normal(0, I))$
+The encoder $\enc$ is then given by $\enc(x) = \mu(x)$.
 
 For a more detailed introduction to VAEs we highly recommend the tutorial by \citeauthor{doerschTutorial2021} \cite{doerschTutorial2021}.
 
@@ -146,5 +145,6 @@ Thus, by construction, the transformation is invertible regardless of the nonlin
     \end{cases}
 \end{equation}
 
+Equipped with these concepts and notation, we can now give an overview of the literature on CFX generation methods making use of generative models.
 
 \end{document}
