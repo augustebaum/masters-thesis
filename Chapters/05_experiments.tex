@@ -5,15 +5,23 @@
 
 \chapter{Experiments}
 
-We now present our three experiments aiming to address the problems stated in \autoref{ch:methods}.
+We now present our experiments to address the problems stated in \autoref{ch:methods}.
 
-First we give details on settings common to all experiments.
+First we give details on settings common to all experiments, next we present our metrics of choice
+and then we delve into the experiments themselves, presenting the experimental setup, the results and
+discussion for each of them in turn.
 
 \section{Models}
 
 All models are trained using the Adam algorithm \cite{kingmaAdam2014} with a learning rate of $1 \times 10^{-3}$.
+We let the models train for an undetermined number of epochs, performing early stopping based on the validation loss with a patience parameter of 3.
 
-They are implemented in \texttt{pytorch}, and trained on one Nvidia G-Force i7-7800X GPU via CUDA 11.7.
+The models are implemented in \texttt{pytorch} and trained on a machine with the following characteristics:
+\begin{itemize}
+    \item CPU: Intel Core i7-7700K CPU @ 4.20GHz
+    \item RAM: 32 GB
+    \item GPU: Nvidia G-Force GTX 1080 via CUDA 11.7
+\end{itemize}
 
 \subsection{Classifier}
 \label{exp/classifiers}
@@ -25,30 +33,25 @@ In \autoref{fig:confusion_matrices} we show the test predictions of our classifi
     \centering
     \begin{subfigure}[b]{0.4\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{./confusion_matrices/cake_on_sea/confusion_matrix_svg-tex.pdf}
+\includegraphics[width=\textwidth]{./05_confusion_matrices/cake_on_sea/confusion_matrix_svg-tex.pdf}
         \caption{Accuracy on \CakeOnSea.}
 \label{fig:cos_confusion_matrix}
     \end{subfigure}
-    % \hfill
     \begin{subfigure}[b]{0.4\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{./confusion_matrices/forest_cover/confusion_matrix_svg-tex.pdf}
+\includegraphics[width=\textwidth]{./05_confusion_matrices/forest_cover/confusion_matrix_svg-tex.pdf}
         \caption{Accuracy on \ForestCover.}
-        % \label{fig:three sin x}
     \end{subfigure}
 
     \begin{subfigure}[b]{0.4\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{./confusion_matrices/wine_quality/confusion_matrix_svg-tex.pdf}
+\includegraphics[width=\textwidth]{./05_confusion_matrices/wine_quality/confusion_matrix_svg-tex.pdf}
         \caption{Accuracy on \WineQuality.}
-        % \label{fig:y equals x}
     \end{subfigure}
-    % \hfill
     \begin{subfigure}[b]{0.4\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{./confusion_matrices/online_news_popularity/confusion_matrix_svg-tex.pdf}
+\includegraphics[width=\textwidth]{./05_confusion_matrices/online_news_popularity/confusion_matrix_svg-tex.pdf}
         \caption{Accuracy on \OnlineNewsPopularity.}
-        % \label{fig:three sin x}
     \end{subfigure}
 
     \caption{Accuracy of our MLP classifier on each dataset.}
@@ -56,7 +59,7 @@ In \autoref{fig:confusion_matrices} we show the test predictions of our classifi
 \end{figure}
 
 It seems the classifier achieves low accuracy on \WineQuality{} and \OnlineNewsPopularity{} in particular.
-These datasets are originally designed for regression, so they are perhaps not well adapted to classification; however, their size is also likely a factor: they have on the order of $10^2$ training examples per dimension where the others have on the order of $10^4$.
+These datasets are originally designed for regression, so they are perhaps not well suited for classification tasks; however, their size is also likely a factor: they have on the order of $10^2$ training examples per dimension where the others have on the order of $10^4$.
 
 All datasets also have significant class imbalance: in \ForestCover{} the test set contains 56382 points with true class 1 while only 554 points in class 3.
 
@@ -64,6 +67,48 @@ All datasets also have significant class imbalance: in \ForestCover{} the test s
 
 We build a normalizing flow model according to the NICE architecture described in \autoref{bg/nf} \cite{dinhNICE2015}.
 The model is trained according to a Gaussian prior distribution, and its layers are 4 additive coupling layers where we divide the input into the odd columns and the even columns, and the nonlinearity is an MLP with 2 layers of 20 nodes each.
+
+\section{Metrics}
+
+In this section we describe the various metrics that will be used in some or all of our experiments.
+
+\subsection{Validity}
+
+Validity is the one requirement where the metric of interest is unambiguous: either a path is valid or it is not.
+Hence, for testing a path generation method on some test set, we measure the validity rate, which is the proportion of valid paths.
+
+\subsection{Computational performance}
+
+Ensuring that CFs generation is fast is an important concern for stakeholders, especially if one needs to generate paths for many points of interest.
+Hence, we measure the time taken \emph{for one step of one path}.
+This is because depending on the number of steps chosen by the user, a path can take longer to generate, and methods such as \ls{} can take advantage of optimizations to compute many paths at once.
+
+\subsection{Realism}
+
+Following the reasoning presented in \cite{vanlooverenInterpretable2021}, we measure realism using a generative model.
+However, while \citeauthor{vanlooverenInterpretable2021} use a VAE and thus estimate realism using the reconstruction error, we can compute the likelihood directly.
+Indeed, normalizing flows are typically trained to minimize the $\nll = - \log P(x)$, so we can compute it easily.
+$P(x)$ is in non-negative so the $\nll$ is in $\R_+$ and the closer it is to 0, the more realistic the point is deemed to be.
+
+For some time we also used the local outlier factor \cite{breunigLOF2000}, for which an implementation is provided by the \sklearn{} Python package, but it did not scale to all of our datasets.
+
+\subsection{Extending metrics to a path}
+
+Many metrics take a point $x' \in \inputspace$ as input and return a score, but we wish to score a whole path $(x_t)_{t=1}^T$.
+Hence, given a metric, we aggregate over the path (that is, from its starting point to the first step at which $\target$ is reached).
+
+For this, we first produce paths in the form of a 3-dimensional tensor in $\R^{\nbsteps \times \batchsize \times \inputdim}$.
+We compute the model predictions resulting in a 2-dimensional tensor in $\setclasses^{\nbsteps \times \batchsize}$.
+Based on this and the target classes we generated in $\setclasses^\batchsize$, we construct a mask $\pathmask \in \{0, 1\}^{\nbsteps \times \batchsize}$ that highlights the valid paths:
+if path $j$ is not valid, then
+$\forall i \in \{1, \ldots, \nbsteps\}$ ${\pathmask_{ij} = 0}$, and if path $j$ is valid then $\pathmask_{ij} = 1$ up to and \emph{not including} the first index where $\target$ is reached, and 0 after that.
+
+Then we can take the element-wise product of, \eg{} the $\nll$ computed for all points of all paths, to mask the unwanted points.
+
+Note that if no paths are valid, the resulting product will be equal to zero, which can be misleading: $\nll = 0$ is a perfect score.
+For this reason we take care to always report the validity rate alongside any metric computed this way.
+
+Let us now describe our experiments in detail.
 
 \section{Experiment 1: Validity losses}
 
@@ -80,7 +125,7 @@ The seeds are generated uniformly based on one primary seed.
 For a given dataset, we measure the validity rate across the whole test set.
 That is, for every test point, we run the classifier to get the $\source$ class ($\source = \arg\max_{c \in \setclasses} f(x)$), and we sample the target class uniformly from $\setclasses \backslash \{\source\}$.
 Then we generate a path using the given loss $\lossval$, and count it as valid or not.
-It is important to sample the $\target$ uniformly to get a full understanding because, even though the label distribution might not be uniform, in general there is no reason to prefer explanations for a given target rather than another.
+It is important to sample the $\target$ uniformly to get a full understanding because, even when the label distribution is not uniform, in general there is no reason to prefer explanations for a given target rather than another.
 
 We average the rates over the different seeds, and report the standard error.
 
@@ -88,7 +133,7 @@ We average the rates over the different seeds, and report the standard error.
 
 The methods we use to produce the paths are variations on \ls{} and \revise{}.
 Specifically, we run both methods twice: once with regularization on the $L_1$ distance, with $\lambda_\text{distance} = 0.3$ and one without regularization (with $\lambda_\text{distance}$ set to 0).
-In the future using some automatic tuning procedure would be preferable: in our case $\lambda_\text{distance} = 1$ led to immobile paths whereas $\lambda_\text{distance} = 0.3$ might be too close to regularization at all.
+In the future using some automatic tuning procedure would be best: in our case $\lambda_\text{distance} = 1$ led to immobile paths whereas $\lambda_\text{distance} = 0.3$ could be too close to performing no regularization at all.
 
 In fact, our implementation of both \ls{} and \revise{} is a joint abstraction that takes a parameter for the frequency of the gradient computation: for \revise{} this is set to 1 (\ie{} recompute the gradient after every step) while for \revise{} it is null (\ie{} never recompute it).
 This way the number of steps and step size can be set to the same values with confidence.
@@ -101,13 +146,13 @@ The losses compared in this experiment are as follows:
     \item The logit-based losses: $\LogitTarget, \LogitSource{}, \LogitOthers{}$
 \end{itemize}
 where we test all losses that can be parametrized with the default parameter of $\lambda = 1$ and also with $\lambda = 0.1$, for a total of 13 losses ($\PrbTarget$ is not parametrized, and recall that $\PrbOthers{}$ is equivalent to $\PrbTarget$.).
-Here again, a larger scale parameter search could have been interesting, but instead we first select the best-performing loss and then show the progression for $\lambda \in [0, 1]$.
+Here again, a larger scale parameter search should have been done, but instead we first select the best-performing loss and then show the progression for $\lambda \in [0, 1]$.
 
 \paragraph{Datasets}
 
 We run our experiment on the datasets described in \autoref{sec:datasets}, namely \CakeOnSea, \ForestCover, \WineQuality{} and \OnlineNewsPopularity.
 
-The batch sizes are chosen so that one epoch takes less than 10 steps, except for \ForestCover{} where the size of the train set would have made very large batches.
+The batch sizes are chosen so that one epoch takes less than 10 steps, except for \ForestCover{} where the size of the train set would have resulted in very large batches.
 The final numbers are:
 \begin{itemize}
     \item \CakeOnSea: 12000
@@ -127,44 +172,48 @@ We highlight in gray the five losses that yield the best average validity rate a
 
 \begin{table}[h!]
 \centering
-\subfile{../Figures/validity_losses.tex}
+\subfile{../Figures/05_validity_losses.tex}
 \caption{Validity rate means with their standard error. Highlighted are the five losses with the best average results.}
 \label{tbl:validity_losses}
 \end{table}
 
 As expected, the validity rate achieved by \revise{} is generally much more acceptable than that of \ls{}, across all losses.
-It would seem $\LogitSource{}$ is always among the best validity losses. However, it is not always clear which value of $\lambda$ should be used.
-Hence, we show the validity rate for several values of $\lambda$ in \autoref{fig:lambda_progression}.
+$\LogitSource{}$ is always among the best validity losses.
+However, it is not always clear which value of $\lambda$ should be used.
+Hence, we show the validity rate for $\lambda \in \{ 0.01, 0.05, 0.1, 0.2, 0.5, 1\}$ in \autoref{fig:lambda_progression}.
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.7\textwidth]{./logit_source_lambda_progression}
+\includegraphics[width=0.7\textwidth]{./05_logit_source_lambda_progression}
 
     \caption{Validity rate for $\LogitSource{\lambda}$ for different values of $\lambda$.}
     \label{fig:lambda_progression}
 \end{figure}
 
+From this plot it is clear that in general letting $\lambda = 1$ leads to higher validity rate;
+however the validity is unusually high for $\lambda = 0.1$ compared to the others.
+
 To make better sense of our findings, we also plot our various losses and their gradients on \CakeOnSea.
-The plots are shown in full in \autoref{fig:cf_losses_all} and \autoref{fig:cf_gradients_all}.
 Here, we select plots for some losses and where the target class is always class 2.
+For reference, the full plots are shown in \autoref{ch:plots}.
 
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=\textwidth]{./cf_losses/cf_losses_detail}
+\includegraphics[width=\textwidth]{./05_cf_losses/cf_losses_detail}
     \caption{Loss profile for various losses on \CakeOnSea, with ${\target = 2}$.}
     \label{fig:cf_losses_detail}
 
     \vspace*{\floatsep}% https://tex.stackexchange.com/q/26521/5764
 
-    \includegraphics[width=\textwidth]{./cf_losses/cf_gradients_detail}
+\includegraphics[width=\textwidth]{./05_cf_losses/cf_gradients_detail}
     \caption{Opposite of the loss gradient for various losses on \CakeOnSea, with $\target = 2$.}
     \label{fig:cf_gradients_detail}
 \end{figure}
 
 \paragraph{Interpretation}
 
-From the test accuracy of our classifier which we showed in \autoref{fig:cos_confusion_matrix}, we know that the prediction probabilities are all close to 1, except near the decision boundaries of course.
+From the test accuracies shown in \autoref{fig:cos_confusion_matrix}, we know that for \CakeOnSea{} the prediction probabilities are all close to 1, except perhaps near the decision boundaries.
 Hence, we can verify our intuitive thinking from \autoref{sec:validity_losses}: for the probability-based losses, the loss is very flat, \ie{} the gradient is close to zero.
 For $\LogPrbOthers{}$ it seems the logits from the other classes counteract the target logit, so that paradoxically the paths get pushed away from class 2 in places.
 For the logit-based losses however, the behavior is fairly uniform across the whole data distribution, and so the gradients clearly point the path towards class 2.
@@ -225,9 +274,36 @@ The realism score for $\CF{x}$ is given by its $\nll$ as computed by our special
 
 We also measure the computational complexity (the duration for one computing one step of one path).
 
-\subsection{Results}
+\paragraph{Results}
 
-\subsection{Interpretation}
+The results for each dataset and method are given in \autoref{tbl:path_reg}.
+
+\begin{table}[h!]
+    \centering
+    \subfile{../Figures/05_path_reg.tex}
+    \caption{Path metrics with their standard error. ($\uparrow$) indicates higher is better, ($\downarrow$) indicates lower is better.}
+    \label{tbl:path_reg}
+\end{table}
+
+It seems the regularization did not achieve its objective, as the mean number of boundary crossings stays approximately the same regardless of whether or not regularization was performed.
+The only case where an effect is observed is for \revise{} on \CakeOnSea{}.
+In no instance do we see a decrease in validity rate when applying path regularization.
+Similarly, path regularization by and large has no effect on realism, except for \ls{} on \CakeOnSea{} and \ForestCover{} where the $\nll$ is decreased when applying regularization.
+The time per step does not depend on the autoencoder training, only on the architecture.
+Yet, we can observe the difference in time performance between \ls{} and \revise{}: \ls{} is up to 70 times faster than \revise{} on \OnlineNewsPopularity{} (recall our paths are 100 steps long).
+
+\paragraph{Interpretation}
+
+The regularization was not strong enough to alter the training of the autoencoder.
+Recall our loss function is given by
+\begin{align*}
+    \BoundaryCrossLoss(\apath) =
+    - \frac{1}{\nbsteps} \sum_{t=1}^{\nbsteps}
+    \max \{ p^{(t)}_\source, p^{(t)}_\target \}
+\end{align*}
+which is in $[-1, 0]$.
+By contrast, the $\nll$ is computed according to a Gaussian prior distribution which can typically be as large as $\inputdim$ (see \autoref{methods:0_sols}), which is larger than 10 for all datasets except for \CakeOnSea{} where $\inputdim=2$.
+Therefore, one easy improvement is to multiply the $\BoundaryCrossLoss$ by $\inputdim$.
 
 \section{Experiment 3: Robustness of explanations with path regularization}
 
@@ -266,13 +342,13 @@ Yet, it is important that manipulated paths retain the validity quality for the 
 
 \paragraph{Results}
 
-The results for each dataset and method are given in \autoref{tbl:path_reg}.
+The results for each dataset and method are given in \autoref{tbl:robustness}.
 
 \begin{table}[h!]
     \centering
-    \subfile{../Figures/path_reg.tex}
-    \caption{Path metrics with their standard error.}
-    \label{tbl:path_reg}
+    \subfile{../Figures/05_robustness.tex}
+    \caption{Path metrics with their standard error. ($\uparrow$) indicates higher is better, ($\downarrow$) indicates lower is better.}
+    \label{tbl:robustness}
 \end{table}
 
 \paragraph{Interpretation}

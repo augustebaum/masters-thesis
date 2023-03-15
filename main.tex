@@ -3,7 +3,7 @@
 	oneside, % Two side (alternating margins) for binding by default, uncomment to switch to one side
 	english, % ngerman for German
 	onehalfspacing, % alternatives: singlespacing, onehalfspacing or doublespacing
-draft, % Uncomment to enable draft mode (no pictures, no links, overfull hboxes indicated)
+% draft, % Uncomment to enable draft mode (no pictures, no links, overfull hboxes indicated)
 	nolistspacing, % If the document is onehalfspacing or doublespacing, uncomment this to set spacing in lists to single
 	liststotoc, % Uncomment to add the list of figures/tables/etc to the table of contents
 	toctotoc, % Uncomment to add the main table of contents to the table of contents
@@ -33,7 +33,7 @@ draft, % Uncomment to enable draft mode (no pictures, no links, overfull hboxes 
 % Make it so imported files can be compiled independently, greatly reducing compilation time
 \usepackage{subfiles}
 
-\usepackage[mode=buildnew]{standalone}
+\usepackage{chngpage}
 
 % -----------------------------------------------
 %	MARGIN SETTINGS
@@ -101,14 +101,14 @@ draft, % Uncomment to enable draft mode (no pictures, no links, overfull hboxes 
 
 \include{Head/TitlePage.tex}
 
-\include{Head/Declaration.tex}
+% \include{Head/Declaration.tex}
 \cleardoublepage
 
 % -----------------------------------------------
 %	QUOTATION PAGE
-% \vspace*{0.2\textheight}
-% \noindent\enquote{\itshape Thanks to my solid academic training, today I can write hundreds of words on virtually any topic without possessing a shred of information, which is how I got a good job in journalism.}\bigbreak
-% \hfill Dave Barry
+\vspace*{0.2\textheight}
+\noindent\enquote{\itshape Nulle montagne sans vallée.}\bigbreak
+\hfill French proverb
 
 % -----------------------------------------------
 %	ABSTRACT PAGE

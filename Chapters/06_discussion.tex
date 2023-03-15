@@ -14,11 +14,11 @@ Tabular data is also special in that it can contain categorical or ordinal featu
 
 In our work, we adapted methods from image problems, so the question of discrete features is never raised; many methods developed for tabular data treat these features as numerical and then apply rounding as needed.
 Since normalizing flows are invertible we would expect this not to be necessary, however, categorical data is especially ill-adapted to normalizing flows because they have to map their discrete distribution to a continuous one (\eg{} a standard Gaussian), which is an unstable process.
-This was still considered an open problem as of 2021 \cite{kobyzevNormalizing2021}.
-There are some ways to go about it: for example, adding a bit of noise to the discrete features so that the distribution is not discrete but heavily multi-modal instead, so that learning is smoother and the points can be turned back to their discrete form with confidence (as long as the learning process succeeded).
-In the interest of isolating variables we decided to leave this as future work.
+This was still considered an open problem as of 2021 \cite{kobyzevNormalizing2021}, but some solutions have been explored:
+for example, dequantization consists in adding a bit of noise to the discrete features so that the distribution is not discrete but heavily multi-modal instead, so that learning is smoother and the points can be turned back to their discrete form with confidence (as long as the learning process succeeded) \cite{hoFlow2019}.
+In the interest of simplicity we decided to leave this as future work.
 
-\section{On \CakeOnSea}
+\section{\CakeOnSea}
 
 This synthetic dataset was produced as a way to easily visualize CF paths, as those could be drawn in two dimensions.
 However, this only served to highlight the difficulty of rating explanations visually: they did not seem to bring more information about the model's behavior than simply visualizing the model's prediction boundaries would have.

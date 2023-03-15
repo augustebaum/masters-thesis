@@ -3,17 +3,16 @@
 
 The use of machine learning is hindered by the problem of explainability: in some applications justifying a model's decisions is critical to ensure trustworthiness, while in others it is set to become a legal necessity.
 For a given input-output pair, counterfactual explanations (CFX) address this need by providing an answer to the question "What would it take for the model to change its mind?".
-% This explanation is easy to understand and it adds to the usual feature attribution framework by proposing alternative inputs
 Such an explanation clearly shows which features are determinant to the model, but depending on the circumstance it also shows an end-user how to obtain a more desirable model outcome.
 However, if the counterfactual looks too different from its original point, this can affect the trustworthiness of the explanation itself: unfortunately the current methods usually do not display the \emph{progression} that leads from the explained input to its counterfactual.
 
 \ls{} was introduced to address this issue: in this technique the input is perturbed \emph{continuously} towards a target class.
-However, so far this technique has only been applied to binary classification problems on images, and for good reason: image explanations are easily understandable by humans, so finding objective quality metrics is not such a pressing goal.
+However, so far this technique has only been applied to binary classification problems on images, and for good reason: image explanations are easily understandable by humans, so objective quality metrics can sometimes appear superfluous.
 
-Thus, our contributions are as follows: firstly, we extend \ls{} to (numerical) tabular data; this requires us to find objective metrics for the quality of counterfactuals because rows of data are not as meaningful as images for a human.
+Thus, our contributions are as follows: firstly, we apply \ls{} to (numerical) tabular data; this requires us to find objective metrics for the quality of counterfactuals because rows of data are not as meaningful as images for a human.
 Secondly, we extend \ls{} to multi-class problems, where targeting a particular class is not the same as simply moving a point away from its current class; we experiment with different loss functions to maximize the probability of reaching the target class.
 Thirdly, we propose a variation to \ls{} to ensure paths satisfy certain interpretability constraints, \eg{} the path should only go through \emph{realistic} points.
-Finally, we study the robustness of our proposed method; we demonstrate it can be abused to produce paths of any given shape.
+Finally, we study the robustness of our proposed method by using it with nonsensical constraints.
 
 
 \end{abstract}

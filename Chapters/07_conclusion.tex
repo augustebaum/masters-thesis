@@ -6,7 +6,26 @@
 \chapter{Conclusion}
 \label{ch:conclusion}
 
-\note{todo}
-In this work, we
+In this work, we studied counterfactual explanation methods for tabular data.
+We first gave an overview of explainable AI, distinguished different methods and their scope, settling on CFX for their ease of comprehension and ability to provide recourse.
+We reviewed the literature on CFX and found many methods based on performing gradient descent in a latent space learned through a generative model such as a variational autoencoder or a normalizing flow, in an effort to keep the CF search within the data manifold and thus guarantee that the CFX are realistic and useful.
+Each work gave different criteria for the quality of an explanation, which shows that progress can still be made in this regard.
+
+We drew upon one of these methods, \ls{}, as a simple and fast method that showed promise on image data.
+We expanded on it in several key ways:
+\begin{enumerate}
+    \item We applied it to tabular data while \citeauthor{cohenGifsplanation2022} focussed on image data, where explanation quality is easier to define.
+    \item We implemented it using NICE, an architecture for normalizing flows, as the generative model to ensure trustworthiness in the produced explanation paths, whereas \citeauthor{cohenGifsplanation2022} used a basic autoencoder.
+    \item We applied it to multi-class classification problems where \citeauthor{cohenGifsplanation2022} focussed on binary classification. In doing so we introduced and analyzed different candidates for the right loss function to minimize with gradient descent.
+    \item In an effort to compete with the usual gradient descent methods, such as \revise{} \cite{joshiRealistic2019}, we formulated the path regularization procedure, to embed interpretability criteria within the latent space, whereas \citeauthor{cohenGifsplanation2022} explicitly refrained from tailoring the latent representation to the task.
+    Though we are confident that this procedure is theoretically sound, we achieved modest results with our experiment settings.
+    \item We probed the path regularization procedure to test its boundaries, showing that it can be misused to produce nonsensical explanations \note{is this what the robustness showed?}
+\end{enumerate}
+
+In future work, we would consider:
+\begin{enumerate}
+    \item Attempting path regularization again with more sensible experimental parameters.
+    \item \note{?}
+\end{enumerate}
 
 \end{document}

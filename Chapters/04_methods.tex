@@ -22,6 +22,7 @@ Find a point $\CF{x}$ for which $f(\CF{x}) > \frac{1}{2}$ such that $\CF{x}$ is 
 \end{quote}
 
 \subsection{Proposed solutions}
+\label{methods:0_sols}
 
 Let us describe the basis for our work, \ls{}.
 This method was presented by \citeauthor{cohenGifsplanation2022} in 2022 as a CF generation method for binary classification models on image data, specifically X-ray images of human lungs \cite{cohenGifsplanation2022}.
@@ -38,7 +39,7 @@ Hence, we first run the encoder $\enc$, then perturb the latent following the gr
 
 \begin{figure}[htbp]
 	\centering
-	\subfile{../Figures/latent_shift.tex}
+\subfile{../Figures/04_latent_shift.tex}
 	\caption{A sketch of the \ls{} algorithm. Step 1 is applying $\enc$, step 2 is perturbing along the gradient of the classifier, and step 3 is applying $\dec$. Adapted from \cite{cohenGifsplanation2022}.}
 	\label{fig:latent_shift}
 \end{figure}
@@ -53,34 +54,51 @@ We outline some of the benefits of \ls{} here:
 	      This is relevant for the problem of recourse mentioned in \autoref{par:cfx}: if a CFX is meant as advice for a data subject to alter their behavior to achieve a better outcome, then this advice would be more meaningful if the CFX would detail what \emph{individual steps} are needed to achieve that change.
 	      This is outlined in research challenge no.~2 of \cite{vermaCounterfactual2020}.
 
-	\item Finally, by setting $\lambda_\text{LS}$ to a negative value we could also produce new points that are \emph{more strongly} predicted as class 0.
+	\item Finally, by setting $\lambda_\text{LS}$ to a negative value we can also produce new points that are \emph{more strongly} predicted as class 0.
 \end{enumerate}
 
 However, in the original \ls{} work the method is applied to images, and the generative model used is an autoencoder architecture based on residual networks \cite{heDeep2015}.
 This is an acceptable choice of model to image data, but it has two important consequences:
 \begin{enumerate}
 	\item The reconstruction error of the autoencoder is non-zero: encoding an image to get the starting point of the path is not an invertible operation.
-	      As explained in \autoref{previous_work:diffeo}, this implies the CF path in input space generally does not go through the original point, even for $\lambda_\text{LS} = 0$; in fact, if the reconstruction error is too large this problem could impact the trustworthiness of the explanation.
+	      As explained in \autoref{previous_work:diffeo}, this implies the CF path in input space generally does not go through the original point, even for $\lambda_\text{LS} = 0$; in fact, if the reconstruction error is too large this problem will impact the trustworthiness of the explanation.
 
-	\item Basic autoencoders have no requirement to map inputs \emph{continuously}, so the generated path could potentially look very complex which also makes the explanation less trustworthy.
+	\item Basic autoencoders have no requirement to map inputs \emph{continuously}, so the generated path can look very complex which also makes the explanation less trustworthy.
 \end{enumerate}
 
 To overcome these issues, we turn to normalizing flows: generative models that are invertible by design.
-Our analyses are generally not specific to normalizing flows though, so in the following we refer to our generative model as an autoencoder or a normalzing flow interchangeably.
+Our analyses are generally not specific to normalizing flows though, so in the following we refer to our generative model as an autoencoder or a normalizing flow interchangeably.
+
+We choose the NICE architecture from \cite{dinhNICE2015} presented in \autoref{bg/nf}.
+In particular, we assume a standard Gaussian prior distribution, \ie{} we enforce that the distribution in the latent space is standard Gaussian.
+As shown in \autoref{bg/nf} for a Gaussian prior the $\nll$ is then written
+\begin{align*}
+\nll(x) = \frac{\latentdim}{2} \log 2 \pi
+    +  \frac{z^T z}{2}
+    - \sum_{i=1}^\latentdim \log \abs{S_{ii}}
+\end{align*}
+which is the loss that is minimized.
+
+\note{mention that revise is almost the same and will be our baseline in the following}
 
 \section{Problem 1: Multi-class extension}
 
 \subsection{Problem statement}
 
-Recall that the authors of \ls{} propose to recover a potential counterfactual by perturbing the input using the gradient of the classifier in latent space: $\CF{x} = \dec(z + \lambda_\text{LS} \nabla_z f(\dec(z)))$.
+Recall that the authors of \ls{} propose to recover a potential counterfactual by perturbing the input using the gradient of the classifier in latent space:
+\begin{equation*}
+    \CF{x} = \dec(z + \lambda_\text{LS} \nabla_z f(\dec(z))).
+\end{equation*}
 
-In the case where $f$ is a binary classifier outputting the predicted probability that $x$ is of class 1, this might be sufficient.
-However, in multi-class problems where $f$ outputs a vector in $\R^\outputdim$ there are several possible choices of functions of which we could compute the gradient.
+In the case where $f$ is a binary classifier outputting the predicted probability that $x$ is of class 1, this is clearly sufficient.
+However, in multi-class problems where $f$ outputs a vector in $\R^\outputdim$ there are several other functions we can use.
 To see this, we reformulate the latent shift strategy with a generic loss that accounts for validity, denoted by $\lossval$:
 
 Let $f$ be the classifier of interest, which outputs logits in $\R^\outputdim$ rather than a probability mass.
-Given $x \in \inputspace$ and an autoencoder $\autoencoder = (\enc, \dec)$, a counterfactual path can be generated by computing the gradient of a so-called ``validity loss'' $\lossval$ and perturbing $z = \enc(x)$ along the opposite of the gradient (that is, in the direction of steepest \emph{descent}) so as to minimize $\lossval$:
-$\CF{x} = \dec(z - \lambda \nabla_z \lossval(z))$.
+Given $x \in \inputspace$ and an autoencoder $\autoencoder = (\enc, \dec)$, a counterfactual path can be generated by computing the gradient of a so-called ``validity loss'' $\lossval$ and perturbing $z = \enc(x)$ in the direction of steepest \emph{descent} of $\lossval$:
+\begin{equation*}
+\CF{x} = \dec(z - \lambda \nabla_z \lossval(z)).
+\end{equation*}
 
 In vanilla \ls{}, the validity loss would then be $\lossval(z) = - \sigma(f(\dec(z)))$ where $\sigma$ denotes the sigmoid function, or any other increasing differentiable function that outputs a number in $[0, 1]$.
 
@@ -92,20 +110,21 @@ Find a validity loss $\lossval$ that, for a given $x \in \inputspace$, gives ris
 \subsection{Proposed solutions}
 \label{sec:validity_losses}
 
-Note that this extension to the multi-class setting means that we have a choice to specify a given target class: we might also prefer to simply change the class, without preference of target class. In our analysis we focus on the case where a target class is specified.
+Note that this extension to the multi-class setting means that we have a choice to specify a given target class: we could set a requirement to simply change the class, without preference of target class.
+In our analysis we focus on the case where a target class is specified.
 
-In order to mimic the solution discussed in \cite{cohenGifsplanation2022}, we could use
+In order to mimic the solution discussed in \cite{cohenGifsplanation2022}, we have
 \begin{equation}
     \lossval(z) = -\softmax(f(\dec(z)))_\target,
 \end{equation}
 \ie{} the component of the output probability mass corresponding to class $\target$.
 We call this loss $\PrbTarget$.
 As before, the codomain is $[0, 1]$, and the loss corresponds directly to what we wish to achieve.
-We could stop there, but in fact other possibilities arise because of the multi-class assumption.
+However, the multi-class setting assumption gives rise to other candidate losses.
 
 Indeed, in the binary classification case, reaching towards the target class is exactly the same as moving away from the source class, since $p_\source = 1 - p_\target$.
 By contrast, in the multi-class setting, different priorities need to be distinguished on a case-by-case basis: is it more important to reach the target (at the risk of potentially staying in the source class) or to get away from the source (at the risk of not reaching the target)?
-The natural extension we presented is favoring the first option, but perhaps some variation of it could be preferable.
+The natural extension we presented is favoring the first option, but including the second in some way is of interest.
 
 Thus, we introduce the following alternative loss, with regularization $\lambda \in [0, 1]$:
 \begin{equation}
@@ -117,7 +136,7 @@ We call it $\PrbSource{\lambda}$.
 
 In fact, we can go further:
 in \ls{}, the objective of increasing $p_\target$ is equivalent to decreasing $\mysum{c} p_c$, since in binary classification this is just $p_\source$; however, in multi-class problems they are distinct quantities.
-Therefore we could also define:
+Therefore we also define:
 \begin{align*}
     \PrbOthers{\lambda}(z) = - \softmax(f(\dec(z)))_\target + \lambda \mysum{c} \softmax(f(\dec(z)))_c
 \end{align*}
@@ -242,7 +261,7 @@ When $j \neq \target$ the gradient is larger than 0 so again, class $\target$ do
 For $\LogPrbOthers{}$ we have:
 \begin{align*}
     \grad{\LogPrbOthers{\lambda}}{u_j}
-     = p_j (1 - \lambda (\outputdim - 1)) + \lambda (1 - \djt) - \djt
+     = p_j (1 - \lambda (\outputdim - 1)) + \lambda (1 - \djt) - \djt.
 \end{align*}
 The full derivation can be found in \autoref{eq:grad_log_prb_others}.
 
@@ -305,15 +324,15 @@ Hence the behavior is also clear: $u_\target$ always gets pushed up higher than 
 
 \subsection{Problem statement}
 
-A typical requirement on a counterfactual $\CF{x}$ for an input $x$ might be for $\norm{\CF{x} - x}$ to be small, where $\norm{\cdot}$ could be the $L_1$ norm for example.
+A typical requirement on a counterfactual $\CF{x}$ for an input $x$ is for $\norm{\CF{x} - x}$ to be small, where $\norm{\cdot}$ is the $L_1$ norm for example.
 While this makes sense for methods that produce a discrete set of counterfactuals, we focus on methods that produce \emph{continuous explanation paths}, hence we wish to ensure these requirements are satisfied \emph{along the path}.
-For distance, we might wish that the endpoint of the path $\CF{x} = \dec(z_T)$ be close to the starting point, but also that \emph{on the whole} the path $(z_t)_{t=1}^T$ stay as close as possible to the starting point.
+In the example of distance, this would give us the constraint that the endpoint of the path $\CF{x} = \dec(z_T)$ be close to the starting point, but also that \emph{on the whole} the path $(z_t)_{t=1}^T$ stay as close as possible to the starting point.
 
 In the case of gradient-descent optimization paths, this can be addressed by placing these constraints in the loss function during the computation of the next step: this is done in \revise{}, where the loss function includes the $L_1$ distance \cite{joshiRealistic2019}:
 \begin{equation*}
 \cfloss(z_t) = \lossval(z_t) + \lambda_\text{distance} \norm{\dec(z_t) - x}_1.
 \end{equation*}
-However, for \ls{} this solution is not appropriate because the gradient is only computed \emph{once}, for $z = \enc(x)$: even though the first step might be in the right direction, overall the whole path could still go in the wrong direction because the information carried by the gradient is less relevant the further away we go from the input.
+However, for \ls{} this solution is not appropriate because the gradient is only computed \emph{once}, for $z = \enc(x)$: even though the first step goes in the right direction, overall the whole path can still go in the wrong direction because the information carried by the gradient is less relevant the further away we go from the input.
 
 Hence, our second problem statement is the following:
 \begin{quote}
@@ -336,7 +355,7 @@ Note that in NF-based autoencoders, the decoder is the inverse of the encoder an
 \While{not converged}{
 $x \gets \mathtt{get\_input}(\text{data})$ \\
 $z \gets \enc_\phi(x)$ \\
-$\source \gets \arg\max f(x)$ \\
+$\source \gets \arg\max_{c \in \setclasses} f(x)$ \\
 $\target \gets \mathtt{random\_target}(x)$ \tcp*{such that $\target \neq \source$}
 $\apath \gets \mathtt{generate\_path}_{\cfloss}(z, \source, \target)$ \tcp*{$\apath = (\CF{x}_t)_{t=1}^T$}
 $\phi \gets \phi - \nabla_\phi {(\nll(z) + \lambda_\apath \pathloss(\apath) + \lambda_\text{CF} \cfloss(\apath))}$ \\
@@ -344,20 +363,17 @@ $\phi \gets \phi - \nabla_\phi {(\nll(z) + \lambda_\apath \pathloss(\apath) + \l
 \end{algorithm}
 
 Since the one obvious constraint on paths is that they should be valid, we include a term $\cfloss$ which would typically be an average over the path of whatever loss was used to compute the path, which should include some constraints on validity; this is what we do in our analyses.
-\note{do we use the same cf loss as the one used for the paths in the end?}
+\note{I ended up not using this in the end; what do i do?}
 
-$\pathloss$ represents our criteria for an interpretable path. So what criteria could we enforce?
-One possible constraint could be that the path should go from $\source$ to $\target$ passing through as few other classes as possible, and ideally, without passing through any other class.
+$\pathloss$ represents our criteria for an interpretable path. So what criteria should we enforce?
+We choose to apply the following constraint: the path should go from $\source$ to $\target$ passing through as few other classes as possible, and ideally, without passing through any other class.
 Thus we formulate $\BoundaryCrossLoss$ as follows:
 \begin{align*}
-     & \BoundaryCrossLoss(\apath) =                                                                                                                                               \\
-     & - \mathbb{1}\{ \apath \text{ is valid}\}
-     \times \frac{1}{\nbsteps} \sum_{t=1}^{\nbsteps}
-        \mathbb{1}\{ t < t_\target \} \max \{ f(\CF{x}_t)_\source, f(\CF{x}_t)_\target \}
+\BoundaryCrossLoss(\apath) = -
+\frac{1}{\nbsteps} \sum_{t=1}^{\nbsteps}
+\max \{ p^{(t)}_\source, p^{(t)}_\target \}
 \end{align*}
-where $t_\target = \arg\min_{t \in \{1, \ldots, \nbsteps\}} \{ \softmax(f(x_t))_\target > \frac{1}{2} \}$ is the first step at which the target is reached.
-
-Importantly, when a path is not valid, its $\BoundaryCrossLoss$ is zero; this could be abused by only producing paths which are not valid, hence we include the $\cfloss$ term to balance out the path loss.
+where $p^{(t)}_i$ is the predicted probability $\softmax(f(x_t))_i$.
 
 Note that class information is indirectly given during the training of the autoencoder, so the autoencoder is dependent on the classification task.
 By contrast, in vanilla \ls{} the authors make a conscious decision to keep the autoencoder entirely separate from the classifier.
@@ -371,7 +387,7 @@ This is a perfectly sound argument, but in the CFX generation literature class-a
 
 The path regularization algorithm admits a general loss $\pathloss$ which is problem-dependent.
 Yet, this raises a question: can the path regularization algorithm accommodate for any path loss, however extraneous?
-If so, this procedure could potentially be manipulated to produce adversarial paths that do not reflect the true behavior of the explained model.
+If so, this procedure can be manipulated to produce adversarial paths that do not reflect the true behavior of the explained model.
 
 \subsection{Proposed experiment}
 
@@ -379,46 +395,6 @@ To probe the possibility of abuse of the path regularization procedure, we formu
 \begin{align}
     \pathloss(\xgoal, (z_t)_{t=1}^T) = \min_{t \in \{1, \ldots, T\}} \{ \norm{\dec(z_t) - \xgoal}_2 \}
 \end{align}
-
-\section{Metrics}
-
-In this section we describe the various metrics that will be used in some or all of our experiments.
-
-\subsection{Validity}
-
-Validity is the one requirement where the metric of interest is unambiguous: either a path is valid or it is not.
-Hence, for testing a path generation method on some test set, we measure the validity rate, which is the proportion of valid paths.
-
-\subsection{Computational performance}
-
-Ensuring that CFs generation is fast is an important concern for stakeholders, especially since one might need to generate paths for many points of interest.
-Hence, we measure the time taken \emph{for one step of one path}.
-This is because depending on the number of steps chosen by the user, a path can take longer to generate, and methods such as \ls{} can take advantage of optimizations to compute many paths at once.
-
-\subsection{Realism}
-
-Following the reasoning presented in \cite{vanlooverenInterpretable2021}, we measure realism using a generative model.
-However, while \citeauthor{vanlooverenInterpretable2021} use a VAE and thus estimate realism using the reconstruction error, we can compute the likelihood directly.
-Indeed, normalizing flows are typically trained to minimize the negative log-likelihood $\nll = - \log P(x)$, so we can compute it easily.
-$P(x)$ is in non-negative so the $\nll$ is in $\R_+$ and the closer it is to 0, the more realistic the point is deemed to be.
-
-For some time we also used the local outlier factor \cite{breunigLOF2000}, for which an implementation is provided by the \sklearn{} Python package, but it could not scale to all of our datasets.
-
-\subsection{Extending metrics to a path}
-
-Many metrics take a point $x' \in \inputspace$ as input and return a score, but we wish to score a whole path $(x_t)_{t=1}^T$.
-Hence, given a metric, we aggregate over the path (that is, from its starting point to the first step at which $\target$ is reached).
-
-For this, we first produce paths in the form of a 3-dimensional tensor in $\R^{\nbsteps \times \batchsize \times \inputdim}$.
-We compute the model predictions resulting in a 2-dimensional tensor in $\setclasses^{\nbsteps \times \batchsize}$.
-Based on this and the target classes we generated in $\setclasses^\batchsize$, we construct a mask $\pathmask \in \{0, 1\}^{\nbsteps \times \batchsize}$ that highlights the valid paths:
-if path $j$ is not valid, then
-$\forall i \in \{1, \ldots, \nbsteps\}$ ${\pathmask_{ij} = 0}$, and if path $j$ is valid then $\pathmask_{ij} = 1$ up to and \emph{not including} the first index where $\target$ is reached, and 0 after that.
-
-Then we can take the element-wise product of, \eg{} the $\nll$ computed for all points of all paths, to mask the unwanted points.
-
-Note that if no paths are valid, the resulting product will be equal to zero, which can be misleading: $\nll = 0$ is a perfect score.
-For this reason we take care to always report the validity rate alongside any metric computed this way.
 
 \section{Datasets}
 \label{sec:datasets}
@@ -449,7 +425,7 @@ However, in the interest of keeping things simple, we use only the 2-feature ver
 
 \begin{figure}[h]
     \centering
-    \input{Figures/cake_on_sea}
+\input{Figures/04_cake_on_sea}
 \caption{Decision rule for the \CakeOnSea dataset. The so-called ``dead zone'' is shown in dark gray between class 2 and class 0.}
     \label{fig:cake_on_sea}
 \end{figure}
@@ -467,7 +443,7 @@ It consists of data on 6498 Portuguese ``Vinho Verde'' wines, such as their pH, 
 There are 13 variables including the quality rating column; except for the quality and whether they are red or white, all of them are numerical.
 As before, we remove the red/white information.
 
-Because the wine quality is an ordinal variable (categorical but ordered), it might not be appropriate to run a classifier on the dataset directly;
+Because the wine quality is an ordinal variable (categorical but ordered), it is not necessarily appropriate to run a classifier on the dataset directly;
 thus, we group quality ratings together into 3 classes.
 In fact, there are no wines with a quality rating of 0, 1, 2 or 10, and 43\% of the rows have a rating of 6 out of 10.
 Hence, for our classification task we create the following class mapping:
@@ -499,8 +475,6 @@ In \autoref{tab:datasets} we summarize the relevant information about our datase
 
 \begin{table}[h!]
     \centering
-    \caption{Summary of our dataset settings}
-    \label{tab:datasets}
 \begin{tabular}{lrrrrrr}
         \toprule
 Name          & $\inputdim$ & $\outputdim$ & $\card{\trainset}$     & $\card{\valset}$     & $\card{\testset}$    & $
@@ -512,6 +486,8 @@ Name          & $\inputdim$ & $\outputdim$ & $\card{\trainset}$     & $\card{\va
 \OnlineNewsPopularity & 45          & 4            & 23788                  & 7928                 & 7928          & 529                   \\
         \bottomrule
     \end{tabular}
+    \caption{Summary of our dataset settings. $\inputdim$ refers to the number of features, $\outputdim$ to the number of classes, and $\abs{\trainset}$, $\abs{\valset}$, $\abs{\testset}$ to the size of the train, validation, and test set respectively.}
+    \label{tab:datasets}
 \end{table}
 
 We are now in position to describe our experiments and findings.

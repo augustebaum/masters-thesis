@@ -64,14 +64,14 @@ One of the most frequently used methods of this kind is \method{IntegratedGradie
 
 Notice that the explanation is only given with respect to the reference point $x'$, so choosing a different $x'$ can yield a different explanation; furthermore, the choice of $x'$ is not always obvious.
 
-Interestingly, it has recently been shown that many pre-existing local explanation methods, including \method{LIME}, can in fact be formulated as instances of the same framework called Local Function Approximation \cite{hanWhich2022}.
+Interestingly, it has recently been shown that many pre-existing local explanation methods, including \method{LIME} and \method{IntegratedGradients}, can in fact be formulated as instances of the same framework called Local Function Approximation \cite{hanWhich2022}.
 
 \subsubsection{Rule-based approaches}
 
 Rule-based techniques aim to approximate the model's behavior by simple logical rules on the input features that hold locally (\ie{} for a high proportion of other input points in the neighborhood of the input of interest).
 As such, they can be understood as a special case of local approximation approaches.
 One rule-based approach, called \method{Anchors}, does this by reformulating the problem as a multi-armed bandit problem \cite{ribeiroAnchors2018}.
-The advantage of rules as explanations is their intelligibility; it has been shown that rules depicting why a model behaved a certain way tend to be well understood compared to other types of explanation \cite{limWhy2009}.
+The advantage of rules as explanations is their intelligibility: it has been shown that rules depicting why a model behaved a certain way tend to be well understood compared to other types of explanation \cite{limWhy2009}.
 
 \subsubsection{Counterfactual approaches}\label{par:cfx}
 
@@ -82,11 +82,10 @@ The differences between an adversarial perturbation and a CFX are subject to deb
 Some authors consider that while adversarial perturbations can be imperceptible, CFX should be sparse yet easily visible perturbations \cite{laugelLocal2020}.
 The argument could also be made that CFX also have a realism constraint \cite{vermaCounterfactual2020}, although that can be the case for adversarial perturbations too: if the perturbation is imperceptible, then the perturbed input is realistic since it is close to a real input point.
 
-CFX provide value in several ways \cite{samekExplainable2019}:
+CFX provide value in two keys ways \cite{samekExplainable2019}:
 \begin{itemize}
-    \item They indirectly show which features are being used by the model in its decisions;
-    \item They provide insight on the model's understanding of what makes an input point realistic;
-    \item They constitute a way to provide \emph{recourse} when the model is used in a setting where recourse is required or desirable (for example in the context of a loan application).
+    \item they indirectly show which features are being used by the model in its decisions, and
+    \item they constitute a way to provide \emph{recourse} when the model is used in a setting where recourse is required or desirable (for example in the context of a loan application).
 \end{itemize}
 
 The subject of this work will be this last kind of local explanation, and we will describe it further in the next section.
@@ -96,28 +95,26 @@ The subject of this work will be this last kind of local explanation, and we wil
 \subsection{A first example: \citeauthor{wachterCounterfactual2017}}
 \label{intro/wachter}
 
-One of the first and most frequently cited sources on CFX is \citeauthor{wachterCounterfactual2017} \cite{wachterCounterfactual2017}. In this work, the problem is formulated as an optimization problem constrained by the distance between the explained input $x$ and the candidate counterfactual $\CF{x}$:
+One of the first and most frequently cited sources on CFX is \citeauthor{wachterCounterfactual2017} \cite{wachterCounterfactual2017}. In this work, the problem is formulated as an optimization problem constrained by the distance between the explained input $x$ and a candidate counterfactual $x'$:
 \begin{equation}
 \arg\min_{\CF{x}} \min_\lambda \{ \lambda (f(\CF{x}) - y_\target)^2 + d(x, \CF{x}) \}
+\arg\min_{x'} \min_\lambda \{ \lambda (f(x') - y')^2 + d(x, x') \}
 \end{equation}
-where $f$ is the model of interest, $y_\target$ is the target model output (different from the factual output $y = f(x)$) and $d$ is the aforementioned distance metric, which depends on the use-case.
+where $f$ is the model of interest, $y'$ is the target model output
+(different from the factual output $y = f(x)$) and $d$ is the aforementioned
+distance metric, which depends on the use-case.
 
 The authors view CFX as an adequate solution to the ``right to explanation'' requirements set by the GDPR \cite{kaminskiRight2018}.
-Furthermore, in certain contexts such as loan applications, a CFX could constitute a useful piece of advice that can be taken advantage of in a future trial: the candidate that sees their application denied can tell what they should improve upon first.
+Furthermore, in certain contexts such as loan applications, a CFX could constitute a useful piece of advice that can be taken advantage of in a future trial: the candidate that sees their application denied can tell what they should do to improve their chances.
 
-Yet, while CFX seem helpful in improving trust in black-box machine learning models, further thought brings to light difficult problems that threaten the trustworthiness \emph{of the explanations themselves}.
+Yet, while CFX seem helpful in improving trust in black-box machine learning models, further thought brings to light difficult problems that threaten the trustworthiness of the explanations \emph{themselves}.
 
 \subsection{Formalizing counterfactual explanations}
 
 % There are many kinds of explanation, each with their own specific formalism issues. Here are some of those for CFX.
-As we saw when describing local explainability techniques, there are several ways of offering local explanations.
+As we saw when describing local explainability techniques, there are several competing forms of local explanation.
 The field of XAI in general has suffered from a crisis of formalism \cite{liptonMythos2017, leavittFalsifiable2020}.
-In particular CFX have a unique set of issues relating to rating explanations, that set it apart from its siblings:
-\begin{itemize}
-    \item the concurrent goals conflict
-    \item the out-of-distribution problem
-    \item the semanticity problem
-\end{itemize}
+In particular CFX have a unique set of issues relating to rating explanations, that set it apart from its siblings.
 
 \subsubsection{The concurrent goals of counterfactual explanations}
 

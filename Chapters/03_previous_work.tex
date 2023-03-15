@@ -25,7 +25,7 @@ Then, given a concept of their choosing, \eg{} the amount of overlapping words b
 In the case of word overlap, they validate that in general this concept allows the model to differentiate between entailment and neutrality.
 
 \citeauthor{baiConcept2022} propose ``concept gradients'' (CGs) \cite{baiConcept2022}, a generalization of a pre-existing technique called ``concept activation vectors'' (CAVs) \cite{kimInterpretability2018}, to evaluate how much a concept influences the model behavior, which gives an indication of whether the model makes use of this concept in its prediction.
-More precisely, concepts are evaluated using the correlation of gradients between a corresponding concept vector and the model outputs; however, CAVs assume that the concept can be expressed as a linear function, whereas CGs have no such requirement and is therefore capable of evaluating more flexible concepts.
+More precisely, concepts are evaluated using the correlation of gradients between a corresponding concept vector and the model outputs; however, CAVs assume that the concept can be expressed as a linear function, whereas CGs have no such requirement and are therefore capable of evaluating more flexible concepts.
 
 \subsection{Causal learning and counterfactuals}
 
@@ -48,7 +48,7 @@ When building a latent variable generative model, the idea of being able to tune
 One way to achieve this is to encode into the latent space the concepts of ``smiling'' and ``glasses'', so that a particular direction in latent space represents a given concept.
 Then, given an image latent $z$, we can increase its ``smiling factor'' by perturbing $z$ in the direction representing the concept of smiling.
 
-Thus, some research has been done to promote this encoding of semantic information, and also to analyze whether some popular generative models have this semanticity property even when not explicitly trained for.
+Thus, some research has been done to promote this encoding of semantic information, and also to analyze whether some popular generative models have this semanticity property even when not explicitly trained for it.
 
 For example, recent work demonstrates this exact kind of manipulation on a diffusion model \cite{kwonDiffusion2023}.
 In this work, the authors detail what they mean by semanticity:
@@ -63,7 +63,7 @@ This description is reminiscent of adversarial perturbations, and in particular 
 In this work, the authors demonstrate that, given a conventional deep learning model, it is possible to find \emph{one} small constant perturbation which, when applied to \emph{any} input in the dataset, leads to a change in model prediction.
 
 Yet, for many applications it is often sufficient to require weaker properties of latent features, such as disentanglement, efficiency or non-spuriousness.
-\citeauthor{wangRepresentation2022} bridge the gap between latent representations and causal learning by formulating the above-mentioned properties in terms of causal quantities; because these quantities are difficult to compute in general, they derive a metric approximating the degree of efficiency and non-spuriousness, which can be used to regularize representation learning models \cite{wangRepresentation2022}.
+\citeauthor{wangRepresentation2022} bridge the gap between latent representations and causal learning by formulating these properties in terms of causal quantities; because these quantities are difficult to compute in general, they derive a metric approximating the degree of efficiency and non-spuriousness, which can be used to regularize representation learning models \cite{wangRepresentation2022}.
 This can only be used in the supervised learning setting, where a label is known and can be used for training.
 In fact, \citeauthor{locatelloChallenging2019} demonstrate that achieving a disentangled representation is not possible without labels \cite{locatelloChallenging2019}.
 
@@ -101,41 +101,43 @@ We now present some previous works on CF generation methods, covering in particu
 
 \paragraph{CF-Rule duality}
 
-\citeauthor{gengComputing2022} prove a duality theorem linking rule-based and CFX, assuming that certain properties hold on the CFX \cite{gengComputing2022}.
+\citeauthor{gengComputing2022} prove a duality theorem linking rule-based and CF explanations, assuming that certain properties hold on the CFX \cite{gengComputing2022}.
 They exploit this duality in one direction by devising two methods for extracting rule-based explanations from CFX.
-In doing so, they demonstrate that a great many methods in the literature do not fit the requirements for producing proper rules, namely, the ability to specify logical feasibility constraints on the CFs (\eg{} an age cannot be negative).
+In doing so, they demonstrate that a great many methods in the literature do not fit the requirements for producing proper rules; namely, most of them do not have the ability to specify logical feasibility constraints on the CFX.
 
 \paragraph{\method{DiCE}}
 
-\citeauthor{mothilalExplaining2020} generate a diverse set of CFs by gradient descent, solving for $k$ candidate CFs at the same time \cite{mothilalExplaining2020}.
-Diversity is modeled by a metric taken from the study of determinantal point processes, which is based on the pairwise distances between the $k$ CFs.
-Using this constraint, they succeed at keeping a high rate of valid CFs while increasing diversity.
+\citeauthor{mothilalExplaining2020} generate a diverse set of CFX by gradient descent, solving for $k$ candidate CFX at the same time \cite{mothilalExplaining2020}.
+Diversity is modeled by a metric taken from the study of determinantal point processes, which is based on the pairwise distances between the $k$ CFX.
+Using this constraint, they succeed at keeping a high rate of valid CFX while increasing diversity.
 
-\paragraph{Wachter}
+\paragraph{Wachter \textsl{et al.}}
 
-We described the gradient-descent procedure presented by \citeauthor{wachterCounterfactual2017} \cite{wachterCounterfactual2017} in \autoref{intro/wachter}; many other gradient-descent-based methods are inspired by this work.
+We described the gradient-descent procedure presented by \citeauthor{wachterCounterfactual2017} \cite{wachterCounterfactual2017} in \autoref{intro/wachter};
+the other gradient-descent-based methods we will now describe are inspired by this work.
 
 \subsection{Methods with generative models}
 
 \paragraph{\revise}
 \label{par:revise}
 
-\citeauthor{joshiRealistic2019} follow the strategy outlined by \citeauthor{wachterCounterfactual2017} in that they frame the CF search as a constrained optimization problem and approach it with gradient descent:
+\citeauthor{joshiRealistic2019} follow the strategy outlined by \citeauthor{wachterCounterfactual2017} in that they frame the CFX search as a constrained optimization problem and approach it with gradient descent:
+If $x^{*}$ is an example with true label $y^{*} = 0$ then they find a CFX $x'$ by solving:
 \begin{align*}
-	\CF{x} = & \arg\min_{x'} c(x', x)              \\
-	         & \text{such that } f(x') = y_\target
+	x' = & \arg\min_{x} c(x, x^{*})              \\
+	     & \text{such that } f(x') = y' = 1
 \end{align*}
 where $c$ is some cost function that is situation-dependent.
-However, in order to ensure the realism of the CF, they perform the optimization in a latent space learned through a VAE.
+However, in order to ensure the realism of the CFX, they perform the optimization in a latent space learned through a VAE.
 
-For example, they use as a cost function the $L_1$ distance between the original input $x$ and the candidate counterfactual $x'$.
-They assume $x$ is predicted as class 0 and thus the CF should be predicted as 1.
-Letting $z'=\enc(x')$, and $\ell$ a loss function like the one used for training the classifier (such as the CE), the loss that is minimized is the following:
+For example, they use as a cost function the $L_1$ distance between the original input $x^{*}$ and the candidate counterfactual $x'$.
+Their VAE is denoted as $(\mathcal{F}, \mathcal{G})$.
+Thus, letting $z' = \mathcal{F}(x')$, and $\ell$ a loss function like the one used for training $f$ (such as the cross-entropy), the loss that is minimized is the following:
 \begin{equation}
-	\ell(f(\dec(z')), 1)
-	+ \lambda_\text{distance} \norm{\dec(z') - x}_1
+	\ell(f(\mathcal{G}(z')), 1)
+	+ \lambda_\text{distance} \norm{\mathcal{G}(z') - x}_1
 \end{equation}
-The resulting CF generation algorithm is called \revise{} \cite{joshiRealistic2019}.
+The resulting CFX generation algorithm is called \revise{} \cite{joshiRealistic2019}.
 
 \paragraph{\method{CFProto}}
 
@@ -200,7 +202,7 @@ In particular, the latent representation architecture consists of normalizing fl
 		\midrule
 		\method{DiCE} \cite{mothilalExplaining2020}          & Yes          & None                                   & NA          \\
 		Rule-CF duality \cite{gengComputing2022}             & Yes          & None                                   & NA          \\
-		Wachter \cite{wachterCounterfactual2017}             & Yes          & None                                   & NA          \\
+		Wachter \textsl{et al.} \cite{wachterCounterfactual2017}             & Yes          & None                                   & NA          \\
 		\bottomrule
 	\end{tabular}
 	\caption{Summary of CF generation methods we presented, in alphabetical order. ``Tabular data'' refers to whether or not the work specifically addresses tabular data; ``Class-aware'' refers to whether or not the generative model is trained with access to class labels or similar information.}

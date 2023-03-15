@@ -1,14 +1,15 @@
-- [ ] Conclusion
-- [ ] Acknowledgements
+- [ ] Make sure there are no \note anymore
+- [x] Conclusion
+- [x] Acknowledgements
 - [ ] Path regularization
     - [X] Replace LOF with NF realism
 - [ ] Robustness experiment
     - Point is $experiments(\max f_i)_i$
-- [ ] Make sure there are no \note anymore
-- [ ] Revisit citations to update those from arxiv
+- [x] Revisit citations to update those from arxiv
+- [ ] Could have made CakeOnSea less convex in terms of the classes
 - [ ] Mention that my implementation of losses allows for differentiating between source and others
-- [ ] Introduction
-    - [ ] Describe IG in more detail?
+- [x] Introduction
+    - [x] Describe IG in more detail? (not doing it)
     - [X] VAE
 - [x] Abstract
 - [o] Related works
@@ -43,4 +44,3 @@
     - [X] exp
     - [x] Discussion
 - [x] Mention Cube specs
-- [ ] Could have made CakeOnSea less convex in terms of the classes

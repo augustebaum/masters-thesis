@@ -520,18 +520,23 @@ KOMA-script documentation for details.}]{fancyhdr}
 
 \ifbool{hyperrefsupport}{% If the nohyperref class option has not been specified
 \AtEndPreamble{\RequirePackage{hyperref}
-\hypersetup{pdfpagemode={UseOutlines},
-bookmarksopen=true,
-bookmarksopenlevel=0,
-colorlinks=false,% Set to false to disable coloring links
-citecolor=magenta,% The color of citations
-linkcolor=red,% The color of references to document elements (sections, figures, etc)
-urlcolor=mdtRed,% The color of hyperlinks (URLs)
-pdfstartview={FitV},
-unicode,
-breaklinks=true,
-hypertexnames=true,
-pagebackref=true,
+\hypersetup{
+	pdfpagemode={UseOutlines},
+	bookmarksopen=true,
+	bookmarksopenlevel=0,
+	colorlinks,
+    linkcolor={red!50!black},
+    citecolor={blue!50!black},
+    urlcolor={blue!80!black},
+	% colorlinks=black,% Set to false to disable coloring links
+	% citecolor=magenta,% The color of citations
+	% linkcolor=red,% The color of references to document elements (sections, figures, etc)
+	% urlcolor=mdtRed,% The color of hyperlinks (URLs)
+	pdfstartview={FitV},
+	unicode,
+	breaklinks=true,
+	hypertexnames=true,
+	pagebackref=true,
 }
 
 \pdfstringdefDisableCommands{% If there is an explicit linebreak in a section heading (or anything printed to the pdf-bookmarks), it is replaced by a space
