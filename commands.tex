@@ -32,7 +32,9 @@
 \newcommand{\eu}[1]{\e^{u_{#1}}}
 \newcommand{\eg}{e.g.\@ }
 \newcommand{\etal}{\textsl{et~al.}\@ }
-\newcommand{\grad}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\grad}[2]{\nabla_{#2} #1}
+\newcommand{\jac}[2]{J_{#1} \left( #2 \right)}
+\newcommand{\del}[2]{\frac{\partial #1}{\partial #2}}
 \newcommand{\ie}{i.e.\@ }
 \newcommand{\inputdim}{D}
 \newcommand{\inputspace}{\mathcal{X}}
@@ -71,6 +73,7 @@
 \newcommand{\softmax}{\mathrm{softmax}}
 \newcommand{\su}[1]{s_{#1}}
 \newcommand{\seu}{\sum_{c \in \setclasses} \eu{c}}
+\newcommand{\sfdec}{\softmax(\, f(\dec(z))\, )}
 \newcommand{\source}{\mathrm{source}}
 \newcommand{\target}{\mathrm{target}}
 \newcommand{\testset}{\data_\text{test}}

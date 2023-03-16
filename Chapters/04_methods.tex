@@ -28,7 +28,7 @@ One solution to this is \ls{}.
 \subsection{Proposed solutions}
 \label{methods:0_sols}
 
-\ls{} was presented by \citeauthor{cohenGifsplanation2022} in 2022 as a CF generation method for binary classification models on image data, specifically X-ray images of human lungs \cite{cohenGifsplanation2022}.
+\ls{} was presented by \citeauthor{cohenGifsplanation2022} in 2022 as a CFX generation method for binary classification models on image data, specifically X-ray images of human lungs \cite{cohenGifsplanation2022}.
 Given an input image $x$ predicted as class 0 (\ie{} for which $f(x)$ is low), \ls{} produces a new image close to $x$ that is predicted as class 1 (\ie{} for which $f(x)$ is high.).
 
 In short, this is the method.
@@ -36,7 +36,8 @@ Let there be an autoencoder with $E$ the encoder and $D$ the decoder, and $z = E
 Then, given some coefficient $\lambda_\text{LS}$, a candidate counterfactual $x'$ is computed as:
 \begin{align*}
     x' = D \left( z + \lambda_\text{LS} \grad{f(D(z))}{z} \right)
-\end{align*}
+\end{align*} 
+where $\grad{f(D(z))}{z}$ denotes the gradient of $f(D(z))$ at $z \in \latentspace$.
 
 In other words, $x$ is perturbed in the direction of the gradient of the classifier $f$ (the direction of steepest ascent), in order for $f$ to increase.
 However, instead of computing the gradient in input space, they compute the gradient of the classifier \emph{in latent space} to promote realistic images.
@@ -80,7 +81,7 @@ Our analyses are generally not specific to normalizing flows though, so in the f
 
 We choose the NICE architecture from \cite{dinhNICE2015} presented in \autoref{bg/nf}.
 In particular, we assume a standard Gaussian prior distribution, \ie{} we enforce that the distribution in the latent space is standard Gaussian.
-As shown in \autoref{bg/nf}, for a Gaussian prior the $\nll$ is written:
+As shown in \autoref{bg/nf}, if $\latentdim$ is the dimensionality of $\latentspace$ and $z = \enc(x)$ then for a Gaussian prior the $\nll$ is written
 \begin{align*}
 \nll(x) = \frac{\latentdim}{2} \log 2 \pi
     +  \frac{z^T z}{2}
@@ -88,8 +89,7 @@ As shown in \autoref{bg/nf}, for a Gaussian prior the $\nll$ is written:
 \end{align*}
 which is the loss that is minimized.
 
-Importantly, there is nothing in our approach that cannot be done with the usual gradient descent procedure --
-which has enjoyed many improvements to promote fast convergence and avoiding local minima \cite{kingmaAdam2014}.
+Importantly, there is nothing in our approach that cannot be done with the usual gradient descent procedure---which has enjoyed many improvements to promote fast convergence and avoiding local minima \cite{kingmaAdam2014}.
 The \ls{} method is nothing but a simplification of \revise{}, the procedure outlined in \cite{joshiRealistic2019},
 where the gradient is computed only once and the constraint on the $L_1$ distance is dropped.
 However, they differ in goals in that the authors of \cite{joshiRealistic2019} do not keep a record of the individual
@@ -107,8 +107,8 @@ Recall that the authors of \ls{} propose to recover a potential counterfactual b
     \CF{x} = \dec(z + \lambda_\text{LS} \nabla_z f(\dec(z))).
 \end{equation*}
 
-When $f$ is a binary classifier outputting the predicted probability that $x$ is of class 1, this is clearly sufficient.
-However, in multi-class problems where $f$ outputs a vector in $\R^\outputdim$ there are several other functions we can use.
+When $f: \inputspace \to [0, 1]$ is a binary classifier outputting the \textbf{predicted probability} that $x$ is of class 1, this is clearly sufficient.
+However, in multi-class problems where $f$ outputs a vector of logits in $\R^\outputdim$ there are several other functions we can use.
 To see this, we reformulate the latent shift strategy with a generic loss that accounts for validity, denoted by $\lossval$:
 
 Let $f$ be the classifier of interest, which outputs logits in $\R^\outputdim$ rather than a probability mass.
@@ -117,7 +117,8 @@ Given $x \in \inputspace$ and an autoencoder $\autoencoder = (\enc, \dec)$, a co
 \CF{x} = \dec(z - \lambda \nabla_z \lossval(z)).
 \end{equation*}
 
-In vanilla \ls{}, the validity loss would then be $\lossval(z) = - \sigma(f(\dec(z)))$ where $\sigma$ denotes the sigmoid function, or any other increasing differentiable function that outputs a number in $[0, 1]$.
+In vanilla \ls{}, the validity loss would then be $\lossval(z) = - \sigma(f(\dec(z)))$ where $\sigma$ denotes the sigmoid function, for example (recall that in the original paper
+the classifier outputs a probability in $[0, 1]$).
 
 Hence, our problem is as follows:
 \begin{quote}
@@ -135,7 +136,7 @@ In our analysis we focus on the case where a target class is specified.
 
 In order to mimic the solution discussed in \cite{cohenGifsplanation2022}, we have
 \begin{equation}
-    \lossval(z) = -\softmax(f(\dec(z)))_\target,
+    \lossval(z) = - \sfdec_\target,
 \end{equation}
 \ie{} the component of the output probability mass corresponding to class $\target$.
 We call this loss $\PrbTarget$.
@@ -150,23 +151,32 @@ The natural extension we presented is favoring the first option, but in fact the
 
 To address this, we introduce the following alternative loss, with regularization $\lambda \in [0, 1]$:
 \begin{equation}
-    \lossval(z) = -\softmax(f(\dec(z)))_\target
-+ \lambda \softmax(f(\dec(z)))_\source
+    \lossval(z) = - \sfdec_\target
++ \lambda  \sfdec_\source
 \end{equation}
 which can be interpreted as adding the constraint of going towards the target as well as \emph{going away from the source}.
 We call it $\PrbSource{\lambda}$.
 
 In fact, we can go further:
-in \ls{}, the objective of increasing $p_\target$ is also equivalent to decreasing $\mysum{c} p_c$, since in binary classification this is just $p_\source$; however, in multi-class problems they are distinct quantities.
+in \ls{}, the objective of increasing $p_\target$ is also equivalent to decreasing
+$
+\sum_{
+    \begin{subarray}{l}
+        c=1 \\
+        c \neq \target
+    \end{subarray}
+    }^\outputdim p_c
+$,
+since in binary classification this is just $p_\source$; however, in multi-class problems they are distinct quantities.
 Therefore we also define:
 \begin{align*}
-    \PrbOthers{\lambda}(z) = - \softmax(f(\dec(z)))_\target + \lambda \mysum{c} \softmax(f(\dec(z)))_c
+    \PrbOthers{\lambda}(z) = -  \sfdec_\target + \lambda \mysum{c}  \sfdec_c
 \end{align*}
 But notice
 \begin{align*}
     \PrbOthers{\lambda}(z)
-     & = - \softmax(f(\dec(z)))_\target + \lambda (1 - \softmax(f(\dec(z)))_\target) \\
-     & = -(\lambda + 1) \softmax(f(\dec(z)))_\target + \lambda \\
+     & = -  \sfdec_\target + \lambda (1 -  \sfdec_\target) \\
+     & = -(\lambda + 1)  \sfdec_\target + \lambda \\
      & = (\lambda + 1) \PrbTarget(z) + \lambda
 \end{align*}
 which is a rescaling of $\PrbTarget$, so in practice $\PrbOthers{}$ is not used.
@@ -174,7 +184,7 @@ which is a rescaling of $\PrbTarget$, so in practice $\PrbOthers{}$ is not used.
 To examine our intuition for why these proposals are sensible, we can compute the gradient of the loss, for example
 \begin{align*}
 \grad{\PrbSource{\lambda}}{z}
-=  \grad{}{z} \left( - \softmax(f(\dec(z)))_\target + \lambda \softmax(f(\dec(z)))_\source \right)
+=  \grad{ \left( -  \sfdec_\target + \lambda  \sfdec_\source \right) }{z}
 \end{align*}
 
 \subsubsection{Theoretical analysis of gradients}
@@ -186,7 +196,7 @@ $z$ only ever appears within $f(\dec(z))$,
 so we let $u(z) = f(\dec(z))$ denote the output logits.
 By the chain rule we then have:
 \begin{align*}
- \grad{\lossval(z)}{z} = \grad{\lossval(u(z))}{u(z)} \grad{u(z)}{z}.
+ \grad{\lossval(z)}{z} = \grad{\lossval(u(z))}{u(z)} \jac{u(z)}{z}.
 \end{align*}
 
 Furthermore, to lighten the calculations we let $p_i(u) = \softmax(u)_i$.
@@ -194,15 +204,15 @@ In the following we usually just write $u$ to mean $u(z)$ and $p_i$ to mean $p_i
 
 The gradient with respect to $z$ is then written:
 \begin{align*}
- \grad{\lossval}{z} = \grad{\lossval(u)}{u} \grad{u}{z}.
+ \grad{\lossval}{z} = \grad{\lossval(u)}{u} \jac{u}{z}.
 \end{align*}
-As mentioned, we cannot say much about $\grad{u}{z}$, but importantly, it not does not change with the loss,
+As mentioned, we cannot say much about $\jac{u}{z}$, but importantly, it not does not change with the loss,
 so we can at least focus on $\grad{\lossval}{u}$.
 
 For $\PrbSource{}$ the gradient with respect to $u$ is written
 \begin{align*}
     \grad{\PrbSource{\lambda}}{u}
-    = \grad{}{u} \left( - p_\target + \lambda p_\source \right)
+    = \grad{ \left( - p_\target + \lambda p_\source \right) }{u}
 \end{align*}
 according to our short-hand notation.
 
@@ -210,15 +220,15 @@ according to our short-hand notation.
 We show in \autoref{eq:grad_softmax} that for $i \in \discreteinterval{1}{\outputdim}$ and 
 $j \in \discreteinterval{1}{\outputdim}$:
 \begin{align*}
-    \grad{p_i}{u_j} = p_i ( \dij  -  p_j )
+    \del{p_i}{u_j} = p_i ( \dij  -  p_j )
 \end{align*}
 where $\dij$ is the Kronecker delta.
 
 Thus, for $j \in \discreteinterval{1}{\outputdim}$ the gradient of $\PrbSource{}$ is written:
 \begin{align*}
-    \grad{\PrbSource{\lambda}}{u_j}
-=  - & \grad{p_\target  + \lambda p_\source}{u_j}  \\
-=  - & \grad{p_\target }{u_j} + \lambda \grad{p_\source}{u_j}  \\
+    \del{\PrbSource{\lambda}}{u_j}
+=  - & \del{p_\target  + \lambda p_\source}{u_j}  \\
+=  - & \del{p_\target }{u_j} + \lambda \del{p_\source}{u_j}  \\
 =  - & p_\target (\djt - p_j) + \lambda p_\source (\djs - p_j).
 \end{align*}
 
@@ -229,30 +239,30 @@ Intuitively, a good validity loss should fulfill some basic requirements:
     Therefore, we first check whether $\grad{\lossval}{u} = 0$; if so, by the chain rule, we then have $\grad{\lossval}{z} = 0$.
     If $\grad{\lossval}{u} \neq 0$ then we cannot conclude in general, but we can at least check whether 
     \begin{align*}
-                                 \grad{\lossval}{u_\target} &< 0 \\ 
-    \text{and } \forall j \neq \target \quad \grad{\lossval}{u_j} &> 0.
+                                 \del{\lossval}{u_\target} &< 0 \\ 
+    \text{and } \forall j \neq \target \quad \del{\lossval}{u_j} &> 0.
     \end{align*}
     If so, this indicates the path is pushed towards the target class
-    more than it is pulled away from the other classes.
+    and it is pulled away from the other classes.
 
     \item When $p_\target$ is 0, we can also check the previously stated condition on $\grad{\lossval}{u}$.
 \end{itemize}
 
 Let us now examine whether these requirements are satisfied. Recall
 \begin{align*}
-    \grad{\PrbSource{\lambda}}{u_j}
+    \del{\PrbSource{\lambda}}{u_j}
     = - p_\target (\djt - p_j) + \lambda p_\source (\djs - p_j).
 \end{align*}
 \begin{itemize}
     \item When $p_\target$ is 1, this means $p_j = \djt$, so we have for all $j$:
          \begin{align*}
-              \grad{\PrbSource{\lambda}}{u_j}
+              \del{\PrbSource{\lambda}}{u_j}
               &= -1 \times (\djt -\djt) + \lambda \times 0 \times (\djs - p_j) \\
               &= 0,\text{ so }  \grad{\PrbSource{\lambda}}{z} = 0 \text{ as required.}
          \end{align*}
     \item When $p_\target$ is 0, we get:
          \begin{align*}
-              \grad{\PrbSource{\lambda}}{u_j}
+              \del{\PrbSource{\lambda}}{u_j}
                & = -0 + \lambda p_\source (\djs - p_j)                        \\
                & = \begin{cases}
                     0                                 & \text{if } j = \target \\
@@ -292,15 +302,15 @@ gradient of $\LogPrbSource{\lambda}$.
 
 We have
 \begin{align*}
-    \grad{\log p_i}{u_j}
-= \grad{p_i}{u_j} \times \frac{1}{p_i}
+    \del{\log p_i}{u_j}
+= \del{p_i}{u_j} \times \frac{1}{p_i}
 = \frac{p_i (\dij - p_j) }{p_i}
 = \dij - p_j
 \end{align*}
 Hence
 \begin{align*}
-    \grad{\LogPrbSource{\lambda}}{u_j}
-     & = - \grad{\log p_\target}{u_j} + \lambda \grad{\log p_\source}{u_j} \\
+    \del{\LogPrbSource{\lambda}}{u_j}
+     & = - \del{\log p_\target}{u_j} + \lambda \del{\log p_\source}{u_j} \\
      & = - (\djt - p_j) + \lambda (\djs - p_j)                             \\
      & = - \djt + p_j + \lambda \djs - \lambda p_j                         \\
      & = (1 - \lambda) p_j + \lambda \djs - \djt.
@@ -309,7 +319,7 @@ We check our intuition:
 \begin{itemize}
     \item For $p_\target = 1$ this gives us
           \begin{align*}
-              \grad{\LogPrbSource{\lambda}}{u_j}
+              \del{\LogPrbSource{\lambda}}{u_j}
                & = (1 - \lambda) \djt + \lambda \djs - \djt \\
                & = \lambda(\djs - \djt)                     \\
                & = \begin{cases}
@@ -323,7 +333,7 @@ We check our intuition:
 
     \item For $p_\target = 0$ we get
           \begin{align*}
-              \grad{\LogPrbSource{\lambda}}{u_j}
+              \del{\LogPrbSource{\lambda}}{u_j}
                & = (1 - \lambda) p_j + \lambda \djs - \djt                 \\
                & = \begin{cases}
                        -1                             & \text{if } j = \target \\
@@ -342,7 +352,7 @@ Recall the expression for $\LogPrbOthers{}$:
 \end{align*}
 Thus its gradient is
 \begin{align*}
-    \grad{\LogPrbOthers{\lambda}}{u_j}
+    \del{\LogPrbOthers{\lambda}}{u_j}
      = p_j (1 - \lambda (\outputdim - 1)) + \lambda (1 - \djt) - \djt.
 \end{align*}
 The full derivation can be found in \autoref{eq:grad_log_prb_others}.
@@ -351,7 +361,7 @@ We check our intuition:
 \begin{itemize}
     \item For $p_\target = 1$ this gives us
           \begin{align*}
-              \grad{\LogPrbOthers{\lambda}}{u_j}
+              \del{\LogPrbOthers{\lambda}}{u_j}
                & = \djt (1 - \lambda (\outputdim - 1)) + \lambda (1 - \djt) - \djt      \\
                & = \djt - \djt \lambda (\outputdim - 1) + \lambda - \lambda \djt - \djt \\
                & = - \djt \lambda (\outputdim - 1) + \lambda - \lambda \djt             \\
@@ -366,7 +376,7 @@ We check our intuition:
 
     \item For $p_\target = 0$ we get
           \begin{align*}
-              \grad{\LogPrbOthers{\lambda}}{u_j}
+              \del{\LogPrbOthers{\lambda}}{u_j}
                & = p_j (1 - \lambda (\outputdim - 1)) + \lambda (1 - \djt) - \djt        \\
                & = \begin{cases}
                        -1                                           & \text{if } j = \target \\
@@ -391,9 +401,9 @@ For this reason, we formulate losses optimizing for the logits directly (with $\
 
 Here the gradients are easy to compute since the loss is linear in the logits:
 \begin{align*}
-\grad{\LogitTarget{}}{u_j} &= - \djt                         \\
-\grad{\LogitSource{\lambda}}{u_j} &= - \djt + \lambda \djs                        \\
-\grad{\LogitOthers{\lambda}}{u_j}
+\del{\LogitTarget{}}{u_j} &= - \djt                         \\
+\del{\LogitSource{\lambda}}{u_j} &= - \djt + \lambda \djs                        \\
+\del{\LogitOthers{\lambda}}{u_j}
 &= - \djt + \lambda \mysum{c} \delta_{jc} \\
 &= - \djt + \lambda \times \begin{cases}
     0 & \text{if } j = \target \\
@@ -449,7 +459,7 @@ Note that in NF-based autoencoders, the decoder is the inverse of the encoder an
 \begin{algorithm}
 \caption{Learning a normalizing flow latent space by SGD with path regularization}
 \label{algo:pathreg}
-\KwData{Classifier $f, \autoencoder\ (\enc_\phi, \dec),$ (training) data, CF loss $\cfloss$, path loss $\pathloss$, path loss regularization coefficient $\lambda_\apath$}
+\KwIn{Classifier $f, \autoencoder\ (\enc_\phi, \dec),$ (training) data, CF loss $\cfloss$, path loss $\pathloss$, path loss regularization coefficient $\lambda_\apath$}
 \KwOut{$\phi^*$ that minimizes the $\nll$ and the path loss}
 \While{not converged}{
 $x \gets \mathtt{get\_input}(\text{data})$ \\
@@ -461,8 +471,9 @@ $\phi \gets \phi - \nabla_\phi {(\nll(z) + \lambda_\apath \pathloss(\apath) + \l
 }
 \end{algorithm}
 
-Since the one obvious constraint on paths is that they should be valid, we include a term $\cfloss$ which would typically be an average over the path of whatever loss was used to compute the path, which should include some constraints on validity; this is what we do in our analyses.
-\note{I ended up not using this in the end; what do i do?}
+Since the one obvious constraint on paths is that they should be valid, we include a term $\cfloss$.
+In fact we ended up not making use of this to keep the problem simple and prevent potential stability issues;
+in future work it could be used for example to impose frozen features on the paths.
 
 $\pathloss$ represents our criteria for an interpretable path. So what criteria should we enforce?
 We choose to apply the following constraint: the path should go from $\source$ to $\target$ passing through as few other classes as possible, and ideally, without passing through any other class.
@@ -472,7 +483,7 @@ Thus we formulate $\BoundaryCrossLoss$ as follows:
 \frac{1}{\nbsteps} \sum_{t=1}^{\nbsteps}
 \max \{ p^{(t)}_\source, p^{(t)}_\target \}
 \end{align*}
-where $p^{(t)}_i$ is the predicted probability $\softmax(f(x_t))_i$.
+where $p^{(t)}_i$ is the predicted probability $\softmax(\,f(x_t)\,)_i$.
 
 Note that class information is indirectly given during the training of the autoencoder, so the autoencoder is dependent on the classification task.
 By contrast, in vanilla \ls{} the authors make a conscious decision to keep the autoencoder entirely separate from the classifier.

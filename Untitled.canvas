@@ -1,8 +1,0 @@
-{
-	"nodes":[
-		{"id":"bc4f237f2e428a86","x":335,"y":-373,"width":660,"height":50,"type":"file","file":"swisscom/thesis/Chapters/latent_shift_methods.md"},
-		{"id":"e0761a82de001215","x":361,"y":-42,"width":250,"height":60,"type":"text","text":"NVP: "},
-		{"id":"0e8f1676c45d10de","x":-404,"y":-421,"width":566,"height":758,"color":"2","type":"file","file":"swisscom/thesis/Chapters/plan.md"}
-	],
-	"edges":[]
-}

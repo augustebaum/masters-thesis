@@ -3,10 +3,11 @@
 
 - [ ] proof read
 
+- [x] L_CF could be used to impose more constraints
+- [x] loss plots: describe more
+- [x] Use different notation for gradient, partial and jacobian, or be more explicit
+- [x] acronyms?
 - [ ] graph for logprbothers
-- [ ] L_CF could be used to impose more constraints
-- [ ] Use different notation for gradient, partial and jacobian, or be more explicit
-- [ ] acronyms?
 - [ ] Could have made CakeOnSea less convex in terms of the classes
 - [ ] Mention that my implementation of losses allows for differentiating between source and others
 

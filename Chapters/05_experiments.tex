@@ -70,7 +70,7 @@ Hence, for our classification task we create the following class mapping:
 
 \subsection{\OnlineNewsPopularity}
 
-This dataset \cite{fernandesProactive2015} also from the UCI repository\footnote{\url{https://archive.ics.uci.edu/ml/datasets/Online+News+Popularity}} contains data on 39644 news posts recovered from the Mashable website, such as the number of HTML tags of a certain type, the time of publishing, and also machine-learning-derived features such as the subjectivity and polarity of the language used, and how well the post fits within a given topic as determined by LDA.
+This dataset \cite{fernandesProactive2015} also from the UCI repository\footnote{\url{https://archive.ics.uci.edu/ml/datasets/Online+News+Popularity}} contains data on 39644 news posts recovered from the Mashable website, such as the number of HTML tags of a certain type, the time of publishing, and also machine-learning-derived features such as the subjectivity and polarity of the language used, and how well the post fits within a given topic as determined by latent Dirichlet allocation.
 As before, we remove the categorical columns, leaving us with 46 columns including the target variable.
 
 The target variable is the number of shares of a given article, which is an integer; in order to make it usable for classification tasks, we create the following class mapping:
@@ -110,11 +110,11 @@ Name          & $\inputdim$ & $\outputdim$ & $\card{\trainset}$     & $\card{\va
 All models are trained using the Adam algorithm \cite{kingmaAdam2014} with a learning rate of $1 \times 10^{-3}$.
 We let the models train for an undetermined number of epochs, performing early stopping based on the validation loss with a patience parameter of 3.
 
-The models are implemented in \texttt{pytorch} and trained on a machine with the following characteristics:
+The models are implemented in \texttt{pytorch}\footnote{\url{https://pytorch.org}} and trained on a machine with the following characteristics:
 \begin{itemize}
     \item CPU: Intel Core i7-7700K CPU @ 4.20GHz
     \item RAM: 32 GB
-    \item GPU: Nvidia G-Force GTX 1080 via CUDA 11.7
+    \item GPU: Nvidia GeForce GTX 1080 with 8 GB VRAM via CUDA 11.7
 \end{itemize}
 
 \subsection{Classifier}
@@ -178,7 +178,9 @@ In this section we describe the various metrics that will be used in some or all
 \subsection{Validity}
 
 Validity is the one requirement where the metric of interest is unambiguous: either a path is valid or it is not.
-Hence, for testing a path generation method on some test set, we measure the validity rate, which is the proportion of valid paths.
+For measuring validity, for each $x \in \testset$ we select a random target class (that is not the same as the originally
+predicted class), produce a path, then check its validity against the chosen target class; we average this over the whole
+test set.
 
 \subsection{Computational performance}
 
@@ -190,10 +192,11 @@ This is because depending on the number of steps chosen by the user, a path can 
 
 Following the reasoning presented in \cite{vanlooverenInterpretable2021}, we measure realism using a generative model.
 However, while \citeauthor{vanlooverenInterpretable2021} use a VAE and thus estimate realism using the reconstruction error, we can compute the likelihood directly.
-Indeed, normalizing flows are typically trained to minimize the $\nll = - \log P(x)$, so we can compute it easily.
+Indeed, normalizing flows explicitely model the data distribution $P(x)$ (which is an approximation of the true distribution that originated the training data)
+via the $\nll = - \log P(x)$, so we can compute it by design.
 $P(x)$ is in non-negative so the $\nll$ is in $\R_+$ and the closer it is to 0, the more realistic the point is deemed to be.
 
-For some time we also used the local outlier factor \cite{breunigLOF2000}, for which an implementation is provided by the \sklearn{} Python package, but it did not scale to all of our datasets.
+We also used the local outlier factor \cite{breunigLOF2000}, for which an implementation is provided by the \sklearn{} Python package, but it did not scale to all of our datasets.
 
 \subsection{Extending metrics to a path}
 \label{exp/masking}
@@ -242,7 +245,7 @@ The methods we use to produce the paths are variations on \ls{} and \revise{}.
 To compare methods on a par, we run both methods twice: once with regularization on the $L_1$ distance, with $\lambda_\text{distance} = 0.3$ and once without regularization (with $\lambda_\text{distance}$ set to 0).
 In the future using some automatic tuning procedure would be best: in our case $\lambda_\text{distance} = 1$ led to immobile paths whereas $\lambda_\text{distance} = 0.3$ could be too close to performing no regularization at all.
 
-In fact, our implementation of both \ls{} and \revise{} is a joint abstraction that takes a parameter for the frequency of the gradient computation: for \revise{} this is set to 1 (\ie{} recompute the gradient after every step) while for \revise{} it is null (\ie{} never recompute it).
+In fact, our implementation of both \ls{} and \revise{} is a joint abstraction that takes a parameter for the frequency of the gradient computation: for \revise{} this is set to 1 (\ie{} we recompute the gradient after every step) while for \ls{} it is null (\ie{} we never recompute it after the first step).
 This way the number of steps and step size can be set to the same values with confidence.
 However, this means that we do not run \revise{} using a more sophisticated optimization algorithm like \method{Adam} or \method{RMSprop}.
 
@@ -277,12 +280,14 @@ The one metric in this experiment is the validity rate, \ie{} the proportion of 
 The results for each dataset and loss are given in \autoref{tbl:validity_losses}.
 We highlight in gray the five losses that yield the best average validity rate across all path methods; the results are not uniform across datasets so we resort to this rough estimate to decide between the losses.
 
-\begin{table}[h!]
-\centering
-\subfile{../Figures/05_validity_losses.tex}
-\caption{Validity rate means with their standard error. Highlighted for each dataset are the five losses with the best average results.}
-\label{tbl:validity_losses}
+\begin{table}[H]
+    \centering
+    \subfile{../Figures/05_validity_losses.tex}
+    \caption{Validity rate means with their standard error. Highlighted for each dataset are the five losses with the best average results.}
+    \label{tbl:validity_losses}
 \end{table}
+
+
 
 The validity rate achieved by \revise{} is generally much more acceptable than that of \ls{}, across all losses.
 This is expected given that \revise{} can correct its trajectory as the path is generated, while \ls{} cannot.
@@ -308,17 +313,57 @@ Here, we select plots for some losses and where the target class is always class
 For reference, the full plots are shown in \autoref{ch:plots}.
 
 
+% \begin{figure}
+%     \centering
+%     \begin{subfigure}[b]{0.4\textwidth}
+%         \centering
+% \includegraphics[width=\textwidth]{./05_confusion_matrices/cake_on_sea/confusion_matrix_svg-tex.pdf}
+%         \caption{Accuracy on \CakeOnSea.}
+% \label{fig:cos_confusion_matrix}
+%     \end{subfigure}
+%     \begin{subfigure}[b]{0.4\textwidth}
+%         \centering
+% \includegraphics[width=\textwidth]{./05_confusion_matrices/forest_cover/confusion_matrix_svg-tex.pdf}
+%         \caption{Accuracy on \ForestCover.}
+%     \end{subfigure}
+
+%     \begin{subfigure}[b]{0.4\textwidth}
+%         \centering
+% \includegraphics[width=\textwidth]{./05_confusion_matrices/wine_quality/confusion_matrix_svg-tex.pdf}
+%         \caption{Accuracy on \WineQuality.}
+%     \end{subfigure}
+%     \begin{subfigure}[b]{0.4\textwidth}
+%         \centering
+% \includegraphics[width=\textwidth]{./05_confusion_matrices/online_news_popularity/confusion_matrix_svg-tex.pdf}
+%         \caption{Accuracy on \OnlineNewsPopularity.}
+%     \end{subfigure}
+
+%     \caption{Accuracy of our MLP classifier on each dataset.}
+%     \label{fig:confusion_matrices}
+% \end{figure}
+
 \begin{figure}[htbp]
     \centering
-\includegraphics[width=\textwidth]{./05_cf_losses/cf_losses_detail}
-    \caption{Loss profile for various losses on \CakeOnSea, with ${\target = 2}$.}
-    \label{fig:cf_losses_detail}
+    \begin{subfigure}[b]{\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./05_cf_losses/cf_losses_detail}
+        \caption{Loss profile for various losses on \CakeOnSea, with ${\target = 2}$.}
+        \label{fig:cf_losses_detail}
+    \end{subfigure}
 
     \vspace*{\floatsep}% https://tex.stackexchange.com/q/26521/5764
 
-\includegraphics[width=\textwidth]{./05_cf_losses/cf_gradients_detail}
-    \caption{Opposite of the loss gradient for various losses on \CakeOnSea, with $\target = 2$.}
-    \label{fig:cf_gradients_detail}
+    \begin{subfigure}[b]{\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./05_cf_losses/cf_gradients_detail}
+        \caption{Opposite of the loss gradient for various losses on \CakeOnSea, with ${\target = 2}$.}
+        \label{fig:cf_gradients_detail}
+    \end{subfigure}
+
+    \caption{Losses and opposite of their gradient for various losses on \CakeOnSea.
+    We show $\PrbTarget{}$, $\PrbSource{}$, $\LogPrbSource{}$, $\LogitTarget{}$, $\LogitSource{}$, $\LogitOthers{}$
+     with $\lambda =1$ and $\target = 2$.}
+    % \label{fig:cf_losses}
 \end{figure}
 
 \paragraph{Interpretation}
@@ -399,7 +444,7 @@ The results for each dataset and method are given in \autoref{tbl:path_reg}.
 It seems the regularization did not achieve its objective, as the mean number of boundary crossings stays approximately the same regardless of whether or not regularization was performed.
 The only case where an effect is observed is for \revise{} on \CakeOnSea{}.
 In no instance do we see a decrease in validity rate when applying path regularization.
-Similarly, path regularization by and large has no effect on realism, except for \ls{} on \CakeOnSea{} and \ForestCover{} where the $\nll$ is decreased when applying regularization.
+Similarly, path regularization has no effect on realism, except for \ls{} on \CakeOnSea{} and \ForestCover{} where the $\nll$ is decreased when applying regularization.
 The time per step does not depend on the autoencoder training, only on the architecture.
 Yet, we can observe the difference in time performance between \ls{} and \revise{}: \ls{} is up to 70 times faster than \revise{} on \OnlineNewsPopularity{}.
 
@@ -484,7 +529,7 @@ The time measurements are much more reasonable than in the previous experiment, 
 
 \paragraph{Interpretation}
 
-By and large the regularization did not apply uniformly for all datasets; the distance-based loss
+The regularization did not apply uniformly for all datasets; the distance-based loss
 is not bounded to a small interval like the $\BoundaryCrossLoss$, which could have had the opposite
 effect of causing the $\nll$ not to be prioritized during training.
 More precisely, decreasing the distance should have the effect of increasing the $\nll$;

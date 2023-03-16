@@ -97,8 +97,7 @@ The subject of this work will be this last kind of local explanation, and we wil
 
 One of the first and most frequently cited sources on CFX is \citeauthor{wachterCounterfactual2017} \cite{wachterCounterfactual2017}. In this work, the problem is formulated as an optimization problem constrained by the distance between the explained input $x$ and a candidate counterfactual $x'$:
 \begin{equation}
-\arg\min_{\CF{x}} \min_\lambda \{ \lambda (f(\CF{x}) - y_\target)^2 + d(x, \CF{x}) \}
-\arg\min_{x'} \min_\lambda \{ \lambda (f(x') - y')^2 + d(x, x') \}
+    \arg\min_{x'} \min_\lambda \{ \lambda (f(x') - y')^2 + d(x, x') \}
 \end{equation}
 where $f$ is the model of interest, $y'$ is the target model output
 (different from the factual output $y = f(x)$) and $d$ is the aforementioned
