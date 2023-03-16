@@ -15,18 +15,18 @@ The term "Explainable AI" refers to the endeavor of extracting human-friendly \e
 
 Some of the reasons driving research in explainable AI (referred to as XAI hereafter) are summarized in \cite{zhangSurvey2021}:
 \begin{itemize}
-    \item Scientists that use AI hope to recover human-understandable information pertaining to their problem of interest (e.g. in drug design or physics);
-    \item Regulators hope to make AI-based decisions accountable, especially those that affect data subjects directly (e.g. in insurance, banking, or in criminal justice);
-    \item AI practitioners hope to limit unexpected failure scenarios in their work, especially in cases where failure can be costly (e.g. in medicine or finance).
+    \item Scientists that use AI hope to recover human-understandable information about their problem of interest (\eg{} in drug design or physics);
+    \item Regulators hope to make AI-based decisions accountable, especially those that affect data subjects directly (\eg{} in insurance, banking, or criminal justice);
+    \item AI practitioners hope to limit unexpected failure scenarios in their work, especially in cases where failure can be costly (\eg{} in medicine or finance).
 \end{itemize}
 
 % Note that it has also been argued that in many cases (including in the tabular setting) trying to "explain" black-box models is less productive than using more interpretable-by-design techniques \cite{rudinWhy2019}.
 
-Because of how ubiquitous AI is becoming, XAI research is also blossoming and the research landscape is vast.
+Because of how ubiquitous AI is becoming, XAI research is also blossoming, and the research landscape is vast.
 Accordingly, some taxonomies have emerged recently that help differentiate methods \cite{zhangSurvey2021, bellePrinciples2021}.
 In particular, as mentioned, there exist methods that alter the training process of the model of interest to make it more interpretable; these are called \emph{embedded} methods.
 On the other hand, many methods are designed to be applied to pre-trained models in a frozen state -- the models can only be probed, not modified. These methods are referred to as \textsl{post hoc} (literally ``after the fact'').
-In this work we focus on the more general-purpose \textsl{post hoc} methods.
+In this work, we focus on the more general-purpose \textsl{post hoc} methods.
 
 One other key characteristic of an XAI method is its \emph{scope}: a \emph{global} XAI method applies to a \emph{whole} fully trained ML model, while a \emph{local} method gives an explanation of \emph{one prediction} by the model.
 Global methods produce compact results, but they report general information that does not necessarily reflect
@@ -35,7 +35,7 @@ a more limited range, which are more precise but can lead to misleading interpre
 
 % It's a trade-off: think of it as looking at just the mean vs. looking at just one point
 
-In the following we focus on local explainability methods, relying on the assumption that aggregating many local explanations can help us grasp the model's general behavior.
+In the following, we focus on local explainability methods, relying on the assumption that aggregating many local explanations can help us grasp the model's general behavior.
 
 \subsection{Local explainability}
 
@@ -44,8 +44,8 @@ Some of them are outlined in \cite{bellePrinciples2021}:
 
 \subsubsection{Local feature attribution approaches}
 
-A popular format for explanations is \emph{feature attributions}: ratings of importance of each input feature, which give an answer to the question ``Which features matter to the model for its prediction?''.
-Broadly speaking, there are two types of methods outputting feature attributions: perturbation-based methods and gradient-based methods.
+A popular format for explanations is \emph{feature attributions}: ratings of the importance of each input feature, which give an answer to the question ``Which features matter to the model for its prediction?''.
+Broadly speaking, there are two types of methods outputting feature attributions: perturbation- and gradient-based.
 
 \paragraph{Perturbation-based methods}
 
@@ -59,12 +59,12 @@ Worse, it has been shown that \method{LIME} and other methods can be fooled into
 
 \paragraph{Gradient-based methods}
 
-Another strategy involves computing the gradient of the classification function with respect to the input features: indeed, by definition of the gradient, this precisely measures how sensitive the prediction is to a change in one of the input features.
+Another strategy involves computing the gradient of the classification function with respect to the input features. Indeed, by definition of the gradient, this precisely measures how sensitive the prediction is to a change in one of the input features.
 One of the most frequently used methods of this kind is \method{IntegratedGradients} \cite{sundararajanAxiomatic2017}, which answers the question: ``How relevant to the prediction is feature $i$ of the point of interest $x$ compared with some other reference point $x'$?''.
 
-Notice that the explanation is only given with respect to the reference point $x'$, so choosing a different $x'$ can yield a different explanation; furthermore, the choice of $x'$ is not always obvious.
+Notice that the explanation is only given for the reference point $x'$, so choosing a different $x'$ can yield a different explanation; furthermore, the choice of $x'$ is not always obvious.
 
-Interestingly, it has recently been shown that many pre-existing local explanation methods, including \method{LIME} and \method{IntegratedGradients}, can in fact be formulated as instances of the same framework called Local Function Approximation \cite{hanWhich2022}.
+Interestingly, it has recently been shown that many pre-existing local explanation methods, including \method{LIME} and \method{IntegratedGradients}, can be formulated as instances of the same framework called Local Function Approximation \cite{hanWhich2022}.
 
 \subsubsection{Rule-based approaches}
 
