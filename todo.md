@@ -1,13 +1,30 @@
 - [ ] Make sure there are no \note anymore
-- [x] Conclusion
-- [x] Acknowledgements
-- [ ] Path regularization
-    - [X] Replace LOF with NF realism
-- [ ] Robustness experiment
-    - Point is $experiments(\max f_i)_i$
-- [x] Revisit citations to update those from arxiv
+- [ ] try plagiarism/grammar with grammarly
+
+- [ ] proof read
+
+- [ ] graph for logprbothers
+- [ ] L_CF could be used to impose more constraints
+- [ ] Use different notation for gradient, partial and jacobian, or be more explicit
+- [ ] acronyms?
 - [ ] Could have made CakeOnSea less convex in terms of the classes
 - [ ] Mention that my implementation of losses allows for differentiating between source and others
+
+- [x] make u, p, L explicit (what variable do they take)
+- [x] Move datasets and robustness to experiments
+- [x] More structure in losses description:
+    - [x] Give each loss a header
+    - [x] Give the def again
+- [x] In discussion, start with what i did
+- [x] Methods: summarize what needs to be done at the start
+- [x] Explicit that we focus on dL du because we can't do otherwise
+- [x] Conclusion
+- [x] Acknowledgements
+- [x] Path regularization
+    - [X] Replace LOF with NF realism
+- [x] Robustness experiment
+    - Point is $experiments(\max f_i)_i$
+- [x] Revisit citations to update those from arxiv
 - [x] Introduction
     - [x] Describe IG in more detail? (not doing it)
     - [X] VAE

@@ -11,6 +11,100 @@ First we give details on settings common to all experiments, next we present our
 and then we delve into the experiments themselves, presenting the experimental setup, the results and
 discussion for each of them in turn.
 
+\section{Datasets}
+\label{sec:datasets}
+
+In our experiments we use one custom synthetic dataset generated in a parametrizable way, as well as some real datasets.
+
+We always take out the categorical features and we standardize each feature.
+
+\subsection{\CakeOnSea}
+
+Our analyses are complicated by the impossibility of visualizing counterfactuals for tabular data in general.
+Thus, in order to start approaching the problem intuitively, one of our datasets is a synthetic dataset with no more than two features having an influence on the response.
+The two features, denoted by $x_0$ and $x_1$, range from 0 to 50, except for the so-called ``dead zone'' which is $[25, 35]^2$, in which there are no points at all.
+There are three classes, and the class decision rule is as follows:
+\begin{align*}
+    (x_0, x_1) \in [35, 45]^2 \implies & y = 2 \\
+    x_1 < 25                  \implies & y = 0 \\
+    (x_0, x_1) \in \text{dead zone} \lor (x_0, x_1) \notin [0, 50]^2  \implies & y\ \text{unknown} \\
+    \text{otherwise} \qquad            & y = 1
+\end{align*}
+Note that we explicitly refrain from assigning a class to points in the dead zone or outside $[0, 50]^2$.
+The decision rule can be visualized in \autoref{fig:cake_on_sea}.
+
+To generate the dataset, we randomly sample points in the $[0, 50]^2$ square and then take out points from the dead zone. By default, the sampling distribution is a uniform $\mathcal{U}([0, 50]^2)$.
+
+Our implementation also allows for producing more features that are linear combinations of the first two, to simulate data with an arbitrary number of columns while keeping the dataset structure intact.
+However, in the interest of keeping things simple, we use only the 2-feature version in our analyses.
+
+\begin{figure}[h]
+    \centering
+\input{Figures/04_cake_on_sea}
+\caption{Decision rule for the \CakeOnSea dataset. The so-called ``dead zone'' is shown in dark gray between class 2 and class 0.}
+    \label{fig:cake_on_sea}
+\end{figure}
+
+\subsection{\ForestCover}
+
+This dataset is taken from the UCI Machine Learning repository\footnote{\url{https://archive.ics.uci.edu/ml/datasets/Covertype}} \cite{duaUCI2019} based on work in \cite{blackardComparative1999}.
+It contains data on 581012 trees such as their elevation, their horizontal distance to the nearest surface water features and the type of soil they are in, as well as their species, among seven tree species. There is a total of 13 recorded variables, including the tree species. Of the 12 variables used for prediction, two are categorical, and encoded as one-hot columns.
+Because our method does not trivially extend to categorical features yet, we remove the one-hot columns; we thus have $D = 10$.
+
+\subsection{\WineQuality}
+
+The \WineQuality{} dataset originates from \cite{cortezModeling2009} and can be found in the UCI repository\footnote{\url{https://archive.ics.uci.edu/ml/datasets/Wine+Quality}}.
+It consists of data on 6498 Portuguese ``Vinho Verde'' wines, such as their pH, their density and their alcohol percentage, as well as a quality rating from 0 to 10.
+There are 13 variables including the quality rating column; except for the quality and whether they are red or white, all of them are numerical.
+As before, we remove the red/white information.
+
+Because the wine quality is an ordinal variable (categorical but ordered), it is not necessarily appropriate to run a classifier on the dataset directly;
+thus, we group quality ratings together into 3 classes.
+In fact, there are no wines with a quality rating of 0, 1, 2 or 10, and 43\% of the rows have a rating of 6 out of 10.
+Hence, for our classification task we create the following class mapping:
+\begin{itemize}
+    \item class 0 corresponds to a quality rating of 5 or lower (33\% of the data),
+    \item class 1 to a rating of 6 (43\%) and
+    \item class 2 to a rating of 7 or higher (18\%).
+\end{itemize}
+
+\subsection{\OnlineNewsPopularity}
+
+This dataset \cite{fernandesProactive2015} also from the UCI repository\footnote{\url{https://archive.ics.uci.edu/ml/datasets/Online+News+Popularity}} contains data on 39644 news posts recovered from the Mashable website, such as the number of HTML tags of a certain type, the time of publishing, and also machine-learning-derived features such as the subjectivity and polarity of the language used, and how well the post fits within a given topic as determined by LDA.
+As before, we remove the categorical columns, leaving us with 46 columns including the target variable.
+
+The target variable is the number of shares of a given article, which is an integer; in order to make it usable for classification tasks, we create the following class mapping:
+\begin{itemize}
+    \item Articles with a number of shares below the median (\ie{} in the worst 50\%) are considered to be in class 0,
+    \item Articles between the 50\% and the 75\% percentiles are considered class 1,
+    \item Articles between the 75\% and 95\% percentiles are considered class 2,
+\item Articles above the 95\% percentile (\ie{} in the best 5\%) are considered class 3.
+\end{itemize}
+Thus, class 0 contains 50\% of the data, class 1 contains 25\%, class 2 contains 20\% and class 3 contains 5\%.
+
+\subsection{Summary of datasets}
+
+All datasets are divided into training, validation, and test sets containing 60\%, 20\%, and 20\% of the data respectively.
+
+In \autoref{tab:datasets} we summarize the relevant information about our datasets and settings when using them for training.
+
+\begin{table}[h!]
+    \centering
+\begin{tabular}{lrrrrrr}
+        \toprule
+Name          & $\inputdim$ & $\outputdim$ & $\card{\trainset}$     & $\card{\valset}$     & $\card{\testset}$    & $
+\card{\trainset} / \inputdim$  \\
+        \midrule
+\CakeOnSea            & 2           & 3            & 57607                  & 19202                & 19202        & 28803                    \\
+\ForestCover          & 10          & 7            & 348608                 & 116202               & 116202       & 34861                   \\
+\WineQuality          & 11          & 3            & 3900                   & 1299                 & 1299          & 355                  \\
+\OnlineNewsPopularity & 45          & 4            & 23788                  & 7928                 & 7928          & 529                   \\
+        \bottomrule
+    \end{tabular}
+    \caption{Summary of our dataset settings. $\inputdim$ refers to the number of features, $\outputdim$ to the number of classes, and $\abs{\trainset}$, $\abs{\valset}$, $\abs{\testset}$ to the size of the train, validation, and test set respectively.}
+    \label{tab:datasets}
+\end{table}
+
 \section{Models}
 
 All models are trained using the Adam algorithm \cite{kingmaAdam2014} with a learning rate of $1 \times 10^{-3}$.
@@ -325,13 +419,17 @@ Therefore, one easy improvement is to multiply the $\BoundaryCrossLoss$ by $\lat
 \section{Experiment 3: Robustness of explanations with path regularization}
 
 Given that we were able to achieve more interpretable paths using path regularization, we ask whether it is possible to meet any interpretability criterion, even a nonsensical one.
-For example, can we use path regularization so that all paths pass through one designated point, regardless of $x$ and $\target$?
+For example, can we use path regularization so that all paths pass through one designated point, regardless of $x$ and $\target$, while staying valid?
 To do so, we select a point $\xgoal \in \inputspace$ that we can reasonably expect to be unrealistic, but is not completely out of reach compared to points in the train set.
 Then, we devise a path loss that encodes the distance from a path to $\xgoal$, and let our path regularization training enforce this constraint.
+The loss is computed as:
+\begin{align*}
+    \pathloss(\xgoal, (z_t)_{t=1}^T) = \min_{t \in \{1, \ldots, T\}} \{ \norm{\dec(z_t) - \xgoal}_2 \}
+\end{align*}
 
 \paragraph{Description}
 
-We perform path regularized training using the adversarial path loss described in \autoref{methods:robustness}.
+We perform path regularized training using an adversarial path loss.
 The loss encodes how close a path passes by a given point $\xgoal$, which is potentially unrealistic.
 In our experiment, we pick a $\xgoal$ that is easy to compute, likely unrealistic yet not completely out of bounds for the dataset:
 \begin{equation}
