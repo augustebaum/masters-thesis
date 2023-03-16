@@ -1,5 +1,6 @@
 - [ ] Make sure there are no \note anymore
 - [ ] try plagiarism/grammar with grammarly
+- [ ] send to prof
 
 - [ ] proof read
 
