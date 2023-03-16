@@ -6,39 +6,76 @@
 \chapter{Discussion and future work}
 \label{ch:discussion}
 
-In light of our experiments, we now discuss additional considerations on how we chose to conduct our project.
+\section{Discussion}
 
-\section{Categorical data}
+% Our proposed losses generally did as expected
+In experiment 1, we confirmed that the probability-based losses do not naturally extend to the multi-class setting.
+We showed that log-probability- and logit-based losses held their promises, achieving higher validity rates.
+However, it is still unclear why the validity rates spikes around $\lambda = 0.1$, and whether this generalizes
+to the other losses.
+It is also difficult to see what drives the competition between logits theoretically,
+which would help explain why the log-probability losses are on par with the logit losses for all datasets except \CakeOnSea.
+We suspect that the classifier achieving worse accuracy for those other datasets is a factor,
+as in this case our theoretical findings do not necessarily hold.
 
-Tabular data is also special in that it can contain categorical or ordinal features, which is challenging to deal with in machine learning and specifically with neural networks: the state-of-the-art to this day are still decision-tree based methods such as \method{XGBoost} \cite{chenXGBoost2016} or \method{CatBoost} \cite{prokhorenkovaCatBoost2018}.
+% Path regularization did stuff, although it could have been applied more strongly
+In experiment 2, we did not choose the correct settings to completely demonstrate the effectiveness of path regularization
+in increasing interpretability.
+Similarly in experiment 3, the adversarial loss was not well adjusted enough to affect autoencoder behavior.
+
+One important consideration is how the path loss is combined with the $\nll$ during training.
+For example, our $\BoundaryCrossLoss$ was computed based on predicted probabilities, but we could have
+resolved the scale issue by replacing them with logits or log-probabilities.
+
+Additionally, our initially idea was to apply the masking scheme \emph{also during training}, not just at test time:
+indeed, what we value is the interpretability of the \emph{valid} paths, \emph{before the target is reached}, so it does not make
+sense to penalize the model for things outside of this scope.
+Of course, using the masking scheme on its own could have caused the model to completely ignore validity; the extra
+$\cfloss$ term in the NF loss was intended to prevent this.
+Unfortunately when applying all of these changes at the same time, stability problems arose that prompted us to
+approach simpler solutions first.
+
+Our decision to use a normalized version of \revise{}, that is, without using more specialized gradient-descent algorithms,
+also potentially penalized this method compared to the original procedure.
+
+
+\section{Additional comments}
+
+In light of our results, we now discuss additional considerations on how we chose to conduct our project.
+
+\subsection{Categorical data}
+
+Tabular data is also special compared to image data in that it can contain categorical or ordinal features, which is challenging to deal with in machine learning and specifically with neural networks: the state-of-the-art to this day are still decision-tree based methods such as \method{XGBoost} \cite{chenXGBoost2016} or \method{CatBoost} \cite{prokhorenkovaCatBoost2018}.
+Also note the difficulty to measure distances between points with categorical data.
 
 In our work, we adapted methods from image problems, so the question of discrete features is never raised; many methods developed for tabular data treat these features as numerical and then apply rounding as needed.
-Since normalizing flows are invertible we would expect this not to be necessary, however, categorical data is especially ill-adapted to normalizing flows because they have to map their discrete distribution to a continuous one (\eg{} a standard Gaussian), which is an unstable process.
+Since normalizing flows are invertible we would expect this not to be necessary; however, categorical data is especially ill-adapted to normalizing flows because they have to map their discrete distribution to a continuous one (\eg{} a standard Gaussian), which is an unstable process.
 This was still considered an open problem as of 2021 \cite{kobyzevNormalizing2021}, but some solutions have been explored:
-for example, dequantization consists in adding a bit of noise to the discrete features so that the distribution is not discrete but heavily multi-modal instead, so that learning is smoother and the points can be turned back to their discrete form with confidence (as long as the learning process succeeded) \cite{hoFlow2019}.
+for example, dequantization consists in adding noise to the discrete features so that the distribution is not discrete but heavily multi-modal instead, so that learning is smoother and the points can be turned back to their discrete form with confidence (as long as the learning process succeeded) \cite{hoFlow2019}.
 In the interest of simplicity we decided to leave this as future work.
 
-\section{\CakeOnSea}
+\subsection{\CakeOnSea}
 
-This synthetic dataset was produced as a way to easily visualize CF paths, as those could be drawn in two dimensions.
-However, this only served to highlight the difficulty of rating explanations visually: they did not seem to bring more information about the model's behavior than simply visualizing the model's prediction boundaries would have.
+The \CakeOnSea{} dataset was produced as a way to easily visualize CF paths, as those could be drawn in two dimensions.
+However, this only served to highlight the difficulty of rating explanations visually: they did not seem to bring more information about the model's behavior than simply visualizing its decision boundaries.
 Several choices could have been made to highlight explanation performance more directly.
 For example, using a toy dataset where the best features are obvious to a human (such as a circle centered on the origin and radius 1 as class 0, and the rest as class 1), or a dataset generated using known causal rules, like those used in \cite{karimiAlgorithmic2020}.
 
-\section{On ``Diffeomorphic Counterfactuals''}
+\subsection{On ``Diffeomorphic Counterfactuals''}
 
-The method presented in the ``Diffeomorphic Counterfactuals'' paper \cite{dombrowskiDiffeomorphic2021} is very similar to ours: using gradient descent in the latent space of a NF-based generative model to maximize the predicted probability of the target class.
+The method presented in the ``Diffeomorphic Counterfactuals'' paper \cite{dombrowskiDiffeomorphic2021}, which we discussed in \autoref{previous_work:diffeo},
+is very similar to ours: using gradient descent in the latent space of a NF-based generative model to maximize the predicted probability of the target class.
 Hence, it seems important to us to highlight the differences between our work and theirs.
 
 First, their work is only tested on image data, while we focus on applications for tabular data.
 Second, while in \cite{dombrowskiDiffeomorphic2021} the method is equivalent to minimizing our $\PrbTarget{}$, we challenged this choice of loss and proposed alternatives that achieved more satisfactory results in terms of validity.
-Third, path regularization to make our method class-aware, which is necessary for enhancing the latent representation \cite{locatelloChallenging2019}.
+Third, we introduced path regularization to make our method class-aware, which is necessary for enhancing the latent representation \cite{locatelloChallenging2019}.
 
 On another note, the authors of \cite{dombrowskiDiffeomorphic2021} recently published an update to their work on arXiv \cite{dombrowskiDiffeomorphic2022}.
 
 We now expound on some of the choices we made that further distinguish our work from the current literature.
 
-\subsection{Why no images?}
+\subsubsection{Why no images?}
 
 Counterfactual explanations are most often applied to images, for the simple reason that it is much easier for humans to judge the quality of images, and in particular their realism.
 Since our methods are inspired from works that have been mostly tested on image-related problems, it is sensible to ask why we refrained from applying our methods to images.
@@ -48,11 +85,12 @@ Thus, our work intended to address this lack of material in the hopes of providi
 
 Additionally, though some works try applying their methods both to image and tabular data, in this work we tried to keep away from the subjectivity and unfalsifiable character of some XAI research \cite{leavittFalsifiable2020}; because images are so easily understood by humans, it can also happen that visual explanations are overanalyzed and interpreted wrongly.
 
-\subsection{Why NICE?}
+\subsubsection{Why NICE?}
 
 There are many normalizing flow architectures \cite{dinhNICE2015, kingmaGlow2018, dinhDensity2022} (see \cite{kobyzevNormalizing2021} for a comprehensive review), and even combinations between normalizing flows and other generative models such as VAEs \cite{rezendeVariational2015}.
 One reason for choosing NICE is its simplicity and therefore ease of implementation for our proof-of-concepts.
-However, it has undesirable properties that we would definitely address in future work.
+However, NFs also have undesirable topological properties \cite{cornishRelaxing2020} that could be addressed in future work by
+stating more precise requirements on the latent representation.
 
 
 \end{document}

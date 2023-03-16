@@ -3,7 +3,7 @@
 
 \begin{document}
 
-\chapter{Experiments}
+\chapter{Experiments and results}
 
 We now present our experiments to address the problems stated in \autoref{ch:methods}.
 
@@ -28,7 +28,16 @@ The models are implemented in \texttt{pytorch} and trained on a machine with the
 
 The classifier architecture in our analyses is an MLP consisting of two 50-node linear layers each followed by a $\relu$, then one last linear layer outputting $\outputdim$ logits.
 
-In \autoref{fig:confusion_matrices} we show the test predictions of our classifier architecture, trained on each dataset with the batch size given in \autoref{tab:datasets}.
+In \autoref{fig:confusion_matrices} we show the test predictions of our classifier architecture, trained with batch sizes:
+\begin{itemize}
+    \item \CakeOnSea: 12000
+    \item \ForestCover: 25000
+    \item \WineQuality: 500
+    \item \OnlineNewsPopularity: 3000
+\end{itemize}
+The batch sizes are chosen so that one epoch takes less than 10 steps, except for \ForestCover{} where the size of the train set would have resulted in very large batches.
+In each experiment we ended using different batch sizes so we re-state them when appropriate.
+
 \begin{figure}
     \centering
     \begin{subfigure}[b]{0.4\textwidth}
@@ -66,7 +75,7 @@ All datasets also have significant class imbalance: in \ForestCover{} the test s
 \subsection{Autoencoder}
 
 We build a normalizing flow model according to the NICE architecture described in \autoref{bg/nf} \cite{dinhNICE2015}.
-The model is trained according to a Gaussian prior distribution, and its layers are 4 additive coupling layers where we divide the input into the odd columns and the even columns, and the nonlinearity is an MLP with 2 layers of 20 nodes each.
+The model is trained according to a Gaussian prior distribution, and its layers are 4 additive coupling layers where we divide the input into the odd columns and the even columns, and the nonlinearity in each coupling layer is an MLP with 2 layers of 20 nodes each.
 
 \section{Metrics}
 
@@ -79,7 +88,7 @@ Hence, for testing a path generation method on some test set, we measure the val
 
 \subsection{Computational performance}
 
-Ensuring that CFs generation is fast is an important concern for stakeholders, especially if one needs to generate paths for many points of interest.
+Ensuring that CFX generation is fast is an important concern for stakeholders, especially if one needs to generate paths for many points of interest.
 Hence, we measure the time taken \emph{for one step of one path}.
 This is because depending on the number of steps chosen by the user, a path can take longer to generate, and methods such as \ls{} can take advantage of optimizations to compute many paths at once.
 
@@ -93,11 +102,15 @@ $P(x)$ is in non-negative so the $\nll$ is in $\R_+$ and the closer it is to 0, 
 For some time we also used the local outlier factor \cite{breunigLOF2000}, for which an implementation is provided by the \sklearn{} Python package, but it did not scale to all of our datasets.
 
 \subsection{Extending metrics to a path}
+\label{exp/masking}
 
-Many metrics take a point $x' \in \inputspace$ as input and return a score, but we wish to score a whole path $(x_t)_{t=1}^T$.
+All the CFX paths are 100 points long (including the starting point, so the number of steps is 99) and the step size $\lambda_\text{LS}$ is 0.1. We found this to be satisfactory so that the path is long enough to reach the target class, yet with step size short enough that the path does not go too far too quickly.
+
+Many metrics take a point $x' \in \inputspace$ as input and return a score, but in our case we wish to score a whole path $(x_t)_{t=1}^T$.
 Hence, given a metric, we aggregate over the path (that is, from its starting point to the first step at which $\target$ is reached).
 
-For this, we first produce paths in the form of a 3-dimensional tensor in $\R^{\nbsteps \times \batchsize \times \inputdim}$.
+For this, we first produce paths in the form of a 3-dimensional tensor in $\R^{\nbsteps \times \batchsize \times \inputdim}$,
+where $\nbsteps$ is the number of steps in the path and $\batchsize$ the batch size.
 We compute the model predictions resulting in a 2-dimensional tensor in $\setclasses^{\nbsteps \times \batchsize}$.
 Based on this and the target classes we generated in $\setclasses^\batchsize$, we construct a mask $\pathmask \in \{0, 1\}^{\nbsteps \times \batchsize}$ that highlights the valid paths:
 if path $j$ is not valid, then
@@ -132,7 +145,7 @@ We average the rates over the different seeds, and report the standard error.
 \paragraph{Baselines}
 
 The methods we use to produce the paths are variations on \ls{} and \revise{}.
-Specifically, we run both methods twice: once with regularization on the $L_1$ distance, with $\lambda_\text{distance} = 0.3$ and one without regularization (with $\lambda_\text{distance}$ set to 0).
+To compare methods on a par, we run both methods twice: once with regularization on the $L_1$ distance, with $\lambda_\text{distance} = 0.3$ and once without regularization (with $\lambda_\text{distance}$ set to 0).
 In the future using some automatic tuning procedure would be best: in our case $\lambda_\text{distance} = 1$ led to immobile paths whereas $\lambda_\text{distance} = 0.3$ could be too close to performing no regularization at all.
 
 In fact, our implementation of both \ls{} and \revise{} is a joint abstraction that takes a parameter for the frequency of the gradient computation: for \revise{} this is set to 1 (\ie{} recompute the gradient after every step) while for \revise{} it is null (\ie{} never recompute it).
@@ -173,11 +186,13 @@ We highlight in gray the five losses that yield the best average validity rate a
 \begin{table}[h!]
 \centering
 \subfile{../Figures/05_validity_losses.tex}
-\caption{Validity rate means with their standard error. Highlighted are the five losses with the best average results.}
+\caption{Validity rate means with their standard error. Highlighted for each dataset are the five losses with the best average results.}
 \label{tbl:validity_losses}
 \end{table}
 
-As expected, the validity rate achieved by \revise{} is generally much more acceptable than that of \ls{}, across all losses.
+The validity rate achieved by \revise{} is generally much more acceptable than that of \ls{}, across all losses.
+This is expected given that \revise{} can correct its trajectory as the path is generated, while \ls{} cannot.
+
 $\LogitSource{}$ is always among the best validity losses.
 However, it is not always clear which value of $\lambda$ should be used.
 Hence, we show the validity rate for $\lambda \in \{ 0.01, 0.05, 0.1, 0.2, 0.5, 1\}$ in \autoref{fig:lambda_progression}.
@@ -193,7 +208,8 @@ Hence, we show the validity rate for $\lambda \in \{ 0.01, 0.05, 0.1, 0.2, 0.5, 
 From this plot it is clear that in general letting $\lambda = 1$ leads to higher validity rate;
 however the validity is unusually high for $\lambda = 0.1$ compared to the others.
 
-To make better sense of our findings, we also plot our various losses and their gradients on \CakeOnSea.
+To make better sense of our findings given our considerations on gradients in \autoref{sec:validity_losses},
+we also plot our various losses and their gradients on \CakeOnSea.
 Here, we select plots for some losses and where the target class is always class 2.
 For reference, the full plots are shown in \autoref{ch:plots}.
 
@@ -213,7 +229,7 @@ For reference, the full plots are shown in \autoref{ch:plots}.
 
 \paragraph{Interpretation}
 
-From the test accuracies shown in \autoref{fig:cos_confusion_matrix}, we know that for \CakeOnSea{} the prediction probabilities are all close to 1, except perhaps near the decision boundaries.
+From the plot values in the probability-based losses in \autoref{fig:cf_losses_detail}, we can tell that for \CakeOnSea{} the prediction probabilities are all close to 1, except perhaps near the decision boundaries.
 Hence, we can verify our intuitive thinking from \autoref{sec:validity_losses}: for the probability-based losses, the loss is very flat, \ie{} the gradient is close to zero.
 For $\LogPrbOthers{}$ it seems the logits from the other classes counteract the target logit, so that paradoxically the paths get pushed away from class 2 in places.
 For the logit-based losses however, the behavior is fairly uniform across the whole data distribution, and so the gradients clearly point the path towards class 2.
@@ -226,12 +242,12 @@ This leads us to choose $\LogitSource{\lambda=1}$ as validity loss in the rest o
 Having determined an appropriate validity loss to use for generating valid paths, we turn now to our objective of interpretability.
 In this experiment we seek to determine if \ls{} equipped with a path regularized autoencoder can perform on the same level as \revise{}, increasing interpretability without compromising validity.
 
-Our proxy for complexity of a path is \emph{the number of class boundary crossings}:
+Our proxy for interpretability of a path is \emph{the number of class boundary crossings}:
 the path should ideally transition from $\source$ to $\target$ without going through other classes.
 We thus add our $\BoundaryCrossLoss$ to the $\nll$ when computing the loss of the autoencoder.
 Our final loss for training the autoencoder is
 \begin{align*}
-    \loss(\phi) = \nll(\phi) + \BoundaryCrossLoss(\apath)
+    \loss_\text{NF}(\phi) = \nll(\phi) + \BoundaryCrossLoss(\apath)
 \end{align*}
 where $\apath$ is a path generated with some CF method.
 
@@ -240,12 +256,11 @@ where $\apath$ is a path generated with some CF method.
 
 First, we generate some seeds.
 For a given dataset, we train one classifier, as in \autoref{validity_losses/description}.
-For each seed, we train several autoencoders: one without path regularization, and then one per CF generation method using the path regularized training procedure.
+Then, for each path method and seed, we train two autoencoders: with and without path regularization.
 
 Then, each autoencoder is used to produce explanation paths on the whole test set, like in \autoref{validity_losses/description}, and metrics are computed with the paths as input.
 Finally, for each explanation method, we aggregate the metrics obtained for each seed and report the standard error.
 
-The paths are 100 points long (including the starting point, so the number of steps is 99) and the step size $\lambda_\text{LS}$ is 0.1. We found this to be satisfactory so that the path is long enough to reach the target class, yet with step size short enough that the path does not go too far too quickly.
 
 \paragraph{Baselines}
 \label{exp/path_reg/baselines}
@@ -255,7 +270,7 @@ in this experiment we use \ls{} and \revise{} in their basic form, \ie{} with no
 
 \paragraph{Datasets}
 
-For memory performance reasons we adapt the batch size for each dataset.
+For memory performance reasons (the loss involves paths in the form of three-dimensional tensors) we reduce the batch size for each dataset compared to the previous experiment.
 We compute the batch size so that one training epoch (one pass through $\trainset$) takes 20 steps, except for \ForestCover{} where the batches are still too big.
 The final numbers are:
 \begin{itemize}
@@ -267,10 +282,12 @@ The final numbers are:
 
 \paragraph{Metrics}
 
-We measure the validity rate, as before, as well the number of boundary crossings \emph{before reaching $\target$} (so if the path goes directly from $\source$ to $\target$ the value is 0) which is the proxy for interpretability we chose.
+We measure the validity rate, as before, as well as the number of boundary crossings \emph{before reaching $\target$} (so if the path goes directly from $\source$ to $\target$ the value is 0) which is the proxy for interpretability we chose.
+For this we use the masking procedure described in \autoref{exp/masking}.
 
 For measuring realism, we use a specially-trained autoencoder with the same architecture as the others, trained using only the $\nll$ as a loss.
-The realism score for $\CF{x}$ is given by its $\nll$ as computed by our special autoencoder.
+The realism score for $\CF{x}$ is given by its $\nll$ as computed by our special autoencoder;
+the metric is extended to the paths using path masking again.
 
 We also measure the computational complexity (the duration for one computing one step of one path).
 
@@ -290,7 +307,7 @@ The only case where an effect is observed is for \revise{} on \CakeOnSea{}.
 In no instance do we see a decrease in validity rate when applying path regularization.
 Similarly, path regularization by and large has no effect on realism, except for \ls{} on \CakeOnSea{} and \ForestCover{} where the $\nll$ is decreased when applying regularization.
 The time per step does not depend on the autoencoder training, only on the architecture.
-Yet, we can observe the difference in time performance between \ls{} and \revise{}: \ls{} is up to 70 times faster than \revise{} on \OnlineNewsPopularity{} (recall our paths are 100 steps long).
+Yet, we can observe the difference in time performance between \ls{} and \revise{}: \ls{} is up to 70 times faster than \revise{} on \OnlineNewsPopularity{}.
 
 \paragraph{Interpretation}
 
@@ -302,8 +319,8 @@ Recall our loss function is given by
     \max \{ p^{(t)}_\source, p^{(t)}_\target \}
 \end{align*}
 which is in $[-1, 0]$.
-By contrast, the $\nll$ is computed according to a Gaussian prior distribution which can typically be as large as $\inputdim$ (see \autoref{methods:0_sols}), which is larger than 10 for all datasets except for \CakeOnSea{} where $\inputdim=2$.
-Therefore, one easy improvement is to multiply the $\BoundaryCrossLoss$ by $\inputdim$.
+By contrast, the $\nll$ is computed according to a Gaussian prior distribution which can typically be as large as $\latentdim$ (see \autoref{methods:0_sols}), which is larger than 10 for all datasets except for \CakeOnSea{} where $\latentdim=2$.
+Therefore, one easy improvement is to multiply the $\BoundaryCrossLoss$ by $\latentdim$.
 
 \section{Experiment 3: Robustness of explanations with path regularization}
 
@@ -320,7 +337,7 @@ In our experiment, we pick a $\xgoal$ that is easy to compute, likely unrealisti
 \begin{equation}
     \xgoal = (\max\{ x_i : x \in \trainset \})_{i=1}^D
 \end{equation}
-\ie{} $\xgoal_i$ is the largest value encountered in the dataset for feature $i$.
+\ie{} $\xgoal_i$ is the largest value encountered in the train set for feature $i$.
 
 Apart from this the setup is the same as that described in \autoref{exp/path_reg}, where we compare paths with the distance path regularization and without.
 
@@ -330,15 +347,21 @@ We use the same baselines as in the previous experiment (\autoref{exp/path_reg/b
 
 \paragraph{Datasets}
 
-We use the same datasets as in the previous experiments.
+We use our datasets with the following batch sizes:
+\begin{itemize}
+    \item \CakeOnSea: 2881
+    \item \ForestCover: 3000
+    \item \WineQuality: 195
+    \item \OnlineNewsPopularity: 1190
+\end{itemize}
+We reduced the batch size for \ForestCover{} again for memory performance reasons.
 
 \paragraph{Metrics}
 
-As before, we analyze the trade-off that is incurred by applying path regularization.
-We measure the validity rate, as well as the realism score and the path loss.
+As before, we measure the validity rate, the time performance as well as the $\nll$ (with masking).
 
-Since we seek to minimize the distance from a path to $\xgoal$, we  include our path distance loss as a measure.
-Yet, it is important that manipulated paths retain the validity quality for the attack to be successful, hence we measure validity as well.
+In addition, we measure the mean distance from a path to $\xgoal$ \emph{before the target is reached}
+using the masking procedure.
 
 \paragraph{Results}
 
@@ -351,8 +374,29 @@ The results for each dataset and method are given in \autoref{tbl:robustness}.
     \label{tbl:robustness}
 \end{table}
 
+We see that for \CakeOnSea{} and \WineQuality the regularization had little effect.
+
+However, it did induce changes in behavior for the two remaining datasets:
+\begin{itemize}
+    \item for \ForestCover{} the mean distance decreased and the $\nll$ heavily increased;
+    \item for \OnlineNewsPopularity{} the mean distance did not change but the $\nll$ heavily increased.
+\end{itemize}
+
+The time measurements are much more reasonable than in the previous experiment, although the trends are the same.
+
 \paragraph{Interpretation}
 
+By and large the regularization did not apply uniformly for all datasets; the distance-based loss
+is not bounded to a small interval like the $\BoundaryCrossLoss$, which could have had the opposite
+effect of causing the $\nll$ not to be prioritized during training.
+More precisely, decreasing the distance should have the effect of increasing the $\nll$;
+but if the $\nll$ increases too much then
+the total loss will increase, at which point the early stopping mechanism will fire.
 
+Relatedly, the $L_2$ distance naturally grows as $\inputdim$ increases, as a consequence of the curse
+of dimensionality; while the $\nll$ is also affected as discussed in the previous experiment, this
+could make the training even more unstable.
+ 
+This concludes our experiments in this project.
 
 \end{document}

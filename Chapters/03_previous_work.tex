@@ -150,12 +150,13 @@ The reasoning is that $\text{proto}_c$ is likely realistic, because it is an ave
 \paragraph{Diffeomorphic Counterfactuals}
 \label{previous_work:diffeo}
 
-\revise{}, which we discussed in \autoref{par:revise}, makes use a VAE to promote realistic CFs, while in \ls{} the authors use a bare autoencoder.
-However, these models are in general not invertible, so that there is a loss of information when sending inputs through them.
-This is problematic when it comes to trustworthiness of the explanations: for example, in \ls{}, the CF path never actually goes through the explained input, even when setting the shift factor $\lambda_\text{LS}$ to zero.
+\revise{}, which we discussed in \autoref{par:revise}, relies on a VAE to promote realistic CFX.
+However, this model is in general not invertible, so that there is a loss of information when sending inputs through it.
+This is problematic when it comes to trustworthiness of the explanations: if the autoencoder is not trained well enough, the latent space will not accurately
+model the data distribution and the resulting CFX will be of little use.
 
 For this reason, in \cite{dombrowskiDiffeomorphic2021} \citeauthor{dombrowskiDiffeomorphic2021} use normalizing flows instead, which are invertible by design.
-Furthermore, they make topological arguments to prove that if the NF is well-trained, then the CF path stays within the data manifold.
+Furthermore, they draw on differential geometry to prove that if the NF is well-trained, then the CFX will stay within the data manifold.
 
 They show that for multi-class problems on images, their method achieves sensible counterfactuals compared to simply perturbing the inputs in input space.
 
@@ -167,9 +168,12 @@ They show that for multi-class problems on images, their method achieves sensibl
 \end{equation}
 where $h$ is some measure of ``uncertainty'' (what we call realism) of $\dec(z')$ with respect to a target label $y$.
 Their approach to evaluation of CFX is intriguing:
-to get a known ground-truth data distribution without resorting to purely fabricated datasets, they train a ``ground-truth'' VAE on a real dataset (they take the example of the MNIST hand-written digits); the VAE is then used to generate an artificial dataset, and the method is tested on these data where metrics such as the ``ground-truth'' log-likelihood.
+to get a known ground-truth data distribution without resorting to purely
+fabricated datasets, they train a ``ground-truth'' VAE on a real dataset (the MNIST hand-written digits dataset);
+the VAE is then used to generate a new artificial dataset, and the method is tested on these \emph{artificial} data where
+metrics such as the ``ground-truth'' log-likelihood can be measured.
 
-Importantly, the authors validate their finding with a user study, which is not that frequent in works on CFX.
+Importantly, the authors validate their findings with a user study, which is not frequent in works on CFX.
 
 \subsection{Methods with class-aware generative models}
 
@@ -177,8 +181,11 @@ Importantly, the authors validate their finding with a user study, which is not 
 
 \citeauthor{downsCRUDS2020} make use of a conditional subspace VAE (or CSVAE for short) to adapt the latent representation to the classification task:
 the latent space is decomposed (or ``disentangled'') into a product of small spaces: $\latentspace = \mathcal{Z} \times \prod_{i} \mathcal{W}_i$, where each space $\mathcal{W}_i$ contains information on the features most correlated with label $i$ \cite{klysLearning2018}.
-For an input $x$, $\enc(x) = (z, w)$ where $z$ is not sensitive to the label and $w$ is sensitive to the label; thus, by altering only $w$ based on the target class, they can then form a counterfactual latent as $\CF{z} = (z, \CF{w})$ and let $\CF{x} = \dec(\CF{z})$.
-In fact, by sampling several $\CF{w}$ they can obtain a whole set of CFs that are uniquely different from $x$.
+For an input $x$, they let $\enc(x) = (z, w)$ where $z$ is not sensitive to the label and $w$ is sensitive to the label; thus, by altering only $w$ based on the target class, they can then form a counterfactual latent as $\CF{z} = (z, \CF{w})$ and let $\CF{x} = \dec(\CF{z})$.
+In fact, by sampling several $\CF{w}$ they can obtain a whole set of CFX that are uniquely different from $x$.
+
+As a side note, recall the recent proposal for the Union of manifolds hypothesis \cite{brownUnion2022} we mentioned in
+\autoref{intro/image_data}: this method fully takes advantage of that fact.
 
 \paragraph{VAE-NF blend}
 
@@ -186,6 +193,10 @@ In fact, by sampling several $\CF{w}$ they can obtain a whole set of CFs that ar
 In particular, the latent representation architecture consists of normalizing flows within a VAE, an idea first developed in \cite{rezendeVariational2015}.
 
 \subsection{Summary of methods}
+
+We summarize the presented works in terms of which generative model is used (if any) and whether or not the generative model
+is trained using the class labels in some way.
+We also mention when a work does not specifically target or test their method on tabular data problems.
 
 \begin{table}[htbp]
 	\centering
@@ -205,28 +216,29 @@ In particular, the latent representation architecture consists of normalizing fl
 		Wachter \textsl{et al.} \cite{wachterCounterfactual2017}             & Yes          & None                                   & NA          \\
 		\bottomrule
 	\end{tabular}
-	\caption{Summary of CF generation methods we presented, in alphabetical order. ``Tabular data'' refers to whether or not the work specifically addresses tabular data; ``Class-aware'' refers to whether or not the generative model is trained with access to class labels or similar information.}
+	\caption{Summary of CF generation methods we presented, in alphabetical order.
+	``Tabular data'' refers to whether or not the work specifically addresses tabular data; ``Class-aware'' refers to whether or not the generative model is trained with access to class labels or similar information.}
 \end{table}
 
 \section{Metrics for CFX}
 
 In general, measuring the quality of an explanation is not a straightforward endeavor.
-However, in our case we have at least one precise goal: to change the class to the target.
+However, in our case we have at least one precise goal: to change the class to a target class.
 When this is achieved, we say that the explanation is \emph{valid}.
-Hence, our first and foremost metric is the \emph{validity rate}: the fraction of CFs that reached the target.
+Hence, our first and foremost metric is the \emph{validity rate}: the fraction of CFX that reached the target.
 
-When a method produces several CFs, it is often desirable to guarantee \emph{diversity}, so that the $k$ proposed CFs are not $k$ times the same point.
+When a method produces several CFX, it is often desirable to guarantee \emph{diversity}, so that the proposed CFX are not all the same.
 
 \subsection{Distance}
 
-For a CFX to be relevant to the explained input, it should be close enough to the explained input; thus some notion of \emph{distance} is often used, \eg{} the Euclidean ($L_2$) norm.
+For a CFX to be relevant to the explained input, it should be close enough to it; thus some notion of \emph{distance} is often used, \eg{} the Euclidean ($L_2$) norm.
 Furthermore, it is often preferred to have \emph{sparse} perturbations, in the interest of simplicity; for this the $L_1$ loss is a common choice \cite{joshiRealistic2019,antoranGetting2021}.
 \citeauthor{vanlooverenInterpretable2021} even propose a linear combination of the two \cite{vanlooverenInterpretable2021}.
 
 \subsection{Feasibility}
 
 When a CFX is intended to provide recourse, authors tend to mention \emph{feasibility} as a requirement.
-This refers to the possibility for, \eg{}, a user, to actually follow the recourse path proposed in the form of a CFX.
+This refers to the possibility for, \eg{} a user, to actually follow the recourse path proposed in the form of a CFX.
 % Several metrics aim to capture feasibility, including:
 
 For example, \citeauthor{pawelczykLearning2020} introduce metrics based on \emph{percentile shift}, that is, for feature $i$, how far $\CF{x}_i$ has shifted in terms of percentile compared to $x_i$ \cite{pawelczykLearning2020}.
@@ -238,6 +250,8 @@ For example, letting $\text{percentile}_i^\data(x) \in [0, 1]$ denote the percen
 
 Before them, \citeauthor{wachterCounterfactual2017} already considered a metric of distributional shift, which is based on the median absolute deviation for feature $k$ \cite{wachterCounterfactual2017}:
 \begin{align*}
+	d(x, x') = \sum_{k \in F} \frac{\abs{x_k - x'_k}}{\text{MAD}_k}
+	 \quad \text{where} \quad
 	\text{MAD}_k
 	= \text{median}_{j \in P} \left\{
 	\abs{
@@ -245,11 +259,7 @@ Before them, \citeauthor{wachterCounterfactual2017} already considered a metric 
 	}
 	\right\}
 \end{align*}
-where $P$ is the set of data points and $x_{j, k}$ is feature $k$ of point $x_j$; the metric is then
-\begin{align*}
-	d(x, x') = \sum_{k \in F} \frac{\abs{x_k - x'_k}}{\text{MAD}_k}
-\end{align*}
-with $F$ the set of features.
+where $P$ is the set of data points, $F$ the set of features and $x_{j, k}$ is feature $k$ of point $x_j$.
 
 \subsection{Realism}
 
@@ -257,6 +267,6 @@ Measuring realism of a data point is a topic of research in itself and a number 
 Some make use of mathematically justified estimators, such as the \emph{maximum mean discrepancy} (or MMD for short) \cite{zhangInterpretable2022}, which can be cumbersome to compute, while others take advantage of generative models, \eg{} using the reconstruction error of an autoencoder \cite{vanlooverenInterpretable2021}.
 Other metrics such as \emph{proximity} or \emph{connectedness} \cite{laugelIssues2019} are derived from the distance between points and draw from older metrics such as the \emph{local outlier factor} \cite{breunigLOF2000}.
 
-Now that we have covered some of the recent advances on CFX generation with generative models, let us present our original work.
+Now that we have covered some of the recent advances on CFX methods powered by generative models, let us present our original work.
 
 \end{document}

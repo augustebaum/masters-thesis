@@ -8,7 +8,7 @@
 
 We now present our work in more detail.
 First, we discuss the specific problems we addressed and our proposed solutions.
-Then, we introduce the metrics and datasets that will be used in our experiments.
+Then, we introduce the datasets used in our experiments.
 
 \section{Problem 0: CFX generation}
 
@@ -21,21 +21,28 @@ Let $x$ be a point that is predicted to be of class 0, \ie{} such that $f(x) < \
 Find a point $\CF{x}$ for which $f(\CF{x}) > \frac{1}{2}$ such that $\CF{x}$ is comparable with $x$ by a human.
 \end{quote}
 
+One solution to this is \ls{}.
+
 \subsection{Proposed solutions}
 \label{methods:0_sols}
 
-Let us describe the basis for our work, \ls{}.
-This method was presented by \citeauthor{cohenGifsplanation2022} in 2022 as a CF generation method for binary classification models on image data, specifically X-ray images of human lungs \cite{cohenGifsplanation2022}.
+\ls{} was presented by \citeauthor{cohenGifsplanation2022} in 2022 as a CF generation method for binary classification models on image data, specifically X-ray images of human lungs \cite{cohenGifsplanation2022}.
+Given an input image $x$ predicted as class 0 (\ie{} for which $f(x)$ is low), \ls{} produces a new image close to $x$ that is predicted as class 1 (\ie{} for which $f(x)$ is high.).
 
-Given an input image $x$ predicted as class 0 (\ie{} for which $f(x)$ is low), the method aims to produce a new image close to $x$ that is predicted as class 1 (\ie{} for which $f(x)$ is high.).
-To achieve this, $x$ is perturbed according to the gradient of the classifier $f$ (the direction of steepest ascent), in order for $f$ to increase.
-However, instead of computing the gradient in input space, they use an autoencoder $(\enc, \dec)$ and compute the gradient of the classifier \emph{in latent space}: $\nabla_z f(\dec(z))$ where $z = \enc(x)$.
-This is to promote realistic images: indeed, autoencoders typically filter out information that is considered to be noise, so performing the perturbation in latent space is safer in this regard to avoid unrealistic images.
+In short, this is the method.
+Let there be an autoencoder with $E$ the encoder and $D$ the decoder, and $z = E(x)$.
+Then, given some coefficient $\lambda_\text{LS}$, a candidate counterfactual $x'$ is computed as:
+\begin{align*}
+    x' = D \left( z + \lambda_\text{LS} \grad{f(D(z))}{z} \right)
+\end{align*}
+
+In other words, $x$ is perturbed in the direction of the gradient of the classifier $f$ (the direction of steepest ascent), in order for $f$ to increase.
+However, instead of computing the gradient in input space, they compute the gradient of the classifier \emph{in latent space} to promote realistic images.
 Indeed, as discussed in \autoref{intro/image_data}, for many image problems the data can be assumed to lie on a low-dimensional subspace of $\inputspace$; therefore, if a generative model can recover this subspace, it can encode the input data in fewer dimensions with little information loss.
 
-A summary of the \ls{} procedure is shown in \autoref{fig:latent_shift}.
+A summary diagram of the \ls{} procedure is shown in \autoref{fig:latent_shift}.
 On the left, the data manifold in input space is non-convex, so by perturbing along the gradient in the input space we risk exiting the data manifold.
-Hence, we first run the encoder $\enc$, then perturb the latent following the gradient of the classifier by some factor $\lambda_\text{LS}$, and finally run the decoder $\dec$ to get the candidate counterfactual $\CF{x}$.
+Hence, we first run the encoder, which we denote by $\enc$, then perturb the latent following the gradient of the classifier by some factor $\lambda_\text{LS}$, and finally run the decoder written $\dec$ to get the candidate counterfactual $\CF{x}$.
 
 \begin{figure}[htbp]
 	\centering
@@ -54,14 +61,14 @@ We outline some of the benefits of \ls{} here:
 	      This is relevant for the problem of recourse mentioned in \autoref{par:cfx}: if a CFX is meant as advice for a data subject to alter their behavior to achieve a better outcome, then this advice would be more meaningful if the CFX would detail what \emph{individual steps} are needed to achieve that change.
 	      This is outlined in research challenge no.~2 of \cite{vermaCounterfactual2020}.
 
-	\item Finally, by setting $\lambda_\text{LS}$ to a negative value we can also produce new points that are \emph{more strongly} predicted as class 0.
+	\item Finally, like in usual gradient descent, by setting $\lambda_\text{LS}$ to a negative value we can also produce new points that are \emph{more strongly} predicted as class 0.
 \end{enumerate}
 
-However, in the original \ls{} work the method is applied to images, and the generative model used is an autoencoder architecture based on residual networks \cite{heDeep2015}.
+However, in the original \ls{} work, the method is applied to images, and the generative model used is an autoencoder architecture based on residual networks \cite{heDeep2015}.
 This is an acceptable choice of model to image data, but it has two important consequences:
 \begin{enumerate}
 	\item The reconstruction error of the autoencoder is non-zero: encoding an image to get the starting point of the path is not an invertible operation.
-	      As explained in \autoref{previous_work:diffeo}, this implies the CF path in input space generally does not go through the original point, even for $\lambda_\text{LS} = 0$; in fact, if the reconstruction error is too large this problem will impact the trustworthiness of the explanation.
+	      This implies the CF path in input space generally does not go through the original point, even for $\lambda_\text{LS} = 0$; in fact, if the reconstruction error is too large this problem will impact the trustworthiness of the explanation.
 
 	\item Basic autoencoders have no requirement to map inputs \emph{continuously}, so the generated path can look very complex which also makes the explanation less trustworthy.
 \end{enumerate}
@@ -71,7 +78,7 @@ Our analyses are generally not specific to normalizing flows though, so in the f
 
 We choose the NICE architecture from \cite{dinhNICE2015} presented in \autoref{bg/nf}.
 In particular, we assume a standard Gaussian prior distribution, \ie{} we enforce that the distribution in the latent space is standard Gaussian.
-As shown in \autoref{bg/nf} for a Gaussian prior the $\nll$ is then written
+As shown in \autoref{bg/nf}, for a Gaussian prior the $\nll$ is written:
 \begin{align*}
 \nll(x) = \frac{\latentdim}{2} \log 2 \pi
     +  \frac{z^T z}{2}
@@ -79,7 +86,15 @@ As shown in \autoref{bg/nf} for a Gaussian prior the $\nll$ is then written
 \end{align*}
 which is the loss that is minimized.
 
-\note{mention that revise is almost the same and will be our baseline in the following}
+Importantly, there is nothing in our approach that cannot be done with the usual gradient descent procedure --
+which has enjoyed many improvements to promote fast convergence and avoiding local minima \cite{kingmaAdam2014}.
+The \ls{} method is nothing but a simplification of \revise{}, the procedure outlined in \cite{joshiRealistic2019},
+where the gradient is computed only once and the constraint on the $L_1$ distance is dropped.
+However, they differ in goals in that the authors of \cite{joshiRealistic2019} do not keep a record of the individual
+steps taken during the gradient descent run.
+Therefore, in the following we test our methods both on \ls{} and \revise{}, with and without the distance constraint
+to stay close to the original \revise{} procedure.
+Our objective is to study to what extent \ls{} can be used as a faster, perhaps less accurate CFX method.
 
 \section{Problem 1: Multi-class extension}
 
@@ -90,7 +105,7 @@ Recall that the authors of \ls{} propose to recover a potential counterfactual b
     \CF{x} = \dec(z + \lambda_\text{LS} \nabla_z f(\dec(z))).
 \end{equation*}
 
-In the case where $f$ is a binary classifier outputting the predicted probability that $x$ is of class 1, this is clearly sufficient.
+When $f$ is a binary classifier outputting the predicted probability that $x$ is of class 1, this is clearly sufficient.
 However, in multi-class problems where $f$ outputs a vector in $\R^\outputdim$ there are several other functions we can use.
 To see this, we reformulate the latent shift strategy with a generic loss that accounts for validity, denoted by $\lossval$:
 
@@ -124,18 +139,18 @@ However, the multi-class setting assumption gives rise to other candidate losses
 
 Indeed, in the binary classification case, reaching towards the target class is exactly the same as moving away from the source class, since $p_\source = 1 - p_\target$.
 By contrast, in the multi-class setting, different priorities need to be distinguished on a case-by-case basis: is it more important to reach the target (at the risk of potentially staying in the source class) or to get away from the source (at the risk of not reaching the target)?
-The natural extension we presented is favoring the first option, but including the second in some way is of interest.
+The natural extension we presented is favoring the first option, but in fact there is no reason to neglect the second.
 
 Thus, we introduce the following alternative loss, with regularization $\lambda \in [0, 1]$:
 \begin{equation}
     \lossval(z) = -\softmax(f(\dec(z)))_\target
 + \lambda \softmax(f(\dec(z)))_\source
 \end{equation}
-which can be interpreted as adding the constraint of going away from the source \emph{as well as going towards the target}.
+which can be interpreted as adding the constraint of going towards the target as well as \emph{going away from the source}.
 We call it $\PrbSource{\lambda}$.
 
 In fact, we can go further:
-in \ls{}, the objective of increasing $p_\target$ is equivalent to decreasing $\mysum{c} p_c$, since in binary classification this is just $p_\source$; however, in multi-class problems they are distinct quantities.
+in \ls{}, the objective of increasing $p_\target$ is also equivalent to decreasing $\mysum{c} p_c$, since in binary classification this is just $p_\source$; however, in multi-class problems they are distinct quantities.
 Therefore we also define:
 \begin{align*}
     \PrbOthers{\lambda}(z) = - \softmax(f(\dec(z)))_\target + \lambda \mysum{c} \softmax(f(\dec(z)))_c
@@ -144,17 +159,19 @@ But notice
 \begin{align*}
     \PrbOthers{\lambda}(z)
      & = - \softmax(f(\dec(z)))_\target + \lambda (1 - \softmax(f(\dec(z)))_\target) \\
-     & = -(\lambda + 1) \softmax(f(\dec(z)))_\target + \lambda
+     & = -(\lambda + 1) \softmax(f(\dec(z)))_\target + \lambda \\
+     & = (\lambda + 1) \PrbTarget(z) + \lambda
 \end{align*}
 which is a rescaling of $\PrbTarget$, so in practice $\PrbOthers{}$ is not used.
 
-To examine our intuition, we can compute the gradient of the loss, for example
+To examine our intuition for why these proposals are sensible, we can compute the gradient of the loss, for example
 \begin{align*}
 \grad{\PrbSource{\lambda}}{z}
 =  \grad{}{z} \left( - \softmax(f(\dec(z)))_\target + \lambda \softmax(f(\dec(z)))_\source \right)
 \end{align*}
 
-Because $z$ will only ever appear within $f(\dec(z))$, let $u = f(\dec(z))$; by the chain rule, in general we have $\grad{\lossval}{z} = \grad{\lossval}{u} \grad{u}{z}$.
+Because $z$ will only ever appear within $f(\dec(z))$, let $u = f(\dec(z))$ denote the output logits.
+By the chain rule we have $\grad{\lossval}{z} = \grad{\lossval}{u} \grad{u}{z}$.
 Furthermore, to lighten the calculations we let $p_i = \softmax(u)_i$ in what follows.
 
 $\grad{u}{z}$ does not change with the loss so we focus on $\grad{\PrbSource{\lambda}}{u}$:
@@ -163,7 +180,7 @@ $\grad{u}{z}$ does not change with the loss so we focus on $\grad{\PrbSource{\la
 =  \grad{}{u} \left( - p_\target + \lambda p_\source \right)
 \end{align*}
 
-We show in \autoref{eq:grad_softmax} that $\grad{p_i}{u_j} = p_i ( \dij  -  p_j)$.
+We show in \autoref{eq:grad_softmax} that $\grad{p_i}{u_j} = p_i ( \dij  -  p_j)$ with $\dij$ the Kronecker delta.
 Thus, the gradient of the loss is written:
 \begin{align*}
     \grad{\lossval}{u_j}
@@ -180,9 +197,11 @@ Intuitively, a good validity loss should fulfill some basic requirements:
 Let us now examine whether these requirements are satisfied:
 \begin{itemize}
     \item When $p_\target$ is 1, this means $p_j = \djt$, so we have for all $j$:
-          \begin{equation*}
-\grad{\PrbSource{\lambda}}{u_j} = -1 \times (\djt -\djt) + \lambda \times 0 \times (\djs - p_j) = 0
-          \end{equation*}
+          \begin{align*}
+                \grad{\PrbSource{\lambda}}{u_j} \\
+                &= -1 \times (\djt -\djt) + \lambda \times 0 \times (\djs - p_j) \\
+                &= 0\text{, as required.}
+          \end{align*}
     \item When $p_\target$ is 0, we get:
           \begin{align*}
 \grad{\PrbSource{\lambda}}{u_j}
@@ -193,7 +212,8 @@ Let us now examine whether these requirements are satisfied:
 - \lambda p_\source p_j           & \text{otherwise}
                    \end{cases}
           \end{align*}
-          The components for the classes that are not $\source$ or $\target$ are negative, which means these classes are favored compared to $\target$ which is counter to our intuition.
+          The components for the classes that are not $\source$ or $\target$ are negative, which means these classes are favored compared to $\target$;
+          this goes against our intuition.
 \end{itemize}
 
 Compare this with $\PrbTarget$: since $\PrbTarget = \PrbSource{\lambda=0}$ we see that in both cases $\grad{\PrbTarget}{u} = 0$.
@@ -201,8 +221,8 @@ This means that if the path gets stuck at $p_\target = 0$ then it cannot recover
 
 \subsubsection{Log-probability-based losses}
 
-Setting the probability as an objective goes counter to the usual loss functions for training classifiers; a more common choice is the cross-entropy $\ce$.
-Indeed, the cross-entropy represents the information that is shared between two distributions, which is a more natural metric than a conventional distance such as the $L_2$ norm \cite{murphyMachine2012}.
+Setting the probability as an objective goes counter to the usual loss functions for training classifiers; a more common choice
+for comparing predicted probabilities with true labels is the cross-entropy $\ce$ \cite{murphyMachine2012}.
 The cross-entropy involves the logarithm of the predicted probabilities, so we can easily modify our previous attempts to get:
 \begin{align*}
     \LogPrbTarget{}:        & \quad    \lossval(u) = - \log p_\target                              \\
@@ -226,9 +246,8 @@ Hence
      & = - \grad{\log p_\target}{u_j} + \lambda \grad{\log p_\source}{u_j} \\
      & = - (\djt - p_j) + \lambda (\djs - p_j)                             \\
      & = - \djt + p_j + \lambda \djs - \lambda p_j                         \\
-     & = (1 - \lambda) p_j + \lambda \djs - \djt
+     & = (1 - \lambda) p_j + \lambda \djs - \djt.
 \end{align*}
-
 We check our intuition:
 \begin{itemize}
     \item For $p_\target = 1$ this gives us
@@ -239,10 +258,10 @@ We check our intuition:
                & = \begin{cases}
                        -\lambda & \text{if } j = \target \\
                        \lambda  & \text{if } j = \source \\
-                       0        & \text{otherwise}
+                       0        & \text{otherwise,}
                    \end{cases}
           \end{align*}
-so the gradient keeps pushing $u_\target$ higher and $u_\source$ lower.
+          so the gradient keeps pushing $u_\target$ higher and $u_\source$ lower, as required.
           When $\lambda = 0$, which corresponds to $\LogPrbTarget$, the gradient is zero which is also acceptable intuitively.
 
     \item For $p_\target = 0$ we get
@@ -250,12 +269,12 @@ so the gradient keeps pushing $u_\target$ higher and $u_\source$ lower.
               \grad{\LogPrbSource{\lambda}}{u_j}
                & = (1 - \lambda) p_j + \lambda \djs - \djt                 \\
                & = \begin{cases}
--1                 & \text{if } j = \target \\
+                       -1                             & \text{if } j = \target \\
                        (1-\lambda)p_\source + \lambda & \text{if } j = \source \\
-                       (1 - \lambda) p_j              & \text{otherwise}
+                       (1 - \lambda) p_j              & \text{otherwise.}
                    \end{cases}
           \end{align*}
-When $j \neq \target$ the gradient is larger than 0 so again, class $\target$ dominates.
+          When $j \neq \target$ the gradient is larger than 0 so again, class $\target$ dominates.
 \end{itemize}
 
 For $\LogPrbOthers{}$ we have:
@@ -280,7 +299,7 @@ We check our intuition:
                        \lambda                    & \text{otherwise}
                    \end{cases}
           \end{align*}
-          so the gradient pushes $u_\target$ higher than that for other classes.
+          so the gradient pushes $u_\target$ higher than that for other classes, as required.
 
     \item For $p_\target = 0$ we get
           \begin{align*}
@@ -291,8 +310,8 @@ We check our intuition:
                        p_j(1 - \lambda ( \outputdim -1 )) + \lambda & \text{otherwise}
                    \end{cases}
           \end{align*}
-Here it is unclear if $u_j$ be more negative than $-1$.
-It turns out it can: for example, if $\lambda = 1$ and $p_j = 1$ then we get $1 - (\outputdim -1) + 1 = 3 - \outputdim$, so for $\outputdim > 4$ $u_j$ will be pushed higher than $u_\target$.
+Here it is unclear if $u_j$ is more negative than $-1$.
+It turns out it can be: for example, if $\lambda = 1$ and $p_j = 1$ then we get $1 - (\outputdim -1) + 1 = 3 - \outputdim$, so for $\outputdim > 4$, $u_j$ will be pushed higher than $u_\target$.
 \end{itemize}
 
 
@@ -313,16 +332,24 @@ Here the gradients are easy to compute since the loss is linear in the logits:
 \grad{\LogitSource{\lambda}}{u_j} &= - \djt + \lambda \djs                        \\
 \grad{\LogitOthers{\lambda}}{u_j}
 &= - \djt + \lambda \mysum{c} \delta_{jc} \\
+&= - \djt + \lambda \times \begin{cases}
+    0 & \text{if } j = \target \\
+    1 & \text{otherwise} 
+\end{cases} \\
 &= - \djt + \lambda (1 - \djt) \\
-&= -(\lambda + 1)\djt + \lambda
+&= -(\lambda + 1)\djt + \lambda.
 \end{align*}
-Hence the behavior is also clear: $u_\target$ always gets pushed up higher than the other logits, no matter the value of $u$.
+Hence the behavior is also clear: in all cases $u_\target$ always gets pushed up higher than the other logits, no matter the value of $u$.
 
 
 
 \section{Problem 2: Path regularization}
 
 \subsection{Problem statement}
+
+In this section and in the following, we denote a CFX path by $(x_t)_{t=1}^T \in \inputspace^T$, where $x_T$ is the end point of the path and
+$x_1$ is its starting point, ideally as close to $x$ as possible.
+Similarly, we also define $(z_t)_{t=1}^T \in \latentspace^T$ such that $(x_t)_{t=1}^T = (\dec(z_t))_{t=1}^T$.
 
 A typical requirement on a counterfactual $\CF{x}$ for an input $x$ is for $\norm{\CF{x} - x}$ to be small, where $\norm{\cdot}$ is the $L_1$ norm for example.
 While this makes sense for methods that produce a discrete set of counterfactuals, we focus on methods that produce \emph{continuous explanation paths}, hence we wish to ensure these requirements are satisfied \emph{along the path}.
@@ -332,7 +359,8 @@ In the case of gradient-descent optimization paths, this can be addressed by pla
 \begin{equation*}
 \cfloss(z_t) = \lossval(z_t) + \lambda_\text{distance} \norm{\dec(z_t) - x}_1.
 \end{equation*}
-However, for \ls{} this solution is not appropriate because the gradient is only computed \emph{once}, for $z = \enc(x)$: even though the first step goes in the right direction, overall the whole path can still go in the wrong direction because the information carried by the gradient is less relevant the further away we go from the input.
+However, for \ls{} this solution is not appropriate because the gradient is only computed \emph{once}, for $z = \enc(x)$.
+Indeed, even though the first step goes in the right direction, overall the whole path can still go in the wrong direction because the information carried by the gradient is less relevant the further away we go from the input.
 
 Hence, our second problem statement is the following:
 \begin{quote}
@@ -378,7 +406,7 @@ where $p^{(t)}_i$ is the predicted probability $\softmax(f(x_t))_i$.
 Note that class information is indirectly given during the training of the autoencoder, so the autoencoder is dependent on the classification task.
 By contrast, in vanilla \ls{} the authors make a conscious decision to keep the autoencoder entirely separate from the classifier.
 Their justification is that this allows for reusing the autoencoder on classifiers that have learned different tasks but that act on the same input data; for example, different classifiers each trained to detect a particular lung disease.
-This is a perfectly sound argument, but in the CFX generation literature class-aware generative models tend to be the norm because class information is very valuable when the objective is to change the class.
+While a valid argument, \citeauthor{locatelloChallenging2019} have demonstrated that some properties of latent representations can only be achieved in the presence of class label information \cite{locatelloChallenging2019}.
 
 \section{Robustness of path regularization}
 \label{methods:robustness}
@@ -386,7 +414,7 @@ This is a perfectly sound argument, but in the CFX generation literature class-a
 \subsection{Problem statement}
 
 The path regularization algorithm admits a general loss $\pathloss$ which is problem-dependent.
-Yet, this raises a question: can the path regularization algorithm accommodate for any path loss, however extraneous?
+Yet, this raises a question: can the path regularization algorithm accommodate for any path loss, however exotic?
 If so, this procedure can be manipulated to produce adversarial paths that do not reflect the true behavior of the explained model.
 
 \subsection{Proposed experiment}
@@ -395,6 +423,8 @@ To probe the possibility of abuse of the path regularization procedure, we formu
 \begin{align}
     \pathloss(\xgoal, (z_t)_{t=1}^T) = \min_{t \in \{1, \ldots, T\}} \{ \norm{\dec(z_t) - \xgoal}_2 \}
 \end{align}
+The goal of the experiment is to verify whether path regularized latent representations lead to paths that fit this
+criterion while staying valid.
 
 \section{Datasets}
 \label{sec:datasets}
@@ -415,10 +445,10 @@ There are three classes, and the class decision rule is as follows:
     (x_0, x_1) \in \text{dead zone} \lor (x_0, x_1) \notin [0, 50]^2  \implies & y\ \text{unknown} \\
     \text{otherwise} \qquad            & y = 1
 \end{align*}
-Note that we explicitly refrain from assigning a class if $x = (x_0, x_1)$ is in the dead zone, to simulate a task with completely unrealistic points surrounded by realistic points.
+Note that we explicitly refrain from assigning a class to points in the dead zone or outside $[0, 50]^2$.
 The decision rule can be visualized in \autoref{fig:cake_on_sea}.
 
-To generate the dataset, we randomly sample points in the $[0, 50]^2$ and then take out points from the dead zone. By default, the sampling distribution is a uniform $\mathcal{U}([0, 50]^2)$.
+To generate the dataset, we randomly sample points in the $[0, 50]^2$ square and then take out points from the dead zone. By default, the sampling distribution is a uniform $\mathcal{U}([0, 50]^2)$.
 
 Our implementation also allows for producing more features that are linear combinations of the first two, to simulate data with an arbitrary number of columns while keeping the dataset structure intact.
 However, in the interest of keeping things simple, we use only the 2-feature version in our analyses.
