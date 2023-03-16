@@ -20,7 +20,7 @@ The Kronecker delta function is defined as
 \end{cases}
 \end{align*}
 
-$y_i \in \R^N$ can also mean an $n$-component vector that is 1 in position $i$ and 0 everywhere else, so $y_i = (\delta_{ij})_{j=1}^N$.
+$y_i \in \R^N$ can also refer to an $N$-component vector that is 1 in position $i$ and 0 everywhere else, so $y_i = (\delta_{ij})_{j=1}^N$.
 
 A norm is a measure of magnitude; there are many existing norms, so when this is undetermined the norm of a vector $x$ is often written $\norm{x}$.
 The $L_p$ norm is an example of a norm and is usually written $\norm{\cdot}_p$.
@@ -96,7 +96,9 @@ One of these activation functions is the \emph{rectified linear unit}, usually a
 
 When optimizing the $w$ (training the model), we do not iterate on the full dataset $\data$.
 We first separate it into a training set, a validation set and a test set, denoted by $\trainset$, $\valset$ and $\testset$ respectively.
-The optimization algorithm is run on the train set, which corresponds to an \emph{epoch}, and after every epoch we compute the validation error by running the model on $\valset$.
+The optimization algorithm is run on the train set repeatedly;
+an \emph{epoch} corresponds to one full on the whole train set, and after every epoch we compute the validation error by running the model on $\valset$.
+When this validation error stops decreasing, this is a sign that the training process can be stopped.
 Finally, we test how well our model generalizes to unseen examples by running it on $\testset$.
 
 \section{Autoencoder}
@@ -114,10 +116,11 @@ run $\dec(z)$ to produce an image that looks like that digit, in handwritten for
 This example is adapted from a tutorial by \citeauthor{doerschTutorial2021} \cite{doerschTutorial2021},
 
 A subclass of generative models is that of \emph{autoencoders}.
-An autoencoder is a pair of functions, commonly referred to as the ``encoder'' and ``decoder'' and denoted by $(\enc: \inputspace \to \latentspace, \dec: \latentspace \to \inputspace)$ implicitly defining a latent space $\latentspace$, with the constraint that the reconstruction error $\norm{x - \dec(\enc(x))}$ is as small as possible.
+An autoencoder is a pair of functions, commonly referred to as the ``encoder'' and ``decoder'' and denoted by $(\enc: \inputspace \to \latentspace, \dec: \latentspace \to \inputspace)$ implicitly defining a latent space $\latentspace$, with the constraint that the reconstruction error $\norm{x - \dec(\enc(x))}$ be as small as possible.
 It is common for us to refer to points in latent space as ``latents''.
-In our work we make use of autoencoder models that are based on deep neural networks and are parametrized by some parameters:
-the encoder is written $\enc_\phi$ and the decoder is written $\dec_\psi$; when it is not ambiguous we drop the subscripts.
+In our work we make use of autoencoder models that are based on deep neural networks and, like for classifiers
+are learned by optimizing their parameters:
+the encoder is written $\enc_\phi$ and the decoder is written $\dec_\psi$; when it is not ambiguous we omit the subscripts.
 In addition, for our purposes it is not sufficient that the reconstruction error be minimized: we require continuity of the decoder, so that mapping a straight line in $\latentspace$ through $\dec$ results in a continuous path in $\inputspace$.
 
 \subsection{Variational autoencoder}
@@ -182,7 +185,7 @@ Importantly, each $g_i$ is \emph{invertible}, hence $g$ itself is invertible and
     }\quad \text{(defining $z_0 = z$)}
 \end{align*}
 where $\det$ denotes the determinant of a matrix.
-We can then train the model by minimizing the \emph{negative log-likelihood} (or NLL for short)
+We can then train the model by minimizing the \emph{negative log-likelihood} (or NLL for short).
 
 Unlike in VAEs, the transformation $g$ is guaranteed to be invertible, but this requires that the dimensionality of $\latentspace$ be at least $\inputdim$.
 
@@ -233,7 +236,10 @@ where $z = \enc(x)$.
 \section{Counterfactual explanations}
 
 Consider a classifier $f$ trained to take an input $x \in \inputspace$ and predict a class $c \in \setclasses$.
-We call this predicted class the \emph{source} class and we write it $\source$
+We call this predicted class the \emph{source} class and we write it $\source$.
+A counterfactual explanation for $x$ is a point $\CF{x}$ that is comparable with $x$ but for which the predicted
+class is different.
+In some cases it is possible to specify a \emph{target} class that $\CF{x}$ should be predicted as; it is written $\target$.
 
 Equipped with these concepts and notation, we can now give an overview of the literature on counterfactual explanation generation methods making use of generative models.
 

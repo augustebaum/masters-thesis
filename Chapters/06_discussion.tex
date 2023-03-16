@@ -6,37 +6,40 @@
 \chapter{Discussion and future work}
 \label{ch:discussion}
 
-\section{Discussion}
+\section{Discussion of findings}
 
 % Our proposed losses generally did as expected
 In experiment 1, we confirmed that the probability-based losses do not naturally extend to the multi-class setting.
 We showed that log-probability- and logit-based losses held their promises, achieving higher validity rates.
-However, it is still unclear why the validity rates spikes around $\lambda = 0.1$, and whether this generalizes
-to the other losses.
+However, it is still unclear why the validity rate spikes around $\lambda = 0.1$, and whether this generalizes
+to the all losses apart from $\LogitSource{}$.
 It is also difficult to see what drives the competition between logits theoretically,
 which would help explain why the log-probability losses are on par with the logit losses for all datasets except \CakeOnSea.
-We suspect that the classifier achieving worse accuracy for those other datasets is a factor,
-as in this case our theoretical findings do not necessarily hold.
+The fact that the classifier achieves worse accuracy for those other datasets is likely a factor,
+as in this case our theoretical findings do not necessarily hold:
+the cases we studied are when the predicted probability of the target class $p_\target$ is 0 or 1.
+In the other cases, it is possible that the losses prioritize moving away from the $\source$ class rather
+than towards the $\target$ class.
 
 % Path regularization did stuff, although it could have been applied more strongly
 In experiment 2, we did not choose the correct settings to completely demonstrate the effectiveness of path regularization
 in increasing interpretability.
-Similarly in experiment 3, the adversarial loss was not well adjusted enough to affect autoencoder behavior.
+Similarly in experiment 3, the adversarial loss was not adjusted well enough to affect autoencoder behavior.
 
 One important consideration is how the path loss is combined with the $\nll$ during training.
 For example, our $\BoundaryCrossLoss$ was computed based on predicted probabilities, but we could have
 resolved the scale issue by replacing them with logits or log-probabilities.
 
-Additionally, our initially idea was to apply the masking scheme \emph{also during training}, not just at test time:
+Additionally, our initial idea was to apply the masking scheme \emph{also during training}, not just at test time:
 indeed, what we value is the interpretability of the \emph{valid} paths, \emph{before the target is reached}, so it does not make
 sense to penalize the model for things outside of this scope.
 Of course, using the masking scheme on its own could have caused the model to completely ignore validity; the extra
 $\cfloss$ term in the NF loss was intended to prevent this.
-Unfortunately when applying all of these changes at the same time, stability problems arose that prompted us to
+Unfortunately, when applying all of these changes at the same time, stability problems arose that prompted us to
 approach simpler solutions first.
 
 Our decision to use a normalized version of \revise{}, that is, without using more specialized gradient-descent algorithms,
-also potentially penalized this method compared to the original procedure.
+also potentially penalized this method compared to the original procedure presented by \citeauthor{joshiRealistic2019} \cite{joshiRealistic2019}.
 
 
 \section{Additional comments}
@@ -45,11 +48,11 @@ In light of our results, we now discuss additional considerations on how we chos
 
 \subsection{Categorical data}
 
-Tabular data is also special compared to image data in that it can contain categorical or ordinal features, which is challenging to deal with in machine learning and specifically with neural networks: the state-of-the-art to this day are still decision-tree based methods such as \method{XGBoost} \cite{chenXGBoost2016} or \method{CatBoost} \cite{prokhorenkovaCatBoost2018}.
+One of the specificities of tabular data compared to image data is that the former can contain categorical or ordinal features, which is challenging to deal with in machine learning and specifically with neural networks: the state-of-the-art to this day are still decision-tree based methods such as \method{XGBoost} \cite{chenXGBoost2016} or \method{CatBoost} \cite{prokhorenkovaCatBoost2018}.
 Also note the difficulty to measure distances between points with categorical data.
 
-In our work, we adapted methods from image problems, so the question of discrete features is never raised; many methods developed for tabular data treat these features as numerical and then apply rounding as needed.
-Since normalizing flows are invertible we would expect this not to be necessary; however, categorical data is especially ill-adapted to normalizing flows because they have to map their discrete distribution to a continuous one (\eg{} a standard Gaussian), which is an unstable process.
+In our work, we adapted methods from image problems, in which the question of discrete features is not raised; many methods developed for tabular data treat these features as numerical and then apply rounding as needed.
+Since normalizing flows are invertible we would expect this not to be necessary; however, normalizing flows is especially ill-adapted to categorical data because they have to map their discrete distribution to a continuous one (\eg{} a standard Gaussian), which is an unstable process.
 This was still considered an open problem as of 2021 \cite{kobyzevNormalizing2021}, but some solutions have been explored:
 for example, dequantization consists in adding noise to the discrete features so that the distribution is not discrete but heavily multi-modal instead, so that learning is smoother and the points can be turned back to their discrete form with confidence (as long as the learning process succeeded) \cite{hoFlow2019}.
 In the interest of simplicity we decided to leave this as future work.
@@ -57,7 +60,7 @@ In the interest of simplicity we decided to leave this as future work.
 \subsection{\CakeOnSea}
 
 The \CakeOnSea{} dataset was produced as a way to easily visualize CF paths, as those could be drawn in two dimensions.
-However, this only served to highlight the difficulty of rating explanations visually: they did not seem to bring more information about the model's behavior than simply visualizing its decision boundaries.
+However, this only served to highlight the difficulty of rating explanations visually: indeed, they did not seem to bring more information about the model's behavior than simply visualizing its decision boundaries.
 Several choices could have been made to highlight explanation performance more directly.
 For example, using a toy dataset where the best features are obvious to a human (such as a circle centered on the origin and radius 1 as class 0, and the rest as class 1), or a dataset generated using known causal rules, like those used in \cite{karimiAlgorithmic2020}.
 

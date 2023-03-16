@@ -35,7 +35,7 @@ In short, this is the method.
 Let there be an autoencoder with $E$ the encoder and $D$ the decoder, and $z = E(x)$.
 Then, given some coefficient $\lambda_\text{LS}$, a candidate counterfactual $x'$ is computed as:
 \begin{align*}
-    x' = D \left( z + \lambda_\text{LS} \grad{f(D(z))}{z} \right)
+    x' = D (\, z + \lambda_\text{LS} \grad{f(D(z))}{z} \,)
 \end{align*} 
 where $\grad{f(D(z))}{z}$ denotes the gradient of $f(D(z))$ at $z \in \latentspace$.
 
@@ -68,7 +68,7 @@ We outline some of the benefits of \ls{} here:
 \end{enumerate}
 
 However, in the original \ls{} work, the method is applied to images, and the generative model used is an autoencoder architecture based on residual networks \cite{heDeep2015}.
-This is an acceptable choice of model to image data, but it has two important consequences:
+This is an acceptable choice of model for image data, but it has two important consequences:
 \begin{enumerate}
 	\item The reconstruction error of the autoencoder is non-zero: encoding an image to get the starting point of the path is not an invertible operation.
 	      This implies the CF path in input space generally does not go through the original point, even for $\lambda_\text{LS} = 0$; in fact, if the reconstruction error is too large this problem will impact the trustworthiness of the explanation.
@@ -96,7 +96,7 @@ However, they differ in goals in that the authors of \cite{joshiRealistic2019} d
 steps taken during the gradient descent run.
 Therefore, in the following we test our methods both on \ls{} and \revise{}, with and without the distance constraint
 to stay close to the original \revise{} procedure.
-Our objective is to study to what extent \ls{} can be used as a faster, perhaps less accurate CFX method.
+Our objective is to study to what extent \ls{} can be used as a perhaps less accurate, yet much faster CFX method.
 
 \section{Multi-class extension}
 
@@ -108,7 +108,7 @@ Recall that the authors of \ls{} propose to recover a potential counterfactual b
 \end{equation*}
 
 When $f: \inputspace \to [0, 1]$ is a binary classifier outputting the \textbf{predicted probability} that $x$ is of class 1, this is clearly sufficient.
-However, in multi-class problems where $f$ outputs a vector of logits in $\R^\outputdim$ there are several other functions we can use.
+However, in multi-class problems where $f$ outputs a vector of \textbf{logits} in $\R^\outputdim$ there are several other functions we can use.
 To see this, we reformulate the latent shift strategy with a generic loss that accounts for validity, denoted by $\lossval$:
 
 Let $f$ be the classifier of interest, which outputs logits in $\R^\outputdim$ rather than a probability mass.
@@ -190,13 +190,13 @@ To examine our intuition for why these proposals are sensible, we can compute th
 \subsubsection{Theoretical analysis of gradients}
 
 In practice, differentiating with respect to $z$ depends on the architectures of the classifier and of
-the autoencoder, so we cannot draw much from it.
+the autoencoder, so we cannot draw information from it in the general case.
 The next best thing we can do is to notice that in our loss expressions,
 $z$ only ever appears within $f(\dec(z))$,
 so we let $u(z) = f(\dec(z))$ denote the output logits.
 By the chain rule we then have:
 \begin{align*}
- \grad{\lossval(z)}{z} = \grad{\lossval(u(z))}{u(z)} \jac{u(z)}{z}.
+ \grad{\lossval(z)}{z} = \grad{\lossval(u(z))}{u(z)} \times \jac{u(z)}{z}.
 \end{align*}
 
 Furthermore, to lighten the calculations we let $p_i(u) = \softmax(u)_i$.
@@ -204,9 +204,9 @@ In the following we usually just write $u$ to mean $u(z)$ and $p_i$ to mean $p_i
 
 The gradient with respect to $z$ is then written:
 \begin{align*}
- \grad{\lossval}{z} = \grad{\lossval(u)}{u} \jac{u}{z}.
+ \grad{\lossval}{z} = \grad{\lossval(u)}{u} \times \jac{u}{z}.
 \end{align*}
-As mentioned, we cannot say much about $\jac{u}{z}$, but importantly, it not does not change with the loss,
+As mentioned, we cannot say much about $\jac{u}{z}$, but importantly, it does not depend on the loss,
 so we can at least focus on $\grad{\lossval}{u}$.
 
 For $\PrbSource{}$ the gradient with respect to $u$ is written
@@ -235,7 +235,7 @@ Thus, for $j \in \discreteinterval{1}{\outputdim}$ the gradient of $\PrbSource{}
 What should we conclude from this?
 Intuitively, a good validity loss should fulfill some basic requirements:
 \begin{itemize}
-    \item When $p_\target$ is 1, we expect the gradient $\grad{\lossval}{z}$ to be close to 0; indeed, if the target is reached, there is no reason to keep perturbing $x$.
+    \item When $p_\target$ is 1, we expect the gradient $\grad{\lossval}{z}$ to be close to 0; indeed, if the target is reached, there is no reason to keep perturbing $z$.
     Therefore, we first check whether $\grad{\lossval}{u} = 0$; if so, by the chain rule, we then have $\grad{\lossval}{z} = 0$.
     If $\grad{\lossval}{u} \neq 0$ then we cannot conclude in general, but we can at least check whether 
     \begin{align*}
@@ -267,7 +267,7 @@ Let us now examine whether these requirements are satisfied. Recall
                & = \begin{cases}
                     0                                 & \text{if } j = \target \\
                     \lambda p_\source (1 - p_\source) & \text{if } j = \source \\
-                    - \lambda p_\source p_j           & \text{otherwise}
+                    - \lambda p_\source p_j           & \text{otherwise.}
                \end{cases}
          \end{align*}
          The components for the classes that are not $\source$ or $\target$ are negative, which means these classes are favored compared to $\target$;
@@ -279,7 +279,7 @@ This means that if the path gets stuck at $p_\target = 0$ then it cannot recover
 
 \subsubsection{Log-probability-based losses}
 
-When training classifiers, using the probabilities directly in the loss is not usually done; a more common choice
+When training classifiers, using the probabilities directly in the loss is unusual; a more common choice
 for comparing predicted probabilities with true labels is the cross-entropy $\ce$ \cite{murphyMachine2012}.
 The cross-entropy involves the logarithm of the predicted probabilities, so we can easily modify our previous attempts to get:
 \begin{align*}
@@ -414,10 +414,10 @@ Here the gradients are easy to compute since the loss is linear in the logits:
 \end{align*}
 Hence the behavior is also clear: in all cases $u_\target$ always gets pushed up higher than the other logits, no matter the value of $u$.
 
-To conclude on this section, let us summarize our findings:
-the behavior of the probability-based losses does not fit our intuitive requirements:
+To conclude on this section, let us summarize our findings.
 \begin{itemize}
-    \item When $p_\target = 0$, our initial guess $\PrbTarget$ completely stops the path, and our first
+    \item The behavior of the probability-based losses does not fit our intuitive requirements:
+    when $p_\target = 0$, our initial guess $\PrbTarget$ completely stops the path, and our first
     refinement $\PrbSource{}$ pushes the other classes up.
     \item The log-probability-based losses overcome these issues, except $\LogPrbOthers{}$ which can also
     promote the other classes under certain conditions.
@@ -445,7 +445,7 @@ Indeed, even though the first step goes in the right direction, overall the whol
 
 Hence, our second problem statement is the following:
 \begin{quote}
-Given a path CF method which may or may not produce paths using an iterative procedure, but which involves a generative model such as a normalizing flow,
+Given a path CF method involving a generative model such as a normalizing flow,
 how can we constrain a whole path $(x_t)_{t=1}^T$ according to some requirements?
 \end{quote}
 
@@ -459,8 +459,8 @@ Note that in NF-based autoencoders, the decoder is the inverse of the encoder an
 \begin{algorithm}
 \caption{Learning a normalizing flow latent space by SGD with path regularization}
 \label{algo:pathreg}
-\KwIn{Classifier $f, \autoencoder\ (\enc_\phi, \dec),$ (training) data, CF loss $\cfloss$, path loss $\pathloss$, path loss regularization coefficient $\lambda_\apath$}
-\KwOut{$\phi^*$ that minimizes the $\nll$ and the path loss}
+\KwIn{Classifier $f, \autoencoder\ (\enc_\phi, \dec),$ (training) data, CF loss $\cfloss$, path loss $\pathloss$, regularization coefficients $\lambda_\apath$ and $\lambda_\text{CF}$}
+\KwOut{$\phi^*$ that minimizes the $\nll$ and the path loss and the CF loss}
 \While{not converged}{
 $x \gets \mathtt{get\_input}(\text{data})$ \\
 $z \gets \enc_\phi(x)$ \\
@@ -472,7 +472,7 @@ $\phi \gets \phi - \nabla_\phi {(\nll(z) + \lambda_\apath \pathloss(\apath) + \l
 \end{algorithm}
 
 Since the one obvious constraint on paths is that they should be valid, we include a term $\cfloss$.
-In fact we ended up not making use of this to keep the problem simple and prevent potential stability issues;
+In fact we ended up not making use of this to keep the problem simple and prevent potential stability issues during training;
 in future work it could be used for example to impose frozen features on the paths.
 
 $\pathloss$ represents our criteria for an interpretable path. So what criteria should we enforce?

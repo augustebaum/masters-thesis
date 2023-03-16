@@ -7,7 +7,7 @@
 
 We now present our experiments to address the problems stated in \autoref{ch:methods}.
 
-First we give details on settings common to all experiments, next we present our metrics of choice
+First we give details on our datasets and settings common to all experiments, next we present our metrics of choice
 and then we delve into the experiments themselves, presenting the experimental setup, the results and
 discussion for each of them in turn.
 
@@ -56,7 +56,7 @@ Because our method does not trivially extend to categorical features yet, we rem
 The \WineQuality{} dataset originates from \cite{cortezModeling2009} and can be found in the UCI repository\footnote{\url{https://archive.ics.uci.edu/ml/datasets/Wine+Quality}}.
 It consists of data on 6498 Portuguese ``Vinho Verde'' wines, such as their pH, their density and their alcohol percentage, as well as a quality rating from 0 to 10.
 There are 13 variables including the quality rating column; except for the quality and whether they are red or white, all of them are numerical.
-As before, we remove the red/white information.
+As before, we remove the categorical features (which is just the red-white feature).
 
 Because the wine quality is an ordinal variable (categorical but ordered), it is not necessarily appropriate to run a classifier on the dataset directly;
 thus, we group quality ratings together into 3 classes.
@@ -122,7 +122,7 @@ The models are implemented in \texttt{pytorch}\footnote{\url{https://pytorch.org
 
 The classifier architecture in our analyses is an MLP consisting of two 50-node linear layers each followed by a $\relu$, then one last linear layer outputting $\outputdim$ logits.
 
-In \autoref{fig:confusion_matrices} we show the test predictions of our classifier architecture, trained with batch sizes:
+The batch size for each dataset is as follows:
 \begin{itemize}
     \item \CakeOnSea: 12000
     \item \ForestCover: 25000
@@ -130,7 +130,9 @@ In \autoref{fig:confusion_matrices} we show the test predictions of our classifi
     \item \OnlineNewsPopularity: 3000
 \end{itemize}
 The batch sizes are chosen so that one epoch takes less than 10 steps, except for \ForestCover{} where the size of the train set would have resulted in very large batches.
-In each experiment we ended using different batch sizes so we re-state them when appropriate.
+In each experiment we ended up using different batch sizes so we re-state them when appropriate.
+
+In \autoref{fig:confusion_matrices} we show the test predictions of our classifier architecture for each dataset.
 
 \begin{figure}
     \centering
@@ -192,9 +194,9 @@ This is because depending on the number of steps chosen by the user, a path can 
 
 Following the reasoning presented in \cite{vanlooverenInterpretable2021}, we measure realism using a generative model.
 However, while \citeauthor{vanlooverenInterpretable2021} use a VAE and thus estimate realism using the reconstruction error, we can compute the likelihood directly.
-Indeed, normalizing flows explicitely model the data distribution $P(x)$ (which is an approximation of the true distribution that originated the training data)
-via the $\nll = - \log P(x)$, so we can compute it by design.
-$P(x)$ is in non-negative so the $\nll$ is in $\R_+$ and the closer it is to 0, the more realistic the point is deemed to be.
+Indeed, normalizing flows explicitely model the data distribution $P(x)$ (which is an approximation of the true distribution from which the training data originates)
+via the $\nll$, so we can compute it by design.
+The $\nll$ is in $\R_+$ and the closer it is to 0, the more realistic the point is deemed to be.
 
 We also used the local outlier factor \cite{breunigLOF2000}, for which an implementation is provided by the \sklearn{} Python package, but it did not scale to all of our datasets.
 
@@ -213,7 +215,7 @@ Based on this and the target classes we generated in $\setclasses^\batchsize$, w
 if path $j$ is not valid, then
 $\forall i \in \{1, \ldots, \nbsteps\}$ ${\pathmask_{ij} = 0}$, and if path $j$ is valid then $\pathmask_{ij} = 1$ up to and \emph{not including} the first index where $\target$ is reached, and 0 after that.
 
-Then we can take the element-wise product of, \eg{} the $\nll$ computed for all points of all paths, to mask the unwanted points.
+Then we can use this mask to exclude certain elements from the computation, \eg{} all points from invalid paths.
 
 Note that if no paths are valid, the resulting product will be equal to zero, which can be misleading: $\nll = 0$ is a perfect score.
 For this reason we take care to always report the validity rate alongside any metric computed this way.
@@ -262,14 +264,7 @@ Here again, a larger scale parameter search should have been done, but instead w
 
 We run our experiment on the datasets described in \autoref{sec:datasets}, namely \CakeOnSea, \ForestCover, \WineQuality{} and \OnlineNewsPopularity.
 
-The batch sizes are chosen so that one epoch takes less than 10 steps, except for \ForestCover{} where the size of the train set would have resulted in very large batches.
-The final numbers are:
-\begin{itemize}
-    \item \CakeOnSea: 12000
-    \item \ForestCover: 25000
-    \item \WineQuality: 500
-    \item \OnlineNewsPopularity: 3000
-\end{itemize}
+The batch sizes are the same as those for the classifier, which are reported in \autoref{exp/classifiers}.
 
 \paragraph{Metrics}
 
@@ -517,7 +512,7 @@ The results for each dataset and method are given in \autoref{tbl:robustness}.
     \label{tbl:robustness}
 \end{table}
 
-We see that for \CakeOnSea{} and \WineQuality the regularization had little effect.
+We see that for \CakeOnSea{} and \WineQuality{} the regularization had little effect.
 
 However, it did induce changes in behavior for the two remaining datasets:
 \begin{itemize}

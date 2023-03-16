@@ -114,7 +114,7 @@ Using this constraint, they succeed at keeping a high rate of valid CFX while in
 \paragraph{Wachter \textsl{et al.}}
 
 We described the gradient-descent procedure presented by \citeauthor{wachterCounterfactual2017} \cite{wachterCounterfactual2017} in \autoref{intro/wachter};
-the other gradient-descent-based methods we will now describe are inspired by this work.
+the other gradient-descent-based methods we will now review are inspired by this work.
 
 \subsection{Methods with generative models}
 
@@ -131,7 +131,7 @@ where $c$ is some cost function that is situation-dependent.
 However, in order to ensure the realism of the CFX, they perform the optimization in a latent space learned through a VAE.
 
 For example, they use as a cost function the $L_1$ distance between the original input $x^{*}$ and the candidate counterfactual $x'$.
-Their VAE is denoted as $(\mathcal{F}, \mathcal{G})$.
+The VAE encoder is written $\mathcal{F}$ and the decoder is called $\mathcal{G}$.
 Thus, letting $z' = \mathcal{F}(x')$, and $\ell$ a loss function like the one used for training $f$ (such as the cross-entropy), the loss that is minimized is the following:
 \begin{equation}
 	\ell(f(\mathcal{G}(z')), 1)
@@ -152,7 +152,7 @@ The reasoning is that $\text{proto}_c$ is likely realistic, because it is an ave
 
 \revise{}, which we discussed in \autoref{par:revise}, relies on a VAE to promote realistic CFX.
 However, this model is in general not invertible, so that there is a loss of information when sending inputs through it.
-This is problematic when it comes to trustworthiness of the explanations: if the autoencoder is not trained well enough, the latent space will not accurately
+This negatively affects the \,,fits this assumption very welnegatively affects the trustworthiness of the explanations: if the autoencoder is not trained well enough, the latent space will not accurately
 model the data distribution and the resulting CFX will be of little use.
 
 For this reason, in \cite{dombrowskiDiffeomorphic2021} \citeauthor{dombrowskiDiffeomorphic2021} use normalizing flows instead, which are invertible by design.
@@ -169,9 +169,9 @@ They show that for multi-class problems on images, their method achieves sensibl
 where $h$ is some measure of ``uncertainty'' (what we call realism) of $\dec(z')$ with respect to a target label $y$.
 Their approach to evaluation of CFX is intriguing:
 to get a known ground-truth data distribution without resorting to purely
-fabricated datasets, they train a ``ground-truth'' VAE on a real dataset (the MNIST hand-written digits dataset);
-the VAE is then used to generate a new artificial dataset, and the method is tested on these \emph{artificial} data where
-metrics such as the ``ground-truth'' log-likelihood can be measured.
+fabricated datasets, they train a so-called ``ground-truth'' VAE on a real dataset (the MNIST hand-written digits dataset);
+this VAE is then used to generate a new artificial dataset, and the method is tested on these \emph{artificial} data where
+metrics such as the ``ground-truth'' likelihood can be measured.
 
 Importantly, the authors validate their findings with a user study, which is not frequent in works on CFX.
 
@@ -185,7 +185,7 @@ For an input $x$, they let $\enc(x) = (z, w)$ where $z$ is not sensitive to the 
 In fact, by sampling several $\CF{w}$ they can obtain a whole set of CFX that are uniquely different from $x$.
 
 As a side note, recall the recent proposal for the Union of manifolds hypothesis \cite{brownUnion2022} we mentioned in
-\autoref{intro/image_data}: this method fully takes advantage of that fact.
+\autoref{intro/image_data}: this method fits this assumption very well.
 
 \paragraph{VAE-NF blend}
 
