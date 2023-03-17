@@ -10,7 +10,7 @@ However, if the counterfactual looks too different from its original point, this
 However, so far this technique has been applied mostly to binary classification problems on images, and for good reason: image explanations are easily understandable by humans, so objective quality metrics matter less than for other domains, such as tabular data.
 
 Thus, our contributions are as follows: firstly, we apply \ls{} to (numerical) tabular data.
-We are lead to search for objective metrics for the quality of counterfactuals, because rows of data cannot be judged intuitively by a human the way images can.
+This leads us to search for objective metrics for the quality of counterfactuals, because rows of data cannot be judged intuitively like images can.
 Secondly, we extend \ls{} to multi-class problems, where targeting a particular class is not the same as simply moving a point away from its current class; we experiment with different loss functions to maximize the probability of reaching the target class.
 Thirdly, we propose a variation to \ls{} to ensure paths satisfy certain interpretability constraints, \eg{} the path should only go through \emph{realistic} points.
 Finally, we study the robustness of our proposed method by using it with nonsensical constraints.

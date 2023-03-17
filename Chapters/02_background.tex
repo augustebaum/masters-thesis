@@ -239,7 +239,10 @@ Consider a classifier $f$ trained to take an input $x \in \inputspace$ and predi
 We call this predicted class the \emph{source} class and we write it $\source$.
 A counterfactual explanation for $x$ is a point $\CF{x}$ that is comparable with $x$ but for which the predicted
 class is different.
-In some cases it is possible to specify a \emph{target} class that $\CF{x}$ should be predicted as; it is written $\target$.
+In some counterfactual methods,  it is possible to specify a \emph{target} class that $\CF{x}$ should be predicted as;
+this class is written $\target$.
+It can happen that the counterfactual is in fact not predicted as $\target$; in this case we say the counterfactual is
+not \emph{valid}.
 
 Equipped with these concepts and notation, we can now give an overview of the literature on counterfactual explanation generation methods making use of generative models.
 

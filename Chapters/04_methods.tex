@@ -31,7 +31,7 @@ One solution to this is \ls{}.
 \ls{} was presented by \citeauthor{cohenGifsplanation2022} in 2022 as a CFX generation method for binary classification models on image data, specifically X-ray images of human lungs \cite{cohenGifsplanation2022}.
 Given an input image $x$ predicted as class 0 (\ie{} for which $f(x)$ is low), \ls{} produces a new image close to $x$ that is predicted as class 1 (\ie{} for which $f(x)$ is high.).
 
-In short, this is the method.
+Let us describe the method.
 Let there be an autoencoder with $E$ the encoder and $D$ the decoder, and $z = E(x)$.
 Then, given some coefficient $\lambda_\text{LS}$, a candidate counterfactual $x'$ is computed as:
 \begin{align*}
@@ -117,7 +117,7 @@ Given $x \in \inputspace$ and an autoencoder $\autoencoder = (\enc, \dec)$, a co
 \CF{x} = \dec(z - \lambda \nabla_z \lossval(z)).
 \end{equation*}
 
-In vanilla \ls{}, the validity loss would then be $\lossval(z) = - \sigma(f(\dec(z)))$ where $\sigma$ denotes the sigmoid function, for example (recall that in the original paper
+In basic \ls{}, the validity loss would then be $\lossval(z) = - \sigma(f(\dec(z)))$ where $\sigma$ denotes the sigmoid function, for example (recall that in the original paper
 the classifier outputs a probability in $[0, 1]$).
 
 Hence, our problem is as follows:
@@ -380,13 +380,20 @@ We check our intuition:
                & = p_j (1 - \lambda (\outputdim - 1)) + \lambda (1 - \djt) - \djt        \\
                & = \begin{cases}
                        -1                                           & \text{if } j = \target \\
-                       p_j(1 - \lambda ( \outputdim -1 )) + \lambda & \text{otherwise}
+                       p_j(1 - \lambda ( \outputdim -1 )) + \lambda & \text{otherwise.}
                    \end{cases}
           \end{align*}
 Here it is unclear if the gradient components for $j \neq \target$ are more negative than $-1$.
 It turns out it can happen: for example, if $\lambda = 1$ and $p_j = 1$ then we get $1 - (\outputdim -1) + 1 = 3 - \outputdim$, so for $\outputdim > 4$, $u_j$ will be pushed higher than $u_\target$.
+We show this the behavior for $\lambda = 1$ in \autoref{fig:log_prb_others}.
 \end{itemize}
 
+\begin{figure}[htbp]
+	\centering
+    \subfile{../Figures/04_log_prb_others}
+	\caption{Behavior of the gradient of $\LogPrbOthers{}$ for $\lambda = 1$, for different values of $\outputdim$. As $\outputdim$ increases, the threshold at which the gradient component changes signs decreases.}
+	\label{fig:log_prb_others}
+\end{figure}
 
 \subsubsection{Logit-based losses}
 
@@ -429,7 +436,7 @@ To conclude on this section, let us summarize our findings.
 \subsection{Problem statement}
 
 In this section and in the following, we denote a CFX path by $(x_t)_{t=1}^T \in \inputspace^T$, where $x_T$ is the end point of the path and
-$x_1$ is its starting point, ideally as close to $x$ as possible.
+$x_1$ is its starting point, ideally as close to $x$ as possible (so $T$ is the number of points in the path).
 Similarly, we also define $(z_t)_{t=1}^T \in \latentspace^T$ such that $(x_t)_{t=1}^T = (\dec(z_t))_{t=1}^T$.
 
 A typical requirement on a counterfactual $\CF{x}$ for an input $x$ is for $\norm{\CF{x} - x}$ to be small, where $\norm{\cdot}$ is the $L_1$ norm for example.
@@ -486,7 +493,7 @@ Thus we formulate $\BoundaryCrossLoss$ as follows:
 where $p^{(t)}_i$ is the predicted probability $\softmax(\,f(x_t)\,)_i$.
 
 Note that class information is indirectly given during the training of the autoencoder, so the autoencoder is dependent on the classification task.
-By contrast, in vanilla \ls{} the authors make a conscious decision to keep the autoencoder entirely separate from the classifier.
+By contrast, in basic \ls{} the authors make a conscious decision to keep the autoencoder entirely separate from the classifier.
 Their justification is that this allows for reusing the autoencoder on classifiers that have learned different tasks but that act on the same input data; for example, different classifiers each trained to detect a particular lung disease.
 While a valid argument, \citeauthor{locatelloChallenging2019} have demonstrated that some properties of latent representations can only be achieved in the presence of class label information \cite{locatelloChallenging2019}.
 
