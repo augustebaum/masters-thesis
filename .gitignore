@@ -3,5 +3,6 @@
 *.log
 *.pdf
 !Logo_EPFL.pdf
+!MSc_thesis_Auguste_Baum.pdf
 *.blg
 *.gz
